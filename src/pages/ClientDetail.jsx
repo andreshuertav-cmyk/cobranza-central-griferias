@@ -1,0 +1,277 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { 
+  ArrowLeft, Phone, Mail, Plus, Edit2, Trash2, 
+  Loader2, Calendar, DollarSign, TrendingUp, History
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import LogEntry from "@/components/collection/LogEntry";
+import AddLogModal from "@/components/collection/AddLogModal";
+import AddClientModal from "@/components/collection/AddClientModal";
+
+const statusConfig = {
+  al_corriente: { label: "Al corriente", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  pendiente: { label: "Pendiente", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  en_negociacion: { label: "En negociación", color: "bg-blue-100 text-blue-700 border-blue-200" },
+  mora: { label: "En mora", color: "bg-red-100 text-red-700 border-red-200" },
+  incobrable: { label: "Incobrable", color: "bg-slate-100 text-slate-700 border-slate-200" }
+};
+
+export default function ClientDetail() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const clientId = urlParams.get("id");
+
+  const [showAddLog, setShowAddLog] = useState(false);
+  const [showEditClient, setShowEditClient] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const { data: client, isLoading: loadingClient } = useQuery({
+    queryKey: ["client", clientId],
+    queryFn: async () => {
+      const clients = await base44.entities.Client.filter({ id: clientId });
+      return clients[0];
+    },
+    enabled: !!clientId
+  });
+
+  const { data: logs = [], isLoading: loadingLogs } = useQuery({
+    queryKey: ["logs", clientId],
+    queryFn: () => base44.entities.CollectionLog.filter({ client_id: clientId }, "-contact_date"),
+    enabled: !!clientId
+  });
+
+  const createLogMutation = useMutation({
+    mutationFn: (data) => base44.entities.CollectionLog.create({ ...data, client_id: clientId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
+      setShowAddLog(false);
+    }
+  });
+
+  const updateClientMutation = useMutation({
+    mutationFn: (data) => base44.entities.Client.update(clientId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      setShowEditClient(false);
+    }
+  });
+
+  const deleteClientMutation = useMutation({
+    mutationFn: () => base44.entities.Client.delete(clientId),
+    onSuccess: () => {
+      window.location.href = createPageUrl("Home");
+    }
+  });
+
+  if (loadingClient) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  if (!client) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Cliente no encontrado</h2>
+          <Link to={createPageUrl("Home")}>
+            <Button variant="outline">Volver al inicio</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const status = statusConfig[client.status] || statusConfig.pendiente;
+  const remaining = (client.total_debt || 0) - (client.paid_amount || 0);
+  const progress = client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Link to={createPageUrl("Home")}>
+            <Button variant="ghost" size="icon" className="shrink-0">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-slate-900 truncate">{client.name}</h1>
+              <Badge className={cn("border", status.color)}>{status.label}</Badge>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setShowEditClient(true)}>
+              <Edit2 className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="text-red-500 hover:text-red-600" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Client Info Card */}
+        <Card className="p-6 mb-6">
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-sm font-medium text-slate-500 mb-3">Información de contacto</h3>
+              <div className="space-y-2">
+                {client.phone && (
+                  <a href={`tel:${client.phone}`} className="flex items-center gap-2 text-slate-700 hover:text-slate-900">
+                    <Phone className="h-4 w-4 text-slate-400" />
+                    {client.phone}
+                  </a>
+                )}
+                {client.email && (
+                  <a href={`mailto:${client.email}`} className="flex items-center gap-2 text-slate-700 hover:text-slate-900">
+                    <Mail className="h-4 w-4 text-slate-400" />
+                    {client.email}
+                  </a>
+                )}
+                {!client.phone && !client.email && (
+                  <p className="text-slate-400 text-sm">Sin información de contacto</p>
+                )}
+              </div>
+              {client.notes && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-sm text-slate-600">{client.notes}</p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-slate-500 mb-3">Estado de cuenta</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-xs text-slate-500 mb-1">Deuda total</p>
+                    <p className="text-xl font-bold text-slate-900">
+                      ${client.total_debt?.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="bg-emerald-50 rounded-xl p-4">
+                    <p className="text-xs text-emerald-600 mb-1">Pagado</p>
+                    <p className="text-xl font-bold text-emerald-700">
+                      ${(client.paid_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="text-slate-500">Progreso de pago</span>
+                    <span className="font-semibold text-slate-900">{progress.toFixed(0)}%</span>
+                  </div>
+                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 rounded-full transition-all"
+                      style={{ width: `${Math.min(progress, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-right text-sm text-slate-500 mt-2">
+                    Saldo: <span className="font-semibold text-slate-900">${remaining.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Collection History */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-slate-400" />
+            <h2 className="text-lg font-semibold text-slate-900">Historial de gestiones</h2>
+          </div>
+          <Button onClick={() => setShowAddLog(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nueva gestión
+          </Button>
+        </div>
+
+        {loadingLogs ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          </div>
+        ) : logs.length === 0 ? (
+          <Card className="p-12 text-center">
+            <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-900 mb-2">Sin gestiones</h3>
+            <p className="text-slate-500 mb-4">Registra la primera gestión de cobranza</p>
+            <Button onClick={() => setShowAddLog(true)} variant="outline" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Registrar gestión
+            </Button>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {logs.map((log) => (
+              <LogEntry key={log.id} log={log} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      <AddLogModal
+        open={showAddLog}
+        onOpenChange={setShowAddLog}
+        onSubmit={(data) => createLogMutation.mutate(data)}
+        isLoading={createLogMutation.isPending}
+      />
+
+      <AddClientModal
+        open={showEditClient}
+        onOpenChange={setShowEditClient}
+        onSubmit={(data) => updateClientMutation.mutate(data)}
+        isLoading={updateClientMutation.isPending}
+        editClient={client}
+      />
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminarán todos los registros de gestión asociados a este cliente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteClientMutation.mutate()}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {deleteClientMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
