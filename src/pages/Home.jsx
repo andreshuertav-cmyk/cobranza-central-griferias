@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Users, DollarSign, AlertTriangle, 
-  TrendingUp, Calendar, Loader2, Upload 
+  TrendingUp, Calendar, Loader2, Upload, BarChart3 
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -74,6 +74,12 @@ export default function Home() {
             <p className="text-slate-500 mt-1">Gestiona tus clientes y seguimientos</p>
           </div>
           <div className="flex gap-2">
+            <Link to={createPageUrl("Reports")}>
+              <Button variant="outline" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Reportes
+              </Button>
+            </Link>
             <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="gap-2">
               <Upload className="h-4 w-4" />
               Carga masiva
