@@ -149,9 +149,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
   const downloadTemplate = () => {
     const csvContent = `nombre_cliente,telefono,email,notas_cliente,numero_documento,tipo_documento,monto,monto_pagado,fecha_emision,fecha_vencimiento,dias_mora,notas_documento
-Juan Pérez,55 1234 5678,juan@email.com,Cliente nuevo,FAC-001,factura,15000,0,2024-01-01,2024-02-01,30,Factura vencida
-María López,55 8765 4321,maria@email.com,Buen pagador,PAG-002,pagare,25000,5000,2024-02-01,2024-03-15,0,Pagos parciales
-María López,55 8765 4321,maria@email.com,,FAC-003,factura,8000,0,2024-01-15,2024-02-28,15,Segunda factura de María`;
+Juan Pérez,55 1234 5678,juan@email.com,Cliente nuevo,FAC-001,factura,15000,0,01-01-2024,01-02-2024,30,Factura vencida
+María López,55 8765 4321,maria@email.com,Buen pagador,PAG-002,pagare,25000,5000,01-02-2024,15-03-2024,0,Pagos parciales
+María López,55 8765 4321,maria@email.com,,FAC-003,factura,8000,0,15-01-2024,28-02-2024,15,Segunda factura de María`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -201,7 +201,7 @@ María López,55 8765 4321,maria@email.com,,FAC-003,factura,8000,0,2024-01-15,20
               <li>CSV o Excel (.xlsx) con encabezados en la primera fila</li>
               <li>Un cliente puede tener múltiples documentos (repetir datos del cliente)</li>
               <li>Tipos de documento: factura, pagare, contrato, credito, otro</li>
-              <li>Las fechas en formato: YYYY-MM-DD (ej: 2024-01-15)</li>
+              <li>Las fechas en formato: DD-MM-YYYY (ej: 15-01-2024)</li>
             </ul>
           </div>
 
