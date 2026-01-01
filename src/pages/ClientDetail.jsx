@@ -25,6 +25,7 @@ import {
 import LogEntry from "@/components/collection/LogEntry";
 import AddLogModal from "@/components/collection/AddLogModal";
 import AddClientModal from "@/components/collection/AddClientModal";
+import DocumentCard from "@/components/collection/DocumentCard";
 
 const statusConfig = {
   al_corriente: { label: "Al corriente", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
@@ -56,6 +57,12 @@ export default function ClientDetail() {
   const { data: logs = [], isLoading: loadingLogs } = useQuery({
     queryKey: ["logs", clientId],
     queryFn: () => base44.entities.CollectionLog.filter({ client_id: clientId }, "-contact_date"),
+    enabled: !!clientId
+  });
+
+  const { data: documents = [], isLoading: loadingDocuments } = useQuery({
+    queryKey: ["documents", clientId],
+    queryFn: () => base44.entities.Document.filter({ client_id: clientId }, "-due_date"),
     enabled: !!clientId
   });
 
@@ -200,6 +207,31 @@ export default function ClientDetail() {
             </div>
           </div>
         </Card>
+
+        {/* Documents Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <DollarSign className="h-5 w-5 text-slate-400" />
+            <h2 className="text-lg font-semibold text-slate-900">Documentos en mora</h2>
+          </div>
+
+          {loadingDocuments ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            </div>
+          ) : documents.length === 0 ? (
+            <Card className="p-8 text-center bg-slate-50">
+              <DollarSign className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-sm text-slate-500">Sin documentos registrados</p>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {documents.map((doc) => (
+                <DocumentCard key={doc.id} document={doc} />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Collection History */}
         <div className="flex items-center justify-between mb-4">
