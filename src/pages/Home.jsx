@@ -35,6 +35,11 @@ export default function Home() {
     queryFn: () => base44.entities.CollectionLog.list("-contact_date", 100)
   });
 
+  const { data: documents = [] } = useQuery({
+    queryKey: ["documents"],
+    queryFn: () => base44.entities.Document.list()
+  });
+
   const createClientMutation = useMutation({
     mutationFn: (data) => base44.entities.Client.create(data),
     onSuccess: () => {
@@ -47,7 +52,13 @@ export default function Home() {
   const totalDebt = clients.reduce((sum, c) => sum + (c.total_debt || 0), 0);
   const totalPaid = clients.reduce((sum, c) => sum + (c.paid_amount || 0), 0);
   const pendingAmount = totalDebt - totalPaid;
-  const inMora = clients.filter(c => c.status === "mora").length;
+  
+  // Count clients with overdue documents
+  const inMora = clients.filter(client => {
+    return documents.some(doc => 
+      doc.client_id === client.id && (doc.days_overdue || 0) > 0
+    );
+  }).length;
 
   // Get today's follow-ups
   const todayFollowUps = logs.filter(log => {
