@@ -31,10 +31,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
     try {
       // 1. Read Excel file in frontend
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, dateNF: 'dd-mm-yyyy' });
 
       if (jsonData.length === 0) {
         throw new Error("El archivo está vacío o no tiene datos válidos");
@@ -42,22 +42,41 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
       // 2. Parse and validate data
       const documentsData = jsonData.map(row => {
-        // Handle Excel date serial numbers
+        // Handle different date formats
         let vencioValue = row.VENCIÓ || row.vencio || row.VENCIO;
-
-        // If it's a number (Excel serial date), convert it
-        if (typeof vencioValue === 'number') {
-          // Excel serial date: days since 1900-01-01
-          const excelEpoch = new Date(1900, 0, 1);
-          const date = new Date(excelEpoch.getTime() + (vencioValue - 2) * 86400000);
-          vencioValue = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        
+        // Convert date to YYYY-MM-DD format
+        let dueDate = null;
+        
+        if (vencioValue) {
+          if (typeof vencioValue === 'number') {
+            // Excel serial date: days since 1900-01-01
+            const excelEpoch = new Date(1900, 0, 1);
+            const date = new Date(excelEpoch.getTime() + (vencioValue - 2) * 86400000);
+            dueDate = date.toISOString().split('T')[0];
+          } else if (typeof vencioValue === 'string') {
+            // Try to parse string date DD-MM-YYYY or other formats
+            const dateStr = String(vencioValue);
+            
+            // Check if it's DD-MM-YYYY format
+            if (dateStr.match(/^\d{1,2}-\d{1,2}-\d{4}$/)) {
+              const [day, month, year] = dateStr.split('-');
+              dueDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            } else if (dateStr.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+              // Already in YYYY-MM-DD format
+              dueDate = dateStr;
+            }
+          } else if (vencioValue instanceof Date) {
+            // JavaScript Date object
+            dueDate = vencioValue.toISOString().split('T')[0];
+          }
         }
 
         return {
           tipo: row.TIPO || row.tipo,
           numero: row.NÚMERO || row.numero || row.NUMERO,
           cliente: row.CLIENTE || row.cliente,
-          vencio: vencioValue,
+          vencio: dueDate,
           dias_mora: row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0,
           total: row.TOTAL || row.total || 0,
           pagado: row.PAGADO || row.pagado || 0,
@@ -127,25 +146,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
                              docType.includes("contrato") ? "contrato" :
                              docType.includes("crédito") || docType.includes("credito") ? "credito" : "otro";
 
-          // Parse the date - it should already be YYYY-MM-DD from earlier conversion
-          let dueDate = String(doc.vencio);
-
-          // If it still has DD-MM-YYYY format, convert it
-          if (dueDate.includes('-')) {
-            const dateParts = dueDate.split('-');
-            if (dateParts.length === 3 && dateParts[0].length <= 2) {
-              // DD-MM-YYYY format, convert to YYYY-MM-DD
-              dueDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-            }
-          }
-
           documentsToCreate.push({
             client_id: clientId,
             document_number: String(doc.numero),
             document_type: mappedType,
             amount: doc.total || 0,
             paid_amount: doc.pagado || 0,
-            due_date: dueDate,
+            due_date: doc.vencio,
             status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
             days_overdue: doc.dias_mora || 0,
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
