@@ -27,12 +27,15 @@ export default function DocumentCard({ document }) {
   
   // Parse date from DD-MM-YYYY format
   const dueDate = document.due_date ? (() => {
-    const dateStr = String(document.due_date);
+    const dateStr = String(document.due_date).trim();
     if (dateStr.includes('-')) {
       const parts = dateStr.split('-');
-      if (parts.length === 3 && parts[0].length <= 2) {
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
         // DD-MM-YYYY format
-        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        }
       }
     }
     return new Date(dateStr);
