@@ -55,16 +55,26 @@ export default function Home() {
       const allDocs = await base44.entities.Document.list();
       const allLogs = await base44.entities.CollectionLog.list();
       
-      await Promise.all([
-        ...allLogs.map(log => base44.entities.CollectionLog.delete(log.id)),
-        ...allDocs.map(doc => base44.entities.Document.delete(doc.id)),
-        ...allClients.map(client => base44.entities.Client.delete(client.id))
-      ]);
+      // Delete logs first
+      for (const log of allLogs) {
+        await base44.entities.CollectionLog.delete(log.id);
+      }
+      
+      // Then delete documents
+      for (const doc of allDocs) {
+        await base44.entities.Document.delete(doc.id);
+      }
+      
+      // Finally delete clients
+      for (const client of allClients) {
+        await base44.entities.Client.delete(client.id);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["logs"] });
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      setShowDeleteConfirm(false);
     }
   });
 
@@ -266,10 +276,7 @@ export default function Home() {
               </Button>
               <Button 
                 className="bg-red-600 hover:bg-red-700"
-                onClick={() => {
-                  deleteAllMutation.mutate();
-                  setShowDeleteConfirm(false);
-                }}
+                onClick={() => deleteAllMutation.mutate()}
                 disabled={deleteAllMutation.isPending}
               >
                 {deleteAllMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
