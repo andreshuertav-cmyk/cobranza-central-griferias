@@ -79,11 +79,14 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
         const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
 
+        // Check if any document is overdue
+        const hasOverdueDocuments = clientData.documents.some(doc => (doc.dias_mora || 0) > 0);
+
         return {
           name: clientName,
           total_debt: totalDebt,
           paid_amount: totalPaid,
-          status: "pendiente"
+          status: hasOverdueDocuments ? "mora" : "pendiente"
         };
       });
 
