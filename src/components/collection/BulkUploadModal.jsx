@@ -34,11 +34,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: true, defval: "" });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
 
       if (jsonData.length === 0) {
         throw new Error("El archivo está vacío o no tiene datos válidos");
       }
+
+      console.log("Primera fila del Excel:", jsonData[0]);
 
       // 2. Parse and validate data
       const documentsData = jsonData.map(row => {
@@ -101,15 +103,25 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           }
         }
 
+        // Parse numeric values - handle strings with commas
+        const parseNumber = (val) => {
+          if (!val) return 0;
+          if (typeof val === 'number') return val;
+          // Remove commas and convert to number
+          const cleaned = String(val).replace(/,/g, '');
+          const num = parseFloat(cleaned);
+          return isNaN(num) ? 0 : num;
+        };
+
         return {
           tipo: row.TIPO || row.tipo,
           numero: row.NÚMERO || row.numero || row.NUMERO,
           cliente: row.CLIENTE || row.cliente,
           vencio: dueDate,
-          dias_mora: Number(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0),
-          total: Number(row.TOTAL || row.total || 0),
-          pagado: Number(row.PAGADO || row.pagado || 0),
-          pendiente: Number(row.PENDIENTE || row.pendiente || 0),
+          dias_mora: parseNumber(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA']),
+          total: parseNumber(row.TOTAL || row.total),
+          pagado: parseNumber(row.PAGADO || row.pagado),
+          pendiente: parseNumber(row.PENDIENTE || row.pendiente),
           vendedor: row.VENDEDOR || row.vendedor || "",
           forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
         };
