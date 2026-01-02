@@ -100,6 +100,13 @@ export default function ClientDetail() {
     }
   });
 
+  const deleteLogMutation = useMutation({
+    mutationFn: (logId) => base44.entities.CollectionLog.delete(logId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
+    }
+  });
+
   if (loadingClient) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -278,7 +285,11 @@ export default function ClientDetail() {
         ) : (
           <div className="space-y-3">
             {logs.map((log) => (
-              <LogEntry key={log.id} log={log} />
+              <LogEntry 
+                key={log.id} 
+                log={log} 
+                onDelete={(logId) => deleteLogMutation.mutate(logId)}
+              />
             ))}
           </div>
         )}

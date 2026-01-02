@@ -1,7 +1,8 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { Phone, MapPin, MessageSquare, Mail, MessageCircle, Calendar, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Phone, MapPin, MessageSquare, Mail, MessageCircle, Calendar, DollarSign, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const contactIcons = {
@@ -22,7 +23,7 @@ const resultConfig = {
   otro: { label: "Otro", color: "bg-slate-100 text-slate-600" }
 };
 
-export default function LogEntry({ log }) {
+export default function LogEntry({ log, onDelete }) {
   const Icon = contactIcons[log.contact_type] || Phone;
   const result = resultConfig[log.result] || resultConfig.otro;
 
@@ -42,9 +43,21 @@ export default function LogEntry({ log }) {
               {log.contact_date && format(new Date(log.contact_date), "d MMM yyyy, HH:mm", { locale: es })}
             </p>
           </div>
-          <Badge className={cn("text-xs", result.color)}>
-            {result.label}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge className={cn("text-xs", result.color)}>
+              {result.label}
+            </Badge>
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-slate-400 hover:text-red-600"
+                onClick={() => onDelete(log.id)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {log.notes && (
