@@ -51,25 +51,23 @@ export default function Home() {
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
+      // Helper to delete in batches
+      const deleteInBatches = async (items, deleteFn, batchSize = 50) => {
+        for (let i = 0; i < items.length; i += batchSize) {
+          const batch = items.slice(i, i + batchSize);
+          await Promise.all(batch.map(item => deleteFn(item.id)));
+        }
+      };
+
       // Fetch all data with no limits
       const allLogs = await base44.entities.CollectionLog.list("-created_date", 10000);
       const allDocs = await base44.entities.Document.list("-created_date", 10000);
       const allClients = await base44.entities.Client.list("-created_date", 10000);
-      
-      // Delete logs first
-      for (const log of allLogs) {
-        await base44.entities.CollectionLog.delete(log.id);
-      }
-      
-      // Then delete documents
-      for (const doc of allDocs) {
-        await base44.entities.Document.delete(doc.id);
-      }
-      
-      // Finally delete clients
-      for (const client of allClients) {
-        await base44.entities.Client.delete(client.id);
-      }
+
+      // Delete in batches: logs first, then docs, then clients
+      await deleteInBatches(allLogs, base44.entities.CollectionLog.delete);
+      await deleteInBatches(allDocs, base44.entities.Document.delete);
+      await deleteInBatches(allClients, base44.entities.Client.delete);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
