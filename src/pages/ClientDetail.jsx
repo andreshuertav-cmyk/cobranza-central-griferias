@@ -72,7 +72,7 @@ export default function ClientDetail() {
     mutationFn: async (data) => {
       await base44.entities.CollectionLog.create({ ...data, client_id: clientId });
       
-      // Si es pago realizado, actualizar el paid_amount del cliente
+      // Si es pago realizado, actualizar el paid_amount del cliente y del documento
       if (data.result === "pago_realizado" && data.paid_amount) {
         const newPaidAmount = (client.paid_amount || 0) + data.paid_amount;
         const totalDebt = client.total_debt || 0;
@@ -84,11 +84,27 @@ export default function ClientDetail() {
           paid_amount: newPaidAmount,
           status: newStatus
         });
+        
+        // Si se especificó un documento, actualizarlo
+        if (data.document_id) {
+          const doc = documents.find(d => d.id === data.document_id);
+          if (doc) {
+            const newDocPaidAmount = (doc.paid_amount || 0) + data.paid_amount;
+            const docTotal = doc.amount || 0;
+            const newDocStatus = newDocPaidAmount >= docTotal ? "pagado" : doc.status;
+            
+            await base44.entities.Document.update(data.document_id, {
+              paid_amount: newDocPaidAmount,
+              status: newDocStatus
+            });
+          }
+        }
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
       queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
       setShowAddLog(false);
     }
   });
@@ -319,6 +335,7 @@ export default function ClientDetail() {
         onSubmit={(data) => createLogMutation.mutate(data)}
         isLoading={createLogMutation.isPending}
         totalDebt={remaining}
+        documents={documents}
       />
 
       <AddClientModal

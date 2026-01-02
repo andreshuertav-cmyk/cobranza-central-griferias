@@ -25,7 +25,7 @@ const resultTypes = [
   { value: "otro", label: "Otro" }
 ];
 
-export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, totalDebt }) {
+export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, totalDebt, documents }) {
   const getLocalDateTime = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -44,7 +44,8 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     promised_amount: "",
     promised_date: "",
     follow_up_date: "",
-    paid_amount: ""
+    paid_amount: "",
+    document_id: ""
   });
 
   const handleSubmit = (e) => {
@@ -53,6 +54,7 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
       ...formData,
       promised_amount: formData.promised_amount ? parseFloat(formData.promised_amount) : null,
       paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : null,
+      document_id: formData.document_id || null,
       contact_date: new Date(formData.contact_date).toISOString()
     });
   };
@@ -157,6 +159,31 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                   <span className="text-lg font-bold text-emerald-900">${totalDebt.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
                 </div>
               )}
+              
+              {documents && documents.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Documento a pagar</Label>
+                  <Select
+                    value={formData.document_id}
+                    onValueChange={(v) => setFormData({ ...formData, document_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un documento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {documents.map((doc) => {
+                        const pending = (doc.amount || 0) - (doc.paid_amount || 0);
+                        return (
+                          <SelectItem key={doc.id} value={doc.id}>
+                            {doc.document_number} - ${pending.toLocaleString('es-MX', { minimumFractionDigits: 0 })} pendiente
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label>Monto pagado</Label>
                 <Input
