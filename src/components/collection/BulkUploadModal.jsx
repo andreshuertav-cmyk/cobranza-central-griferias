@@ -114,13 +114,21 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
                              docType.includes("contrato") ? "contrato" :
                              docType.includes("crédito") || docType.includes("credito") ? "credito" : "otro";
 
+          // Convert date from DD-MM-YYYY to YYYY-MM-DD
+          let dueDate = String(doc.vencio);
+          const dateParts = dueDate.split('-');
+          if (dateParts.length === 3 && dateParts[0].length <= 2) {
+            // DD-MM-YYYY format, convert to YYYY-MM-DD
+            dueDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+          }
+
           documentsToCreate.push({
             client_id: clientId,
             document_number: String(doc.numero),
             document_type: mappedType,
             amount: doc.total || 0,
             paid_amount: doc.pagado || 0,
-            due_date: String(doc.vencio),
+            due_date: dueDate,
             status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
             days_overdue: doc.dias_mora || 0,
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
