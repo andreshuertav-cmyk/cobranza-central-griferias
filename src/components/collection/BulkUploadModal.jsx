@@ -101,29 +101,15 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           }
         }
 
-        // Parse and validate numeric values - remove commas and other formatting
-        const cleanNumber = (val) => {
-          if (!val) return 0;
-          // Convert to string and remove commas, spaces, and currency symbols
-          const cleaned = String(val).replace(/[,\s$]/g, '');
-          const num = Number(cleaned);
-          return isNaN(num) ? 0 : num;
-        };
-
-        const total = cleanNumber(row.TOTAL || row.total);
-        const pagado = cleanNumber(row.PAGADO || row.pagado);
-        const diasMora = cleanNumber(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA']);
-        const pendiente = cleanNumber(row.PENDIENTE || row.pendiente);
-
         return {
           tipo: row.TIPO || row.tipo,
           numero: row.NÚMERO || row.numero || row.NUMERO,
           cliente: row.CLIENTE || row.cliente,
           vencio: dueDate,
-          dias_mora: Math.round(diasMora),
-          total: Math.round(total * 100) / 100,
-          pagado: Math.round(pagado * 100) / 100,
-          pendiente: Math.round(pendiente * 100) / 100,
+          dias_mora: Number(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0),
+          total: Number(row.TOTAL || row.total || 0),
+          pagado: Number(row.PAGADO || row.pagado || 0),
+          pendiente: Number(row.PENDIENTE || row.pendiente || 0),
           vendedor: row.VENDEDOR || row.vendedor || "",
           forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
         };
@@ -159,8 +145,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
         return {
           name: clientName,
-          total_debt: Math.round(totalDebt * 100) / 100,
-          paid_amount: Math.round(totalPaid * 100) / 100,
+          total_debt: totalDebt,
+          paid_amount: totalPaid,
           status: hasOverdueDocuments ? "mora" : "pendiente"
         };
       });
@@ -195,11 +181,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             client_id: clientId,
             document_number: String(doc.numero),
             document_type: mappedType,
-            amount: Math.round((doc.total || 0) * 100) / 100,
-            paid_amount: Math.round((doc.pagado || 0) * 100) / 100,
+            amount: doc.total || 0,
+            paid_amount: doc.pagado || 0,
             due_date: doc.vencio,
             status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
-            days_overdue: Math.round(doc.dias_mora || 0),
+            days_overdue: doc.dias_mora || 0,
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
           });
         }
