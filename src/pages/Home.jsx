@@ -56,13 +56,21 @@ export default function Home() {
     return isToday(followDate) || (isPast(followDate) && !isToday(followDate));
   });
 
-  // Filter clients
-  const filteredClients = clients.filter(c => {
-    const matchesSearch = c.name?.toLowerCase().includes(search.toLowerCase()) ||
-                          c.phone?.includes(search);
-    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Filter clients and remove duplicates by name
+  const filteredClients = clients
+    .filter(c => {
+      const matchesSearch = c.name?.toLowerCase().includes(search.toLowerCase()) ||
+                            c.phone?.includes(search);
+      const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .reduce((unique, client) => {
+      // Keep only the first occurrence of each client name
+      if (!unique.find(c => c.name === client.name)) {
+        unique.push(client);
+      }
+      return unique;
+    }, []);
 
   return (
     <div className="min-h-screen bg-slate-50">
