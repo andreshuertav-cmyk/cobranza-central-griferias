@@ -77,10 +77,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           numero: row.NÚMERO || row.numero || row.NUMERO,
           cliente: row.CLIENTE || row.cliente,
           vencio: dueDate,
-          dias_mora: row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0,
-          total: row.TOTAL || row.total || 0,
-          pagado: row.PAGADO || row.pagado || 0,
-          pendiente: row.PENDIENTE || row.pendiente || 0,
+          dias_mora: parseFloat(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0),
+          total: parseFloat(row.TOTAL || row.total || 0),
+          pagado: parseFloat(row.PAGADO || row.pagado || 0),
+          pendiente: parseFloat(row.PENDIENTE || row.pendiente || 0),
           vendedor: row.VENDEDOR || row.vendedor || "",
           forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
         };
@@ -108,8 +108,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
       // 4. Prepare clients data
       const clientsToCreate = Object.entries(clientsMap).map(([clientName, clientData]) => {
-        const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
-        const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
+        const totalDebt = clientData.documents.reduce((sum, doc) => sum + parseFloat(doc.total || 0), 0);
+        const totalPaid = clientData.documents.reduce((sum, doc) => sum + parseFloat(doc.pagado || 0), 0);
 
         // Check if any document is overdue
         const hasOverdueDocuments = clientData.documents.some(doc => (doc.dias_mora || 0) > 0);
@@ -153,11 +153,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             client_id: clientId,
             document_number: String(doc.numero),
             document_type: mappedType,
-            amount: doc.total || 0,
-            paid_amount: doc.pagado || 0,
+            amount: parseFloat(doc.total || 0),
+            paid_amount: parseFloat(doc.pagado || 0),
             due_date: doc.vencio,
             status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
-            days_overdue: doc.dias_mora || 0,
+            days_overdue: parseFloat(doc.dias_mora || 0),
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
           });
         }
