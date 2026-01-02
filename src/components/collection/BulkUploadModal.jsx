@@ -31,10 +31,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
     try {
       // 1. Read Excel file in frontend
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+      const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: true, defval: "" });
 
       if (jsonData.length === 0) {
         throw new Error("El archivo está vacío o no tiene datos válidos");
