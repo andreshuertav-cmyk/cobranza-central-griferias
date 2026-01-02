@@ -34,13 +34,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
       if (jsonData.length === 0) {
         throw new Error("El archivo está vacío o no tiene datos válidos");
       }
-
-      console.log("Primera fila del Excel:", jsonData[0]);
 
       // 2. Parse and validate data
       const documentsData = jsonData.map(row => {
@@ -60,13 +58,35 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             // Try to parse string date in various formats
             const dateStr = String(vencioValue).trim();
             
-            // DD-MM-YYYY or DD/MM/YYYY
-            if (dateStr.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/)) {
+            // MM/DD/YY or MM-DD-YY (US short format like "11/26/25")
+            if (dateStr.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{2}$/)) {
               const parts = dateStr.split(/[-\/]/);
-              const day = parts[0].padStart(2, '0');
-              const month = parts[1].padStart(2, '0');
-              const year = parts[2];
+              const month = parts[0].padStart(2, '0');
+              const day = parts[1].padStart(2, '0');
+              let year = parts[2];
+              // Convert 2-digit year to 4-digit (assume 20xx for years < 50, else 19xx)
+              year = parseInt(year) < 50 ? `20${year}` : `19${year}`;
               dueDate = `${year}-${month}-${day}`;
+            }
+            // DD-MM-YYYY or DD/MM/YYYY
+            else if (dateStr.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/)) {
+              const parts = dateStr.split(/[-\/]/);
+              const first = parseInt(parts[0]);
+              const second = parseInt(parts[1]);
+              
+              // If first part > 12, it must be day (DD-MM-YYYY)
+              if (first > 12) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                dueDate = `${year}-${month}-${day}`;
+              } else {
+                // Could be either DD-MM-YYYY or MM-DD-YYYY, assume MM-DD-YYYY if in US format context
+                const month = parts[0].padStart(2, '0');
+                const day = parts[1].padStart(2, '0');
+                const year = parts[2];
+                dueDate = `${year}-${month}-${day}`;
+              }
             } 
             // YYYY-MM-DD or YYYY/MM/DD
             else if (dateStr.match(/^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/)) {
@@ -75,27 +95,6 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
               const month = parts[1].padStart(2, '0');
               const day = parts[2].padStart(2, '0');
               dueDate = `${year}-${month}-${day}`;
-            }
-            // MM-DD-YYYY or MM/DD/YYYY (US format)
-            else if (dateStr.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/) && dateStr.length <= 10) {
-              // Try to parse as DD-MM-YYYY first (more common in Latin America)
-              const parts = dateStr.split(/[-\/]/);
-              const first = parseInt(parts[0]);
-              const second = parseInt(parts[1]);
-              
-              // If first part > 12, it must be day
-              if (first > 12) {
-                const day = parts[0].padStart(2, '0');
-                const month = parts[1].padStart(2, '0');
-                const year = parts[2];
-                dueDate = `${year}-${month}-${day}`;
-              } else {
-                // Assume DD-MM-YYYY (Latin America standard)
-                const day = parts[0].padStart(2, '0');
-                const month = parts[1].padStart(2, '0');
-                const year = parts[2];
-                dueDate = `${year}-${month}-${day}`;
-              }
             }
           } else if (vencioValue instanceof Date) {
             // JavaScript Date object
