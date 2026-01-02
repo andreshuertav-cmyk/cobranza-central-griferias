@@ -41,18 +41,31 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       }
 
       // 2. Parse and validate data
-      const documentsData = jsonData.map(row => ({
-        tipo: row.TIPO || row.tipo,
-        numero: row.NÚMERO || row.numero || row.NUMERO,
-        cliente: row.CLIENTE || row.cliente,
-        vencio: row.VENCIÓ || row.vencio || row.VENCIO,
-        dias_mora: row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0,
-        total: row.TOTAL || row.total || 0,
-        pagado: row.PAGADO || row.pagado || 0,
-        pendiente: row.PENDIENTE || row.pendiente || 0,
-        vendedor: row.VENDEDOR || row.vendedor || "",
-        forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
-      }));
+      const documentsData = jsonData.map(row => {
+        // Handle Excel date serial numbers
+        let vencioValue = row.VENCIÓ || row.vencio || row.VENCIO;
+
+        // If it's a number (Excel serial date), convert it
+        if (typeof vencioValue === 'number') {
+          // Excel serial date: days since 1900-01-01
+          const excelEpoch = new Date(1900, 0, 1);
+          const date = new Date(excelEpoch.getTime() + (vencioValue - 2) * 86400000);
+          vencioValue = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        }
+
+        return {
+          tipo: row.TIPO || row.tipo,
+          numero: row.NÚMERO || row.numero || row.NUMERO,
+          cliente: row.CLIENTE || row.cliente,
+          vencio: vencioValue,
+          dias_mora: row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0,
+          total: row.TOTAL || row.total || 0,
+          pagado: row.PAGADO || row.pagado || 0,
+          pendiente: row.PENDIENTE || row.pendiente || 0,
+          vendedor: row.VENDEDOR || row.vendedor || "",
+          forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
+        };
+      });
 
       if (documentsData.length === 0) {
         throw new Error("No se encontraron datos válidos en el archivo");
@@ -114,12 +127,16 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
                              docType.includes("contrato") ? "contrato" :
                              docType.includes("crédito") || docType.includes("credito") ? "credito" : "otro";
 
-          // Convert date from DD-MM-YYYY to YYYY-MM-DD
+          // Parse the date - it should already be YYYY-MM-DD from earlier conversion
           let dueDate = String(doc.vencio);
-          const dateParts = dueDate.split('-');
-          if (dateParts.length === 3 && dateParts[0].length <= 2) {
-            // DD-MM-YYYY format, convert to YYYY-MM-DD
-            dueDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
+          // If it still has DD-MM-YYYY format, convert it
+          if (dueDate.includes('-')) {
+            const dateParts = dueDate.split('-');
+            if (dateParts.length === 3 && dateParts[0].length <= 2) {
+              // DD-MM-YYYY format, convert to YYYY-MM-DD
+              dueDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+            }
           }
 
           documentsToCreate.push({
