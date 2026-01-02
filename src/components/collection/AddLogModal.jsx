@@ -43,7 +43,8 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     notes: "",
     promised_amount: "",
     promised_date: "",
-    follow_up_date: ""
+    follow_up_date: "",
+    paid_amount: ""
   });
 
   const handleSubmit = (e) => {
@@ -51,11 +52,13 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     onSubmit({
       ...formData,
       promised_amount: formData.promised_amount ? parseFloat(formData.promised_amount) : null,
+      paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : null,
       contact_date: new Date(formData.contact_date).toISOString()
     });
   };
 
   const showPromiseFields = formData.result === "promesa_pago";
+  const showPaymentFields = formData.result === "pago_realizado";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,6 +145,27 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                     onChange={(e) => setFormData({ ...formData, promised_date: e.target.value })}
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {showPaymentFields && (
+            <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 space-y-4">
+              {totalDebt !== undefined && (
+                <div className="flex items-center justify-between pb-3 border-b border-emerald-200">
+                  <span className="text-sm text-emerald-700">Deuda pendiente:</span>
+                  <span className="text-lg font-bold text-emerald-900">${totalDebt.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Monto pagado</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={formData.paid_amount}
+                  onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
+                />
               </div>
             </div>
           )}

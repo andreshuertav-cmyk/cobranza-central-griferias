@@ -69,9 +69,20 @@ export default function ClientDetail() {
   });
 
   const createLogMutation = useMutation({
-    mutationFn: (data) => base44.entities.CollectionLog.create({ ...data, client_id: clientId }),
+    mutationFn: async (data) => {
+      await base44.entities.CollectionLog.create({ ...data, client_id: clientId });
+      
+      // Si es pago realizado, actualizar el paid_amount del cliente
+      if (data.result === "pago_realizado" && data.paid_amount) {
+        const newPaidAmount = (client.paid_amount || 0) + data.paid_amount;
+        await base44.entities.Client.update(clientId, {
+          paid_amount: newPaidAmount
+        });
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
       setShowAddLog(false);
     }
   });
