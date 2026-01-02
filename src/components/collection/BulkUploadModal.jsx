@@ -138,7 +138,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
         for (const doc of clientData.documents) {
           // Skip if missing required fields
-          if (!doc.numero || !doc.vencio) continue;
+          if (!doc.numero || !doc.vencio) {
+            console.log('Skipping document - missing numero or vencio:', doc);
+            continue;
+          }
 
           const docType = doc.tipo?.toLowerCase() || "factura";
           const mappedType = docType.includes("factura") ? "factura" : 
@@ -160,8 +163,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         }
       }
 
-      // 8. Create all documents in bulk
-      const createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
+      // 8. Create all documents in bulk (only if we have documents)
+      let createdDocuments = [];
+      if (documentsToCreate.length > 0) {
+        createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
+      } else {
+        throw new Error("No se pudo procesar ningún documento. Verifica que el archivo tenga fechas válidas en la columna VENCIÓ.");
+      }
 
       setResult({
         success: true,
