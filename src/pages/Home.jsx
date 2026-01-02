@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Users, DollarSign, AlertTriangle, 
-  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2 
+  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2, ArrowUpDown
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -21,6 +21,7 @@ import BulkUploadModal from "@/components/collection/BulkUploadModal";
 export default function Home() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name"); // "name" or "debt"
   const [showAddClient, setShowAddClient] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -120,7 +121,16 @@ export default function Home() {
         unique.push(client);
       }
       return unique;
-    }, []);
+    }, [])
+    .sort((a, b) => {
+      if (sortBy === "name") {
+        return (a.name || "").localeCompare(b.name || "");
+      } else {
+        const debtA = (a.total_debt || 0) - (a.paid_amount || 0);
+        const debtB = (b.total_debt || 0) - (b.paid_amount || 0);
+        return debtB - debtA; // Mayor a menor
+      }
+    });
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -217,6 +227,26 @@ export default function Home() {
               <TabsTrigger value="en_negociacion">Negociando</TabsTrigger>
             </TabsList>
           </Tabs>
+          <div className="flex gap-2">
+            <Button
+              variant={sortBy === "name" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSortBy("name")}
+              className="gap-2"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              Nombre
+            </Button>
+            <Button
+              variant={sortBy === "debt" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSortBy("debt")}
+              className="gap-2"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              Deuda
+            </Button>
+          </div>
         </div>
 
         {/* Client List */}
