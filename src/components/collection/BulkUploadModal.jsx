@@ -58,11 +58,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             // Try to parse string date in various formats
             const dateStr = String(vencioValue).trim();
             
-            // MM/DD/YY or MM-DD-YY (US short format like "11/26/25")
+            // DD/MM/YY or DD-MM-YY (formato latino corto)
             if (dateStr.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{2}$/)) {
               const parts = dateStr.split(/[-\/]/);
-              const month = parts[0].padStart(2, '0');
-              const day = parts[1].padStart(2, '0');
+              const day = parts[0].padStart(2, '0');
+              const month = parts[1].padStart(2, '0');
               let year = parts[2];
               // Convert 2-digit year to 4-digit (assume 20xx for years < 50, else 19xx)
               year = parseInt(year) < 50 ? `20${year}` : `19${year}`;
@@ -71,22 +71,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             // DD-MM-YYYY or DD/MM/YYYY
             else if (dateStr.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/)) {
               const parts = dateStr.split(/[-\/]/);
-              const first = parseInt(parts[0]);
-              const second = parseInt(parts[1]);
-              
-              // If first part > 12, it must be day (DD-MM-YYYY)
-              if (first > 12) {
-                const day = parts[0].padStart(2, '0');
-                const month = parts[1].padStart(2, '0');
-                const year = parts[2];
-                dueDate = `${year}-${month}-${day}`;
-              } else {
-                // Could be either DD-MM-YYYY or MM-DD-YYYY, assume MM-DD-YYYY if in US format context
-                const month = parts[0].padStart(2, '0');
-                const day = parts[1].padStart(2, '0');
-                const year = parts[2];
-                dueDate = `${year}-${month}-${day}`;
-              }
+              const day = parts[0].padStart(2, '0');
+              const month = parts[1].padStart(2, '0');
+              const year = parts[2];
+              dueDate = `${year}-${month}-${day}`;
             } 
             // YYYY-MM-DD or YYYY/MM/DD
             else if (dateStr.match(/^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/)) {
