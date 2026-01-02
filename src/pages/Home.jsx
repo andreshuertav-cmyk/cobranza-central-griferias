@@ -52,11 +52,16 @@ export default function Home() {
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
       // Helper to delete in batches
-      const deleteInBatches = async (items, deleteFn, batchSize = 50) => {
+      const deleteInBatches = async (items, deleteFn, entityName, batchSize = 50) => {
+        console.log(`Borrando ${items.length} ${entityName}...`);
         for (let i = 0; i < items.length; i += batchSize) {
           const batch = items.slice(i, i + batchSize);
-          await Promise.all(batch.map(item => deleteFn(item.id)));
+          await Promise.all(batch.map(item => deleteFn(item.id).catch(err => {
+            console.error(`Error borrando ${entityName}:`, err);
+          })));
+          console.log(`Progreso ${entityName}: ${Math.min(i + batchSize, items.length)}/${items.length}`);
         }
+        console.log(`✓ ${entityName} borrados completamente`);
       };
 
       // Fetch all data with no limits
@@ -64,10 +69,14 @@ export default function Home() {
       const allDocs = await base44.entities.Document.list("-created_date", 10000);
       const allClients = await base44.entities.Client.list("-created_date", 10000);
 
+      console.log(`Total a borrar: ${allLogs.length} logs, ${allDocs.length} docs, ${allClients.length} clientes`);
+
       // Delete in batches: logs first, then docs, then clients
-      await deleteInBatches(allLogs, base44.entities.CollectionLog.delete);
-      await deleteInBatches(allDocs, base44.entities.Document.delete);
-      await deleteInBatches(allClients, base44.entities.Client.delete);
+      await deleteInBatches(allLogs, base44.entities.CollectionLog.delete, "logs");
+      await deleteInBatches(allDocs, base44.entities.Document.delete, "documentos");
+      await deleteInBatches(allClients, base44.entities.Client.delete, "clientes");
+      
+      console.log("✓ Borrado completo exitoso");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
