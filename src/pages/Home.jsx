@@ -51,24 +51,36 @@ export default function Home() {
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      const allClients = await base44.entities.Client.list();
-      const allDocs = await base44.entities.Document.list();
-      const allLogs = await base44.entities.CollectionLog.list();
+      // Fetch all data with no limits
+      const allLogs = await base44.entities.CollectionLog.list("-created_date", 10000);
+      const allDocs = await base44.entities.Document.list("-created_date", 10000);
+      const allClients = await base44.entities.Client.list("-created_date", 10000);
       
-      // Delete logs first
+      // Delete in order: logs -> documents -> clients
+      const deletePromises = [];
+      
       for (const log of allLogs) {
-        await base44.entities.CollectionLog.delete(log.id);
+        deletePromises.push(
+          base44.entities.CollectionLog.delete(log.id).catch(err => console.error('Error deleting log:', err))
+        );
       }
+      await Promise.all(deletePromises);
       
-      // Then delete documents
+      const docPromises = [];
       for (const doc of allDocs) {
-        await base44.entities.Document.delete(doc.id);
+        docPromises.push(
+          base44.entities.Document.delete(doc.id).catch(err => console.error('Error deleting doc:', err))
+        );
       }
+      await Promise.all(docPromises);
       
-      // Finally delete clients
+      const clientPromises = [];
       for (const client of allClients) {
-        await base44.entities.Client.delete(client.id);
+        clientPromises.push(
+          base44.entities.Client.delete(client.id).catch(err => console.error('Error deleting client:', err))
+        );
       }
+      await Promise.all(clientPromises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
