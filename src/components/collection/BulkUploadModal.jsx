@@ -74,26 +74,33 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         clientsMap[clientName].documents.push(docData);
       }
 
-      // 4. Create clients and documents
-      let createdClients = 0;
-      let createdDocuments = 0;
-
-      for (const [clientName, clientData] of Object.entries(clientsMap)) {
-        // Calculate totals from documents
+      // 4. Prepare clients data
+      const clientsToCreate = Object.entries(clientsMap).map(([clientName, clientData]) => {
         const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
         const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
 
-        // Create client
-        const client = await base44.entities.Client.create({
+        return {
           name: clientName,
           total_debt: totalDebt,
           paid_amount: totalPaid,
           status: "pendiente"
-        });
+        };
+      });
 
-        createdClients++;
+      // 5. Create all clients in bulk
+      const createdClients = await base44.entities.Client.bulkCreate(clientsToCreate);
 
-        // Create documents for this client
+      // 6. Map client names to IDs
+      const clientNameToId = {};
+      createdClients.forEach(client => {
+        clientNameToId[client.name] = client.id;
+      });
+
+      // 7. Prepare all documents data
+      const documentsToCreate = [];
+      for (const [clientName, clientData] of Object.entries(clientsMap)) {
+        const clientId = clientNameToId[clientName];
+
         for (const doc of clientData.documents) {
           // Skip if missing required fields
           if (!doc.numero || !doc.vencio) continue;
@@ -104,8 +111,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
                              docType.includes("contrato") ? "contrato" :
                              docType.includes("crédito") || docType.includes("credito") ? "credito" : "otro";
 
-          await base44.entities.Document.create({
-            client_id: client.id,
+          documentsToCreate.push({
+            client_id: clientId,
             document_number: String(doc.numero),
             document_type: mappedType,
             amount: doc.total || 0,
@@ -115,14 +122,16 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             days_overdue: doc.dias_mora || 0,
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
           });
-          createdDocuments++;
         }
       }
 
+      // 8. Create all documents in bulk
+      const createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
+
       setResult({
         success: true,
-        clientsCount: createdClients,
-        documentsCount: createdDocuments
+        clientsCount: createdClients.length,
+        documentsCount: createdDocuments.length
       });
 
       // Notify parent
