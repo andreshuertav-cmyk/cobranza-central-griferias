@@ -62,7 +62,7 @@ export default function ClientCard({ client, onClick }) {
           <div className="mt-2">
             <p className="text-xs text-slate-500">Adeudo</p>
             <p className="text-lg font-bold text-slate-900">
-              ${remaining.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+              ${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
             </p>
           </div>
         </div>
