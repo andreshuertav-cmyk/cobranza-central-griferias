@@ -101,15 +101,21 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           }
         }
 
+        // Parse and validate numeric values
+        const total = Number(row.TOTAL || row.total || 0);
+        const pagado = Number(row.PAGADO || row.pagado || 0);
+        const diasMora = Number(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0);
+        const pendiente = Number(row.PENDIENTE || row.pendiente || 0);
+
         return {
           tipo: row.TIPO || row.tipo,
           numero: row.NÚMERO || row.numero || row.NUMERO,
           cliente: row.CLIENTE || row.cliente,
           vencio: dueDate,
-          dias_mora: parseFloat(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0),
-          total: parseFloat(row.TOTAL || row.total || 0),
-          pagado: parseFloat(row.PAGADO || row.pagado || 0),
-          pendiente: parseFloat(row.PENDIENTE || row.pendiente || 0),
+          dias_mora: isNaN(diasMora) ? 0 : Math.round(diasMora),
+          total: isNaN(total) ? 0 : Math.round(total * 100) / 100,
+          pagado: isNaN(pagado) ? 0 : Math.round(pagado * 100) / 100,
+          pendiente: isNaN(pendiente) ? 0 : Math.round(pendiente * 100) / 100,
           vendedor: row.VENDEDOR || row.vendedor || "",
           forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
         };
@@ -137,16 +143,16 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
       // 4. Prepare clients data
       const clientsToCreate = Object.entries(clientsMap).map(([clientName, clientData]) => {
-        const totalDebt = clientData.documents.reduce((sum, doc) => sum + parseFloat(doc.total || 0), 0);
-        const totalPaid = clientData.documents.reduce((sum, doc) => sum + parseFloat(doc.pagado || 0), 0);
+        const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
+        const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
 
         // Check if any document is overdue
         const hasOverdueDocuments = clientData.documents.some(doc => (doc.dias_mora || 0) > 0);
 
         return {
           name: clientName,
-          total_debt: totalDebt,
-          paid_amount: totalPaid,
+          total_debt: Math.round(totalDebt * 100) / 100,
+          paid_amount: Math.round(totalPaid * 100) / 100,
           status: hasOverdueDocuments ? "mora" : "pendiente"
         };
       });
@@ -181,11 +187,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             client_id: clientId,
             document_number: String(doc.numero),
             document_type: mappedType,
-            amount: doc.total,
-            paid_amount: doc.pagado,
+            amount: Math.round((doc.total || 0) * 100) / 100,
+            paid_amount: Math.round((doc.pagado || 0) * 100) / 100,
             due_date: doc.vencio,
-            status: doc.dias_mora > 0 ? "vencido" : "vigente",
-            days_overdue: doc.dias_mora,
+            status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
+            days_overdue: Math.round(doc.dias_mora || 0),
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
           });
         }
