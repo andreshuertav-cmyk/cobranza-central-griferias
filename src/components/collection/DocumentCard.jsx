@@ -25,7 +25,19 @@ export default function DocumentCard({ document }) {
   const remaining = (document.amount || 0) - (document.paid_amount || 0);
   const progress = document.amount > 0 ? ((document.paid_amount || 0) / document.amount) * 100 : 0;
   
-  const dueDate = document.due_date ? new Date(document.due_date) : null;
+  // Parse date from DD-MM-YYYY format
+  const dueDate = document.due_date ? (() => {
+    const dateStr = String(document.due_date);
+    if (dateStr.includes('-')) {
+      const parts = dateStr.split('-');
+      if (parts.length === 3 && parts[0].length <= 2) {
+        // DD-MM-YYYY format
+        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      }
+    }
+    return new Date(dateStr);
+  })() : null;
+  
   const today = new Date();
   const daysOverdue = dueDate && dueDate < today ? differenceInDays(today, dueDate) : 0;
   const isOverdue = daysOverdue > 0 && document.status !== "pagado";
