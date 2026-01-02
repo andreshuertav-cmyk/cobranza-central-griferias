@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Users, DollarSign, AlertTriangle, 
-  TrendingUp, Calendar, Loader2, BarChart3, Trash2 
+  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2 
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -15,6 +15,7 @@ import { format, isToday, isTomorrow, isPast } from "date-fns";
 import StatsCard from "@/components/collection/StatsCard";
 import ClientCard from "@/components/collection/ClientCard";
 import AddClientModal from "@/components/collection/AddClientModal";
+import BulkUploadModal from "@/components/collection/BulkUploadModal";
 
 
 export default function Home() {
@@ -255,6 +256,16 @@ export default function Home() {
         onOpenChange={setShowAddClient}
         onSubmit={(data) => createClientMutation.mutate(data)}
         isLoading={createClientMutation.isPending}
+      />
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        open={showBulkUpload}
+        onOpenChange={setShowBulkUpload}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["clients"] });
+          setShowBulkUpload(false);
+        }}
       />
 
 
