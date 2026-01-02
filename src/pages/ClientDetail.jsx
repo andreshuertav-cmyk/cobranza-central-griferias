@@ -89,8 +89,8 @@ export default function ClientDetail() {
         if (data.document_id) {
           const doc = documents.find(d => d.id === data.document_id);
           if (doc) {
-            const newDocPaidAmount = (doc.paid_amount || 0) + data.paid_amount;
             const docTotal = doc.amount || 0;
+            const newDocPaidAmount = Math.min(docTotal, (doc.paid_amount || 0) + data.paid_amount);
             const newDocStatus = newDocPaidAmount >= docTotal ? "pagado" : doc.status;
             
             await base44.entities.Document.update(data.document_id, {
