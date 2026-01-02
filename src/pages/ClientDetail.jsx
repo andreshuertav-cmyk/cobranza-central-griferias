@@ -26,6 +26,7 @@ import LogEntry from "@/components/collection/LogEntry";
 import AddLogModal from "@/components/collection/AddLogModal";
 import AddClientModal from "@/components/collection/AddClientModal";
 import DocumentCard from "@/components/collection/DocumentCard";
+import AddDocumentModal from "@/components/collection/AddDocumentModal";
 
 const statusConfig = {
   al_corriente: { label: "Al corriente", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
@@ -42,6 +43,7 @@ export default function ClientDetail() {
   const [showAddLog, setShowAddLog] = useState(false);
   const [showEditClient, setShowEditClient] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAddDocument, setShowAddDocument] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -87,6 +89,14 @@ export default function ClientDetail() {
     mutationFn: () => base44.entities.Client.delete(clientId),
     onSuccess: () => {
       window.location.href = createPageUrl("Home");
+    }
+  });
+
+  const createDocumentMutation = useMutation({
+    mutationFn: (data) => base44.entities.Document.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
+      setShowAddDocument(false);
     }
   });
 
@@ -210,9 +220,15 @@ export default function ClientDetail() {
 
         {/* Documents Section */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <DollarSign className="h-5 w-5 text-slate-400" />
-            <h2 className="text-lg font-semibold text-slate-900">Documentos en mora</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-slate-400" />
+              <h2 className="text-lg font-semibold text-slate-900">Documentos en mora</h2>
+            </div>
+            <Button onClick={() => setShowAddDocument(true)} variant="outline" size="sm" className="gap-2">
+              <Plus className="h-3 w-3" />
+              Agregar documento
+            </Button>
           </div>
 
           {loadingDocuments ? (
@@ -282,6 +298,14 @@ export default function ClientDetail() {
         onSubmit={(data) => updateClientMutation.mutate(data)}
         isLoading={updateClientMutation.isPending}
         editClient={client}
+      />
+
+      <AddDocumentModal
+        open={showAddDocument}
+        onOpenChange={setShowAddDocument}
+        onSubmit={(data) => createDocumentMutation.mutate(data)}
+        isLoading={createDocumentMutation.isPending}
+        clientId={clientId}
       />
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
