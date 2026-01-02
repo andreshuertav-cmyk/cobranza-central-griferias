@@ -161,9 +161,12 @@ export default function ClientDetail() {
     );
   }
 
-  const status = statusConfig[client.status] || statusConfig.pendiente;
   const remaining = (client.total_debt || 0) - (client.paid_amount || 0);
   const progress = client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0;
+  
+  // Determinar el estado real basado en el saldo
+  const actualStatus = remaining <= 0 ? "al_corriente" : client.status;
+  const status = statusConfig[actualStatus] || statusConfig.pendiente;
 
   return (
     <div className="min-h-screen bg-slate-50">
