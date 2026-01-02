@@ -8,7 +8,6 @@ import * as XLSX from "xlsx";
 
 export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
   const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -25,51 +24,35 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
   const handleUpload = async () => {
     if (!file) return;
 
-    setUploading(true);
-    setProcessing(false);
+    setProcessing(true);
     setError(null);
     setResult(null);
 
     try {
-      // 1. Upload the file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // 1. Read Excel file in frontend
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      setUploading(false);
-      setProcessing(true);
-
-      // 2. Extract data from file
-      const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
-        file_url,
-        json_schema: {
-          type: "object",
-          properties: {
-            documents: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  tipo: { type: "string" },
-                  numero: { type: "string" },
-                  cliente: { type: "string" },
-                  vencio: { type: "string" },
-                  dias_mora: { type: "number" },
-                  total: { type: "number" },
-                  pagado: { type: "number" },
-                  pendiente: { type: "number" },
-                  vendedor: { type: "string" },
-                  forma_pago: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-
-      if (extractResult.status === "error") {
-        throw new Error(extractResult.details || "Error al procesar el archivo");
+      if (jsonData.length === 0) {
+        throw new Error("El archivo está vacío o no tiene datos válidos");
       }
 
-      const documentsData = extractResult.output?.documents || [];
+      // 2. Parse and validate data
+      const documentsData = jsonData.map(row => ({
+        tipo: row.TIPO || row.tipo,
+        numero: row.NÚMERO || row.numero || row.NUMERO,
+        cliente: row.CLIENTE || row.cliente,
+        vencio: row.VENCIÓ || row.vencio || row.VENCIO,
+        dias_mora: row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || 0,
+        total: row.TOTAL || row.total || 0,
+        pagado: row.PAGADO || row.pagado || 0,
+        pendiente: row.PENDIENTE || row.pendiente || 0,
+        vendedor: row.VENDEDOR || row.vendedor || "",
+        forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
+      }));
 
       if (documentsData.length === 0) {
         throw new Error("No se encontraron datos válidos en el archivo");
@@ -147,7 +130,6 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
     } catch (err) {
       setError(err.message || "Error al procesar la carga masiva");
     } finally {
-      setUploading(false);
       setProcessing(false);
     }
   };
@@ -223,7 +205,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
                 className="hidden"
                 accept=".xlsx"
                 onChange={handleFileChange}
-                disabled={uploading || processing}
+                disabled={processing}
               />
               <label htmlFor="bulk-upload" className="cursor-pointer">
                 <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
@@ -236,12 +218,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           )}
 
           {/* Processing Status */}
-          {(uploading || processing) && (
+          {processing && (
             <Alert className="border-blue-200 bg-blue-50">
               <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
               <AlertDescription className="text-blue-900">
-                {uploading && "Subiendo archivo..."}
-                {processing && "Procesando datos y creando registros..."}
+                Procesando datos y creando registros...
               </AlertDescription>
             </Alert>
           )}
@@ -277,10 +258,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             {!result?.success && (
               <Button
                 onClick={handleUpload}
-                disabled={!file || uploading || processing}
+                disabled={!file || processing}
                 className="gap-2"
               >
-                {(uploading || processing) && <Loader2 className="h-4 w-4 animate-spin" />}
+                {processing && <Loader2 className="h-4 w-4 animate-spin" />}
                 Cargar datos
               </Button>
             )}
