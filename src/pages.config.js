@@ -1,12 +1,12 @@
 import ClientDetail from './pages/ClientDetail';
-import Home from './pages/Home';
 import Reports from './pages/Reports';
+import Home from './pages/Home';
 
 
 export const PAGES = {
     "ClientDetail": ClientDetail,
-    "Home": Home,
     "Reports": Reports,
+    "Home": Home,
 }
 
 export const pagesConfig = {
