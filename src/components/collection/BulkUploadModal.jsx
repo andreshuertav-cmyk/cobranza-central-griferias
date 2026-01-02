@@ -34,7 +34,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const workbook = XLSX.read(data, { type: 'array', cellDates: true });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, dateNF: 'dd-mm-yyyy' });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false });
 
       if (jsonData.length === 0) {
         throw new Error("El archivo está vacío o no tiene datos válidos");
@@ -55,16 +55,45 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             const date = new Date(excelEpoch.getTime() + (vencioValue - 2) * 86400000);
             dueDate = date.toISOString().split('T')[0];
           } else if (typeof vencioValue === 'string') {
-            // Try to parse string date DD-MM-YYYY or other formats
-            const dateStr = String(vencioValue);
+            // Try to parse string date in various formats
+            const dateStr = String(vencioValue).trim();
             
-            // Check if it's DD-MM-YYYY format
-            if (dateStr.match(/^\d{1,2}-\d{1,2}-\d{4}$/)) {
-              const [day, month, year] = dateStr.split('-');
-              dueDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            } else if (dateStr.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
-              // Already in YYYY-MM-DD format
-              dueDate = dateStr;
+            // DD-MM-YYYY or DD/MM/YYYY
+            if (dateStr.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/)) {
+              const parts = dateStr.split(/[-\/]/);
+              const day = parts[0].padStart(2, '0');
+              const month = parts[1].padStart(2, '0');
+              const year = parts[2];
+              dueDate = `${year}-${month}-${day}`;
+            } 
+            // YYYY-MM-DD or YYYY/MM/DD
+            else if (dateStr.match(/^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/)) {
+              const parts = dateStr.split(/[-\/]/);
+              const year = parts[0];
+              const month = parts[1].padStart(2, '0');
+              const day = parts[2].padStart(2, '0');
+              dueDate = `${year}-${month}-${day}`;
+            }
+            // MM-DD-YYYY or MM/DD/YYYY (US format)
+            else if (dateStr.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/) && dateStr.length <= 10) {
+              // Try to parse as DD-MM-YYYY first (more common in Latin America)
+              const parts = dateStr.split(/[-\/]/);
+              const first = parseInt(parts[0]);
+              const second = parseInt(parts[1]);
+              
+              // If first part > 12, it must be day
+              if (first > 12) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                dueDate = `${year}-${month}-${day}`;
+              } else {
+                // Assume DD-MM-YYYY (Latin America standard)
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                dueDate = `${year}-${month}-${day}`;
+              }
             }
           } else if (vencioValue instanceof Date) {
             // JavaScript Date object
