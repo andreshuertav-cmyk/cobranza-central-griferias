@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { Upload, FileSpreadsheet, Download, Loader2, CheckCircle2, AlertCircle, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import * as XLSX from "xlsx";
 
 export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
   const [file, setFile] = useState(null);
@@ -159,20 +160,17 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `TIPO,NÚMERO,CLIENTE,VENCIÓ,DÍAS MORA,TOTAL,PAGADO,PENDIENTE,VENDEDOR,FORMA PAGO
-Factura,FAC-001,Juan Pérez,01-02-2024,30,15000,0,15000,Carlos,Transferencia
-Pagaré,PAG-002,María López,15-03-2024,0,25000,5000,20000,Ana,Efectivo
-Factura,FAC-003,María López,28-02-2024,15,8000,0,8000,Ana,Transferencia`;
+    const data = [
+      ["TIPO", "NÚMERO", "CLIENTE", "VENCIÓ", "DÍAS MORA", "TOTAL", "PAGADO", "PENDIENTE", "VENDEDOR", "FORMA PAGO"],
+      ["Factura", "FAC-001", "Juan Pérez", "01-02-2024", 30, 15000, 0, 15000, "Carlos", "Transferencia"],
+      ["Pagaré", "PAG-002", "María López", "15-03-2024", 0, 25000, 5000, 20000, "Ana", "Efectivo"],
+      ["Factura", "FAC-003", "María López", "28-02-2024", 15, 8000, 0, 8000, "Ana", "Transferencia"]
+    ];
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "plantilla_carga_masiva.csv");
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+    XLSX.writeFile(wb, "plantilla_carga_masiva.xlsx");
   };
 
   return (
@@ -181,7 +179,7 @@ Factura,FAC-003,María López,28-02-2024,15,8000,0,8000,Ana,Transferencia`;
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Carga masiva de clientes</DialogTitle>
           <DialogDescription>
-            Sube un archivo CSV o Excel con clientes y sus documentos en mora
+            Sube un archivo Excel con clientes y sus documentos en mora
           </DialogDescription>
         </DialogHeader>
 
@@ -199,7 +197,7 @@ Factura,FAC-003,María López,28-02-2024,15,8000,0,8000,Ana,Transferencia`;
                   className="gap-2 border-blue-300 hover:bg-blue-100"
                 >
                   <Download className="h-3 w-3" />
-                  Plantilla CSV
+                  Plantilla Excel
                 </Button>
               </div>
             </AlertDescription>
@@ -209,7 +207,7 @@ Factura,FAC-003,María López,28-02-2024,15,8000,0,8000,Ana,Transferencia`;
           <div className="bg-slate-50 rounded-lg p-4 space-y-2 text-sm">
             <h4 className="font-semibold text-slate-900">Formato del archivo:</h4>
             <ul className="space-y-1 text-slate-600 list-disc list-inside">
-              <li>CSV o Excel (.xlsx) con columnas: TIPO, NÚMERO, CLIENTE, VENCIÓ, DÍAS MORA, TOTAL, PAGADO, PENDIENTE, VENDEDOR, FORMA PAGO</li>
+              <li>Archivo Excel (.xlsx) con columnas: TIPO, NÚMERO, CLIENTE, VENCIÓ, DÍAS MORA, TOTAL, PAGADO, PENDIENTE, VENDEDOR, FORMA PAGO</li>
               <li>Un cliente puede tener múltiples filas (documentos)</li>
               <li>Tipos: Factura, Pagaré, Contrato, Crédito, Otro</li>
               <li>Fechas en formato: DD-MM-YYYY (ej: 15-01-2024)</li>
@@ -223,7 +221,7 @@ Factura,FAC-003,María López,28-02-2024,15,8000,0,8000,Ana,Transferencia`;
                 type="file"
                 id="bulk-upload"
                 className="hidden"
-                accept=".csv,.xlsx,.xls"
+                accept=".xlsx"
                 onChange={handleFileChange}
                 disabled={uploading || processing}
               />
@@ -232,7 +230,7 @@ Factura,FAC-003,María López,28-02-2024,15,8000,0,8000,Ana,Transferencia`;
                 <p className="text-sm font-medium text-slate-900 mb-1">
                   {file ? file.name : "Selecciona un archivo"}
                 </p>
-                <p className="text-xs text-slate-500">CSV o Excel (máx 10MB)</p>
+                <p className="text-xs text-slate-500">Solo Excel .xlsx (máx 10MB)</p>
               </label>
             </div>
           )}
