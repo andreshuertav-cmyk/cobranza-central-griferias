@@ -75,8 +75,14 @@ export default function ClientDetail() {
       // Si es pago realizado, actualizar el paid_amount del cliente
       if (data.result === "pago_realizado" && data.paid_amount) {
         const newPaidAmount = (client.paid_amount || 0) + data.paid_amount;
+        const totalDebt = client.total_debt || 0;
+        
+        // Si ya pagó toda la deuda, cambiar status a "al_corriente"
+        const newStatus = newPaidAmount >= totalDebt ? "al_corriente" : client.status;
+        
         await base44.entities.Client.update(clientId, {
-          paid_amount: newPaidAmount
+          paid_amount: newPaidAmount,
+          status: newStatus
         });
       }
     },
