@@ -16,7 +16,6 @@ import StatsCard from "@/components/collection/StatsCard";
 import ClientCard from "@/components/collection/ClientCard";
 import AddClientModal from "@/components/collection/AddClientModal";
 import BulkUploadModal from "@/components/collection/BulkUploadModal";
-import BulkUploadModal from "@/components/collection/BulkUploadModal";
 
 export default function Home() {
   const [search, setSearch] = useState("");
