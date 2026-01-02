@@ -215,12 +215,17 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       }
 
       // 8. Validate we have documents to create
+      console.log(`Total documents to create: ${documentsToCreate.length}`);
+      console.log('Sample document:', documentsToCreate[0]);
+
       if (documentsToCreate.length === 0) {
         throw new Error("No se encontraron documentos válidos para procesar. Verifica que las columnas NÚMERO y VENCIÓ tengan datos correctos.");
       }
 
       // 9. Create all documents in bulk
+      console.log('Creating documents...');
       const createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
+      console.log(`Created ${createdDocuments.length} documents`);
 
       setResult({
         success: true,
