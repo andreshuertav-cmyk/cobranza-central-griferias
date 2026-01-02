@@ -56,31 +56,20 @@ export default function Home() {
       const allDocs = await base44.entities.Document.list("-created_date", 10000);
       const allClients = await base44.entities.Client.list("-created_date", 10000);
       
-      // Delete in order: logs -> documents -> clients
-      const deletePromises = [];
-      
+      // Delete logs first
       for (const log of allLogs) {
-        deletePromises.push(
-          base44.entities.CollectionLog.delete(log.id).catch(err => console.error('Error deleting log:', err))
-        );
+        await base44.entities.CollectionLog.delete(log.id);
       }
-      await Promise.all(deletePromises);
       
-      const docPromises = [];
+      // Then delete documents
       for (const doc of allDocs) {
-        docPromises.push(
-          base44.entities.Document.delete(doc.id).catch(err => console.error('Error deleting doc:', err))
-        );
+        await base44.entities.Document.delete(doc.id);
       }
-      await Promise.all(docPromises);
       
-      const clientPromises = [];
+      // Finally delete clients
       for (const client of allClients) {
-        clientPromises.push(
-          base44.entities.Client.delete(client.id).catch(err => console.error('Error deleting client:', err))
-        );
+        await base44.entities.Client.delete(client.id);
       }
-      await Promise.all(clientPromises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
