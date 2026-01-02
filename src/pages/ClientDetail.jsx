@@ -187,13 +187,13 @@ export default function ClientDetail() {
                   <div className="bg-slate-50 rounded-xl p-4">
                     <p className="text-xs text-slate-500 mb-1">Deuda total</p>
                     <p className="text-xl font-bold text-slate-900">
-                      ${client.total_debt?.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      ${client.total_debt?.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                     </p>
                   </div>
                   <div className="bg-emerald-50 rounded-xl p-4">
                     <p className="text-xs text-emerald-600 mb-1">Pagado</p>
                     <p className="text-xl font-bold text-emerald-700">
-                      ${(client.paid_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      ${(client.paid_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                     </p>
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export default function ClientDetail() {
                     />
                   </div>
                   <p className="text-right text-sm text-slate-500 mt-2">
-                    Saldo: <span className="font-semibold text-slate-900">${remaining.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                    Saldo: <span className="font-semibold text-slate-900">${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
                   </p>
                 </div>
               </div>
