@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Users, DollarSign, AlertTriangle, 
-  TrendingUp, Calendar, Loader2, Upload, BarChart3 
+  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2 
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -22,6 +22,7 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddClient, setShowAddClient] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -45,6 +46,25 @@ export default function Home() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       setShowAddClient(false);
+    }
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const allClients = await base44.entities.Client.list();
+      const allDocs = await base44.entities.Document.list();
+      const allLogs = await base44.entities.CollectionLog.list();
+      
+      await Promise.all([
+        ...allLogs.map(log => base44.entities.CollectionLog.delete(log.id)),
+        ...allDocs.map(doc => base44.entities.Document.delete(doc.id)),
+        ...allClients.map(client => base44.entities.Client.delete(client.id))
+      ]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["logs"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
     }
   });
 
@@ -93,6 +113,14 @@ export default function Home() {
             <p className="text-slate-500 mt-1">Gestiona tus clientes y seguimientos</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowDeleteConfirm(true)} 
+              variant="outline" 
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              Borrar todo
+            </Button>
             <Link to={createPageUrl("Reports")}>
               <Button variant="outline" className="gap-2">
                 <BarChart3 className="h-4 w-4" />
@@ -223,6 +251,34 @@ export default function Home() {
           setShowBulkUpload(false);
         }}
       />
+
+      {/* Delete All Confirmation */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">¿Borrar toda la base de datos?</h3>
+            <p className="text-slate-600 mb-6">
+              Esta acción eliminará todos los clientes, documentos y registros de gestión. No se puede deshacer.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                className="bg-red-600 hover:bg-red-700"
+                onClick={() => {
+                  deleteAllMutation.mutate();
+                  setShowDeleteConfirm(false);
+                }}
+                disabled={deleteAllMutation.isPending}
+              >
+                {deleteAllMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Borrar todo
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
