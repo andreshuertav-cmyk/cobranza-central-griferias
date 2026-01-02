@@ -22,7 +22,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddClient, setShowAddClient] = useState(false);
-
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const queryClient = useQueryClient();
@@ -146,7 +146,10 @@ export default function Home() {
                 Reportes
               </Button>
             </Link>
-
+            <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="gap-2">
+              <Upload className="h-4 w-4" />
+              Carga masiva
+            </Button>
             <Button onClick={() => setShowAddClient(true)} className="gap-2">
               <Plus className="h-4 w-4" />
               Nuevo cliente
