@@ -134,9 +134,37 @@ export default function ClientDetail() {
   });
 
   const deleteLogMutation = useMutation({
-    mutationFn: (logId) => base44.entities.CollectionLog.delete(logId),
+    mutationFn: async (logId) => {
+      // Buscar el log antes de borrarlo
+      const logToDelete = logs.find(l => l.id === logId);
+      
+      // Si era un pago realizado, revertir el pago
+      if (logToDelete && logToDelete.result === "pago_realizado" && logToDelete.paid_amount) {
+        const newPaidAmount = Math.max(0, (client.paid_amount || 0) - logToDelete.paid_amount);
+        await base44.entities.Client.update(clientId, {
+          paid_amount: newPaidAmount,
+          status: newPaidAmount < client.total_debt ? "mora" : "al_corriente"
+        });
+        
+        // Si había un documento asociado, revertir también su pago
+        if (logToDelete.document_id) {
+          const doc = documents.find(d => d.id === logToDelete.document_id);
+          if (doc) {
+            const newDocPaidAmount = Math.max(0, (doc.paid_amount || 0) - logToDelete.paid_amount);
+            await base44.entities.Document.update(logToDelete.document_id, {
+              paid_amount: newDocPaidAmount,
+              status: newDocPaidAmount < doc.amount ? "vencido" : "pagado"
+            });
+          }
+        }
+      }
+      
+      await base44.entities.CollectionLog.delete(logId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
     }
   });
 
