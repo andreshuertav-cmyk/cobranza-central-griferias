@@ -42,32 +42,21 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         json_schema: {
           type: "object",
           properties: {
-            clients: {
+            documents: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
-                  name: { type: "string" },
-                  phone: { type: "string" },
-                  email: { type: "string" },
-                  notes: { type: "string" },
-                  documents: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        document_number: { type: "string" },
-                        document_type: { type: "string" },
-                        amount: { type: "number" },
-                        paid_amount: { type: "number" },
-                        issue_date: { type: "string" },
-                        due_date: { type: "string" },
-                        status: { type: "string" },
-                        days_overdue: { type: "number" },
-                        notes: { type: "string" }
-                      }
-                    }
-                  }
+                  tipo: { type: "string" },
+                  numero: { type: "string" },
+                  cliente: { type: "string" },
+                  vencio: { type: "string" },
+                  dias_mora: { type: "number" },
+                  total: { type: "number" },
+                  pagado: { type: "number" },
+                  pendiente: { type: "number" },
+                  vendedor: { type: "string" },
+                  forma_pago: { type: "string" }
                 }
               }
             }
@@ -79,26 +68,40 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         throw new Error(extractResult.details || "Error al procesar el archivo");
       }
 
-      const clientsData = extractResult.output?.clients || [];
+      const documentsData = extractResult.output?.documents || [];
 
-      if (clientsData.length === 0) {
+      if (documentsData.length === 0) {
         throw new Error("No se encontraron datos válidos en el archivo");
       }
 
-      // 3. Create clients and documents
+      // 3. Group documents by client
+      const clientsMap = {};
+
+      for (const docData of documentsData) {
+        const clientName = docData.cliente;
+
+        if (!clientsMap[clientName]) {
+          clientsMap[clientName] = {
+            name: clientName,
+            documents: []
+          };
+        }
+
+        clientsMap[clientName].documents.push(docData);
+      }
+
+      // 4. Create clients and documents
       let createdClients = 0;
       let createdDocuments = 0;
 
-      for (const clientData of clientsData) {
-        const { documents, ...clientInfo } = clientData;
-
-        // Calculate total debt from documents
-        const totalDebt = documents?.reduce((sum, doc) => sum + (doc.amount || 0), 0) || 0;
-        const totalPaid = documents?.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0) || 0;
+      for (const [clientName, clientData] of Object.entries(clientsMap)) {
+        // Calculate totals from documents
+        const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
+        const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
 
         // Create client
         const client = await base44.entities.Client.create({
-          ...clientInfo,
+          name: clientName,
           total_debt: totalDebt,
           paid_amount: totalPaid,
           status: "pendiente"
@@ -107,17 +110,25 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         createdClients++;
 
         // Create documents for this client
-        if (documents && documents.length > 0) {
-          for (const doc of documents) {
-            await base44.entities.Document.create({
-              ...doc,
-              client_id: client.id,
-              document_type: doc.document_type || "factura",
-              status: doc.status || (doc.days_overdue > 0 ? "vencido" : "vigente"),
-              paid_amount: doc.paid_amount || 0
-            });
-            createdDocuments++;
-          }
+        for (const doc of clientData.documents) {
+          const docType = doc.tipo?.toLowerCase() || "factura";
+          const mappedType = docType.includes("factura") ? "factura" : 
+                             docType.includes("pagar") ? "pagare" : 
+                             docType.includes("contrato") ? "contrato" :
+                             docType.includes("crédito") || docType.includes("credito") ? "credito" : "otro";
+
+          await base44.entities.Document.create({
+            client_id: client.id,
+            document_number: doc.numero,
+            document_type: mappedType,
+            amount: doc.total || 0,
+            paid_amount: doc.pagado || 0,
+            due_date: doc.vencio,
+            status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
+            days_overdue: doc.dias_mora || 0,
+            notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
+          });
+          createdDocuments++;
         }
       }
 
@@ -148,10 +159,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `nombre_cliente,telefono,email,notas_cliente,numero_documento,tipo_documento,monto,monto_pagado,fecha_emision,fecha_vencimiento,dias_mora,notas_documento
-Juan Pérez,55 1234 5678,juan@email.com,Cliente nuevo,FAC-001,factura,15000,0,01-01-2024,01-02-2024,30,Factura vencida
-María López,55 8765 4321,maria@email.com,Buen pagador,PAG-002,pagare,25000,5000,01-02-2024,15-03-2024,0,Pagos parciales
-María López,55 8765 4321,maria@email.com,,FAC-003,factura,8000,0,15-01-2024,28-02-2024,15,Segunda factura de María`;
+    const csvContent = `TIPO,NÚMERO,CLIENTE,VENCIÓ,DÍAS MORA,TOTAL,PAGADO,PENDIENTE,VENDEDOR,FORMA PAGO
+Factura,FAC-001,Juan Pérez,01-02-2024,30,15000,0,15000,Carlos,Transferencia
+Pagaré,PAG-002,María López,15-03-2024,0,25000,5000,20000,Ana,Efectivo
+Factura,FAC-003,María López,28-02-2024,15,8000,0,8000,Ana,Transferencia`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -198,10 +209,10 @@ María López,55 8765 4321,maria@email.com,,FAC-003,factura,8000,0,15-01-2024,28
           <div className="bg-slate-50 rounded-lg p-4 space-y-2 text-sm">
             <h4 className="font-semibold text-slate-900">Formato del archivo:</h4>
             <ul className="space-y-1 text-slate-600 list-disc list-inside">
-              <li>CSV o Excel (.xlsx) con encabezados en la primera fila</li>
-              <li>Un cliente puede tener múltiples documentos (repetir datos del cliente)</li>
-              <li>Tipos de documento: factura, pagare, contrato, credito, otro</li>
-              <li>Las fechas en formato: DD-MM-YYYY (ej: 15-01-2024)</li>
+              <li>CSV o Excel (.xlsx) con columnas: TIPO, NÚMERO, CLIENTE, VENCIÓ, DÍAS MORA, TOTAL, PAGADO, PENDIENTE, VENDEDOR, FORMA PAGO</li>
+              <li>Un cliente puede tener múltiples filas (documentos)</li>
+              <li>Tipos: Factura, Pagaré, Contrato, Crédito, Otro</li>
+              <li>Fechas en formato: DD-MM-YYYY (ej: 15-01-2024)</li>
             </ul>
           </div>
 
