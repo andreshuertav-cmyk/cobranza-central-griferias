@@ -168,7 +168,6 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         for (const doc of clientData.documents) {
           // Skip if missing required fields
           if (!doc.numero || !doc.vencio) {
-            console.log('Skipping document - missing numero or vencio:', doc);
             continue;
           }
 
@@ -182,23 +181,23 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             client_id: clientId,
             document_number: String(doc.numero),
             document_type: mappedType,
-            amount: parseFloat(doc.total || 0),
-            paid_amount: parseFloat(doc.pagado || 0),
+            amount: doc.total,
+            paid_amount: doc.pagado,
             due_date: doc.vencio,
-            status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
-            days_overdue: parseFloat(doc.dias_mora || 0),
+            status: doc.dias_mora > 0 ? "vencido" : "vigente",
+            days_overdue: doc.dias_mora,
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
           });
         }
       }
 
-      // 8. Create all documents in bulk (only if we have documents)
-      let createdDocuments = [];
-      if (documentsToCreate.length > 0) {
-        createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
-      } else {
-        throw new Error("No se pudo procesar ningún documento. Verifica que el archivo tenga fechas válidas en la columna VENCIÓ.");
+      // 8. Validate we have documents to create
+      if (documentsToCreate.length === 0) {
+        throw new Error("No se encontraron documentos válidos para procesar. Verifica que las columnas NÚMERO y VENCIÓ tengan datos correctos.");
       }
+
+      // 9. Create all documents in bulk
+      const createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
 
       setResult({
         success: true,
