@@ -41,10 +41,18 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       }
 
       // 2. Parse and validate data
-      const documentsData = jsonData.map(row => {
+      const documentsData = jsonData.map((row, idx) => {
         // Handle different date formats
         let vencioValue = row.VENCIÓ || row.vencio || row.VENCIO;
-        
+
+        console.log(`Row ${idx + 1}:`, {
+          tipo: row.TIPO,
+          numero: row.NÚMERO || row.numero,
+          cliente: row.CLIENTE,
+          vencioRaw: vencioValue,
+          vencioType: typeof vencioValue
+        });
+
         // Convert date to YYYY-MM-DD format
         let dueDate = null;
         
@@ -100,9 +108,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           return isNaN(num) ? 0 : num;
         };
 
-        return {
+        const parsed = {
           tipo: row.TIPO || row.tipo,
-          numero: row.NÚMERO || row.numero || row.NUMERO,
+          numero: String(row.NÚMERO || row.numero || row.NUMERO || ""),
           cliente: row.CLIENTE || row.cliente,
           vencio: dueDate,
           dias_mora: parseNumber(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA']),
@@ -112,7 +120,16 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           vendedor: row.VENDEDOR || row.vendedor || "",
           forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
         };
-      });
+
+        console.log(`Parsed row ${idx + 1}:`, {
+          numero: parsed.numero,
+          vencio: parsed.vencio,
+          hasNumero: !!parsed.numero,
+          hasVencio: !!parsed.vencio
+        });
+
+        return parsed;
+        });
 
       if (documentsData.length === 0) {
         throw new Error("No se encontraron datos válidos en el archivo");
@@ -167,6 +184,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         for (const doc of clientData.documents) {
           // Skip if missing required fields
           if (!doc.numero || !doc.vencio) {
+            console.warn('Skipping document - missing fields:', {
+              cliente: clientName,
+              numero: doc.numero,
+              vencio: doc.vencio,
+              hasNumero: !!doc.numero,
+              hasVencio: !!doc.vencio
+            });
             continue;
           }
 
