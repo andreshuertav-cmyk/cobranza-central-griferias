@@ -109,12 +109,12 @@ export default function DocumentCard({ document }) {
           <div>
             <p className="text-xs text-slate-500">Adeudo</p>
             <p className="text-lg font-bold text-slate-900">
-              ${remaining.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+              ${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
             </p>
           </div>
           {document.paid_amount > 0 && (
             <p className="text-xs text-emerald-600 mt-1">
-              Pagado: ${document.paid_amount.toLocaleString('es-MX')}
+              Pagado: ${document.paid_amount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
             </p>
           )}
         </div>
