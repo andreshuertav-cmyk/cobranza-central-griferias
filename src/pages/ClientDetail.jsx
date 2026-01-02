@@ -290,6 +290,7 @@ export default function ClientDetail() {
         onOpenChange={setShowAddLog}
         onSubmit={(data) => createLogMutation.mutate(data)}
         isLoading={createLogMutation.isPending}
+        totalDebt={remaining}
       />
 
       <AddClientModal

@@ -25,7 +25,7 @@ const resultTypes = [
   { value: "otro", label: "Otro" }
 ];
 
-export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading }) {
+export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, totalDebt }) {
   const getLocalDateTime = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -116,24 +116,32 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading })
           </div>
 
           {showPromiseFields && (
-            <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-              <div className="space-y-2">
-                <Label>Monto prometido</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.promised_amount}
-                  onChange={(e) => setFormData({ ...formData, promised_amount: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Fecha de pago</Label>
-                <Input
-                  type="date"
-                  value={formData.promised_date}
-                  onChange={(e) => setFormData({ ...formData, promised_date: e.target.value })}
-                />
+            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-4">
+              {totalDebt !== undefined && (
+                <div className="flex items-center justify-between pb-3 border-b border-blue-200">
+                  <span className="text-sm text-blue-700">Deuda total del cliente:</span>
+                  <span className="text-lg font-bold text-blue-900">${totalDebt.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Monto prometido</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formData.promised_amount}
+                    onChange={(e) => setFormData({ ...formData, promised_amount: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fecha de pago</Label>
+                  <Input
+                    type="date"
+                    value={formData.promised_date}
+                    onChange={(e) => setFormData({ ...formData, promised_date: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
           )}
