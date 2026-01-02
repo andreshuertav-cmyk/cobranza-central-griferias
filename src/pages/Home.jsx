@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Users, DollarSign, AlertTriangle, 
-  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2 
+  TrendingUp, Calendar, Loader2, BarChart3, Trash2 
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -15,13 +15,11 @@ import { format, isToday, isTomorrow, isPast } from "date-fns";
 import StatsCard from "@/components/collection/StatsCard";
 import ClientCard from "@/components/collection/ClientCard";
 import AddClientModal from "@/components/collection/AddClientModal";
-import BulkUploadModal from "@/components/collection/BulkUploadModal";
 
 export default function Home() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddClient, setShowAddClient] = useState(false);
-  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const queryClient = useQueryClient();
@@ -149,10 +147,6 @@ export default function Home() {
                 Reportes
               </Button>
             </Link>
-            <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="gap-2">
-              <Upload className="h-4 w-4" />
-              Carga masiva
-            </Button>
             <Button onClick={() => setShowAddClient(true)} className="gap-2">
               <Plus className="h-4 w-4" />
               Nuevo cliente
@@ -262,16 +256,6 @@ export default function Home() {
         onOpenChange={setShowAddClient}
         onSubmit={(data) => createClientMutation.mutate(data)}
         isLoading={createClientMutation.isPending}
-      />
-
-      {/* Bulk Upload Modal */}
-      <BulkUploadModal
-        open={showBulkUpload}
-        onOpenChange={setShowBulkUpload}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["clients"] });
-          setShowBulkUpload(false);
-        }}
       />
 
       {/* Delete All Confirmation */}
