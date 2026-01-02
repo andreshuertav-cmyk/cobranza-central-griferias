@@ -95,6 +95,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
         // Create documents for this client
         for (const doc of clientData.documents) {
+          // Skip if missing required fields
+          if (!doc.numero || !doc.vencio) continue;
+
           const docType = doc.tipo?.toLowerCase() || "factura";
           const mappedType = docType.includes("factura") ? "factura" : 
                              docType.includes("pagar") ? "pagare" : 
@@ -103,11 +106,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
           await base44.entities.Document.create({
             client_id: client.id,
-            document_number: doc.numero,
+            document_number: String(doc.numero),
             document_type: mappedType,
             amount: doc.total || 0,
             paid_amount: doc.pagado || 0,
-            due_date: doc.vencio,
+            due_date: String(doc.vencio),
             status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
             days_overdue: doc.dias_mora || 0,
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
