@@ -36,14 +36,19 @@ export default function DocumentCard({ document, onPayment }) {
         const [day, month, year] = parts;
         // DD-MM-YYYY format
         if (day.length <= 2 && month.length <= 2 && year.length === 4) {
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          date.setHours(0, 0, 0, 0);
+          return date;
         }
       }
     }
-    return new Date(dateStr);
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    return date;
   })() : null;
   
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const daysOverdue = dueDate && dueDate < today ? differenceInDays(today, dueDate) : 0;
   
   // Calculate actual status based on current state
