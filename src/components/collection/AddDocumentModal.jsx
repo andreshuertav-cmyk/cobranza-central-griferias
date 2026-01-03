@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ const statusOptions = [
 ];
 
 export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoading, clientId, editDocument }) {
-  const [formData, setFormData] = useState(editDocument || {
+  const [formData, setFormData] = useState({
     document_number: "",
     document_type: "factura",
     amount: "",
@@ -34,6 +34,34 @@ export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoadi
     days_overdue: "0",
     notes: ""
   });
+
+  useEffect(() => {
+    if (editDocument) {
+      setFormData({
+        document_number: editDocument.document_number || "",
+        document_type: editDocument.document_type || "factura",
+        amount: editDocument.amount?.toString() || "",
+        paid_amount: editDocument.paid_amount?.toString() || "0",
+        issue_date: editDocument.issue_date || "",
+        due_date: editDocument.due_date || "",
+        status: editDocument.status || "vigente",
+        days_overdue: editDocument.days_overdue?.toString() || "0",
+        notes: editDocument.notes || ""
+      });
+    } else {
+      setFormData({
+        document_number: "",
+        document_type: "factura",
+        amount: "",
+        paid_amount: "0",
+        issue_date: "",
+        due_date: "",
+        status: "vigente",
+        days_overdue: "0",
+        notes: ""
+      });
+    }
+  }, [editDocument, open]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
