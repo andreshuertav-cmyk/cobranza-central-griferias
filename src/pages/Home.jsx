@@ -21,7 +21,7 @@ import BulkUploadModal from "@/components/collection/BulkUploadModal";
 export default function Home() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("name"); // "name" or "debt"
+  const [sortBy, setSortBy] = useState(() => localStorage.getItem("sortBy") || "name");
   const [showAddClient, setShowAddClient] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -231,7 +231,10 @@ export default function Home() {
             <Button
               variant={sortBy === "name" ? "default" : "outline"}
               size="sm"
-              onClick={() => setSortBy("name")}
+              onClick={() => {
+                setSortBy("name");
+                localStorage.setItem("sortBy", "name");
+              }}
               className="gap-2"
             >
               <ArrowUpDown className="h-3 w-3" />
@@ -240,7 +243,10 @@ export default function Home() {
             <Button
               variant={sortBy === "debt" ? "default" : "outline"}
               size="sm"
-              onClick={() => setSortBy("debt")}
+              onClick={() => {
+                setSortBy("debt");
+                localStorage.setItem("sortBy", "debt");
+              }}
               className="gap-2"
             >
               <ArrowUpDown className="h-3 w-3" />
