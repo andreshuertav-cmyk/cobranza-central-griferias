@@ -1,8 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, ChevronRight, TrendingUp } from "lucide-react";
+import { Phone, Mail, ChevronRight, TrendingUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 
 const statusConfig = {
   al_corriente: { label: "Al corriente", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
@@ -12,7 +14,17 @@ const statusConfig = {
   incobrable: { label: "Incobrable", color: "bg-slate-100 text-slate-700 border-slate-200" }
 };
 
-export default function ClientCard({ client, onClick }) {
+const resultLabels = {
+  contactado: "Contactado",
+  no_contesto: "No contestó",
+  numero_equivocado: "Número equivocado",
+  promesa_pago: "Promesa de pago",
+  pago_realizado: "Pago realizado",
+  rechaza_pago: "Rechaza pago",
+  otro: "Otro"
+};
+
+export default function ClientCard({ client, lastLog, onClick }) {
   const status = statusConfig[client.status] || statusConfig.pendiente;
   const remaining = (client.total_debt || 0) - (client.paid_amount || 0);
   const progress = client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0;
@@ -41,17 +53,34 @@ export default function ClientCard({ client, onClick }) {
             </div>
           </div>
 
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-slate-500">Avance de pago</span>
-              <span className="font-medium text-slate-700">{progress.toFixed(0)}%</span>
+          <div className="mt-3 space-y-2">
+            <div>
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-slate-500">Avance de pago</span>
+                <span className="font-medium text-slate-700">{progress.toFixed(0)}%</span>
+              </div>
+              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(progress, 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-emerald-500 rounded-full transition-all"
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              />
-            </div>
+            
+            {lastLog && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-2 py-1.5">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Clock className="h-3 w-3 text-blue-600 shrink-0" />
+                  <span className="text-blue-900 font-medium">
+                    {resultLabels[lastLog.result] || lastLog.result}
+                  </span>
+                  <span className="text-blue-600">•</span>
+                  <span className="text-blue-700">
+                    {formatDistanceToNow(new Date(lastLog.contact_date), { addSuffix: true, locale: es })}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

@@ -274,11 +274,16 @@ export default function Home() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredClients.map((client) => (
-              <Link key={client.id} to={createPageUrl(`ClientDetail?id=${client.id}`)}>
-                <ClientCard client={client} />
-              </Link>
-            ))}
+            {filteredClients.map((client) => {
+              const clientLogs = logs.filter(log => log.client_id === client.id);
+              const lastLog = clientLogs.length > 0 ? clientLogs[0] : null;
+
+              return (
+                <Link key={client.id} to={createPageUrl(`ClientDetail?id=${client.id}`)}>
+                  <ClientCard client={client} lastLog={lastLog} />
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
