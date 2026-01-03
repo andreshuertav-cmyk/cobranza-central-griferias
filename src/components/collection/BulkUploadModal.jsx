@@ -149,27 +149,17 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const clientNameToId = {};
 
       for (const [clientName, clientData] of Object.entries(clientsMap)) {
-        const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
-        const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
-        const hasOverdueDocuments = clientData.documents.some(doc => (doc.dias_mora || 0) > 0);
-
         const existingClient = existingClientsByName[clientName];
 
         if (existingClient) {
-          // Update existing client
-          const newTotalDebt = (existingClient.total_debt || 0) + totalDebt;
-          const newPaidAmount = (existingClient.paid_amount || 0) + totalPaid;
-
-          clientsToUpdate.push({
-            id: existingClient.id,
-            total_debt: newTotalDebt,
-            paid_amount: newPaidAmount,
-            status: hasOverdueDocuments ? "mora" : (newPaidAmount >= newTotalDebt ? "al_corriente" : existingClient.status)
-          });
-
+          // Just track existing client, we'll recalculate debt later
           clientNameToId[clientName] = existingClient.id;
         } else {
-          // Create new client
+          // Create new client with initial debt
+          const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
+          const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
+          const hasOverdueDocuments = clientData.documents.some(doc => (doc.dias_mora || 0) > 0);
+
           clientsToCreate.push({
             name: clientName,
             total_debt: totalDebt,
@@ -188,14 +178,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         clientNameToId[client.name] = client.id;
       });
 
-      // 7. Update existing clients
-      for (const updateData of clientsToUpdate) {
-        await base44.entities.Client.update(updateData.id, {
-          total_debt: updateData.total_debt,
-          paid_amount: updateData.paid_amount,
-          status: updateData.status
-        });
-      }
+      // 7. Recalculate debt for existing clients after documents are created
+      // (Will be done after document creation in step 11)
 
       // 8. Get existing documents to avoid duplicates
       const allExistingDocs = await base44.entities.Document.list("-created_date", 10000);
@@ -254,7 +238,29 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       // 10. Create all new documents in bulk
       const createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
 
-      // 11. Mark documents as paid if they no longer appear in the upload
+      // 11. Recalculate total_debt and paid_amount for existing clients
+      const allClientsInUpload = new Set(Object.keys(clientsMap));
+      for (const clientName of allClientsInUpload) {
+        const existingClient = existingClientsByName[clientName];
+        if (existingClient) {
+          const clientId = existingClient.id;
+
+          // Get ALL documents for this client (old + new)
+          const clientDocs = await base44.entities.Document.filter({ client_id: clientId });
+
+          const totalDebt = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+          const totalPaid = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+          const hasOverdue = clientDocs.some(doc => (doc.days_overdue || 0) > 0);
+
+          await base44.entities.Client.update(clientId, {
+            total_debt: totalDebt,
+            paid_amount: totalPaid,
+            status: hasOverdue ? "mora" : (totalPaid >= totalDebt ? "al_corriente" : existingClient.status)
+          });
+        }
+      }
+
+      // 12. Mark documents as paid if they no longer appear in the upload
       const documentsMarkedPaid = [];
       const uploadedDocNumbers = new Set();
 
@@ -286,7 +292,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       setResult({
         success: true,
         clientsCount: createdClients.length,
-        updatedClientsCount: clientsToUpdate.length,
+        updatedClientsCount: allClientsInUpload.size - createdClients.length,
         documentsCount: createdDocuments.length,
         documentsMarkedPaid: documentsMarkedPaid.length
       });
