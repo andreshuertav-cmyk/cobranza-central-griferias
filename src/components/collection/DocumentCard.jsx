@@ -22,8 +22,10 @@ const statusConfig = {
 
 export default function DocumentCard({ document }) {
   const status = statusConfig[document.status] || statusConfig.vigente;
-  const remaining = Math.max(0, (document.amount || 0) - (document.paid_amount || 0));
-  const progress = document.amount > 0 ? Math.min(100, ((document.paid_amount || 0) / document.amount) * 100) : 0;
+  const totalAmount = document.amount || 0;
+  const paidAmount = document.paid_amount || 0;
+  const remaining = Math.max(0, totalAmount - paidAmount);
+  const progress = totalAmount > 0 ? Math.min(100, (paidAmount / totalAmount) * 100) : 0;
   
   // Parse date from DD-MM-YYYY format
   const dueDate = document.due_date ? (() => {
