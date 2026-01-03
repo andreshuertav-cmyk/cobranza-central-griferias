@@ -24,6 +24,7 @@ import TopCollectorsTable from "@/components/reports/TopCollectorsTable";
 import PromisesReport from "@/components/reports/PromisesReport";
 import ConsolidatedPromisesReport from "@/components/reports/ConsolidatedPromisesReport";
 import SalesRepReport from "@/components/reports/SalesRepReport";
+import FactorizedReport from "@/components/reports/FactorizedReport";
 
 export default function Reports() {
   const [period, setPeriod] = useState("week"); // day, week, month
@@ -247,6 +248,12 @@ export default function Reports() {
             <div className="mt-8">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Reporte por vendedor</h2>
               <SalesRepReport documents={documents} clients={clients} />
+            </div>
+
+            {/* Factorized Report */}
+            <div className="mt-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Facturas factorizadas</h2>
+              <FactorizedReport documents={documents} clients={clients} />
             </div>
           </>
         )}
