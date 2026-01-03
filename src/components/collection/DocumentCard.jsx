@@ -22,7 +22,6 @@ const statusConfig = {
 };
 
 export default function DocumentCard({ document, onPayment }) {
-  const status = statusConfig[document.status] || statusConfig.vigente;
   const totalAmount = document.amount || 0;
   const paidAmount = document.paid_amount || 0;
   const remaining = Math.max(0, totalAmount - paidAmount);
@@ -46,7 +45,14 @@ export default function DocumentCard({ document, onPayment }) {
   
   const today = new Date();
   const daysOverdue = dueDate && dueDate < today ? differenceInDays(today, dueDate) : 0;
-  const isOverdue = daysOverdue > 0 && document.status !== "pagado";
+  
+  // Calculate actual status based on current state
+  const actualStatus = remaining <= 0 ? "pagado" : 
+                      daysOverdue > 0 ? "vencido" : 
+                      document.status === "cancelado" ? "cancelado" : "vigente";
+  
+  const status = statusConfig[actualStatus] || statusConfig.vigente;
+  const isOverdue = daysOverdue > 0 && actualStatus !== "pagado";
 
   return (
     <Card className={cn(
