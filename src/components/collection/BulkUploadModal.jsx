@@ -136,32 +136,74 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         clientsMap[clientName].documents.push(docData);
       }
 
-      // 4. Prepare clients data
-      const clientsToCreate = Object.entries(clientsMap).map(([clientName, clientData]) => {
-        const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
-        const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
-
-        // Check if any document is overdue
-        const hasOverdueDocuments = clientData.documents.some(doc => (doc.dias_mora || 0) > 0);
-
-        return {
-          name: clientName,
-          total_debt: totalDebt,
-          paid_amount: totalPaid,
-          status: hasOverdueDocuments ? "mora" : "pendiente"
-        };
+      // 4. Get existing clients to check for duplicates
+      const existingClients = await base44.entities.Client.list("-created_date", 10000);
+      const existingClientsByName = {};
+      existingClients.forEach(client => {
+        existingClientsByName[client.name] = client;
       });
 
-      // 5. Create all clients in bulk
-      const createdClients = await base44.entities.Client.bulkCreate(clientsToCreate);
-
-      // 6. Map client names to IDs
+      // 5. Prepare clients data - separate new vs existing
+      const clientsToCreate = [];
+      const clientsToUpdate = [];
       const clientNameToId = {};
+
+      for (const [clientName, clientData] of Object.entries(clientsMap)) {
+        const totalDebt = clientData.documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
+        const totalPaid = clientData.documents.reduce((sum, doc) => sum + (doc.pagado || 0), 0);
+        const hasOverdueDocuments = clientData.documents.some(doc => (doc.dias_mora || 0) > 0);
+
+        const existingClient = existingClientsByName[clientName];
+
+        if (existingClient) {
+          // Update existing client
+          const newTotalDebt = (existingClient.total_debt || 0) + totalDebt;
+          const newPaidAmount = (existingClient.paid_amount || 0) + totalPaid;
+
+          clientsToUpdate.push({
+            id: existingClient.id,
+            total_debt: newTotalDebt,
+            paid_amount: newPaidAmount,
+            status: hasOverdueDocuments ? "mora" : (newPaidAmount >= newTotalDebt ? "al_corriente" : existingClient.status)
+          });
+
+          clientNameToId[clientName] = existingClient.id;
+        } else {
+          // Create new client
+          clientsToCreate.push({
+            name: clientName,
+            total_debt: totalDebt,
+            paid_amount: totalPaid,
+            status: hasOverdueDocuments ? "mora" : "pendiente"
+          });
+        }
+      }
+
+      // 6. Create new clients
+      const createdClients = clientsToCreate.length > 0 
+        ? await base44.entities.Client.bulkCreate(clientsToCreate)
+        : [];
+
       createdClients.forEach(client => {
         clientNameToId[client.name] = client.id;
       });
 
-      // 7. Prepare all documents data
+      // 7. Update existing clients
+      for (const updateData of clientsToUpdate) {
+        await base44.entities.Client.update(updateData.id, {
+          total_debt: updateData.total_debt,
+          paid_amount: updateData.paid_amount,
+          status: updateData.status
+        });
+      }
+
+      // 8. Get existing documents to avoid duplicates
+      const allExistingDocs = await base44.entities.Document.list("-created_date", 10000);
+      const existingDocNumbers = new Set(
+        allExistingDocs.map(doc => `${doc.client_id}_${doc.document_number}`)
+      );
+
+      // 9. Prepare all documents data
       const documentsToCreate = [];
       for (const [clientName, clientData] of Object.entries(clientsMap)) {
         const clientId = clientNameToId[clientName];
@@ -169,6 +211,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         for (const doc of clientData.documents) {
           // Skip if missing required fields
           if (!doc.numero || !doc.vencio) {
+            continue;
+          }
+
+          const docKey = `${clientId}_${doc.numero}`;
+
+          // Skip if document already exists for this client
+          if (existingDocNumbers.has(docKey)) {
             continue;
           }
 
@@ -193,15 +242,16 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       }
 
       if (documentsToCreate.length === 0) {
-        throw new Error("No se encontraron documentos válidos para procesar. Verifica que las columnas NÚMERO y VENCIÓ tengan datos correctos.");
+        throw new Error("No se encontraron documentos nuevos para procesar. Todos los documentos ya existen o faltan datos requeridos.");
       }
 
-      // 8. Create all documents in bulk
+      // 10. Create all new documents in bulk
       const createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
 
       setResult({
         success: true,
         clientsCount: createdClients.length,
+        updatedClientsCount: clientsToUpdate.length,
         documentsCount: createdDocuments.length
       });
 
@@ -327,7 +377,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
               <AlertDescription className="text-emerald-900">
                 <div className="font-medium mb-1">¡Carga exitosa!</div>
                 <div className="text-sm">
-                  Se crearon {result.clientsCount} cliente(s) con {result.documentsCount} documento(s) en total.
+                  {result.clientsCount > 0 && <div>• {result.clientsCount} cliente(s) nuevo(s) creado(s)</div>}
+                  {result.updatedClientsCount > 0 && <div>• {result.updatedClientsCount} cliente(s) actualizado(s)</div>}
+                  <div>• {result.documentsCount} documento(s) agregado(s)</div>
                 </div>
               </AlertDescription>
             </Alert>
