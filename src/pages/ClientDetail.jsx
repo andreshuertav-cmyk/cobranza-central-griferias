@@ -226,8 +226,11 @@ export default function ClientDetail() {
     );
   }
 
-  const remaining = (client.total_debt || 0) - (client.paid_amount || 0);
-  const progress = client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0;
+  // Calcular deuda real desde documentos
+  const totalDebtFromDocs = documents.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+  const totalPaidFromDocs = documents.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+  const remaining = totalDebtFromDocs - totalPaidFromDocs;
+  const progress = totalDebtFromDocs > 0 ? (totalPaidFromDocs / totalDebtFromDocs) * 100 : 0;
   
   // Determinar el estado real basado en el saldo
   const actualStatus = remaining <= 0 ? "al_corriente" : client.status;
