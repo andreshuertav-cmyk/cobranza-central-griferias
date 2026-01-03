@@ -489,7 +489,7 @@ export default function Home() {
 
                           const actualStatus = remaining <= 0 ? "al_corriente" : 
                                               hasOverdueDocuments ? "mora" : 
-                                              client.status;
+                                              "pendiente";
 
                           const clientWithStatus = { ...client, status: actualStatus };
 

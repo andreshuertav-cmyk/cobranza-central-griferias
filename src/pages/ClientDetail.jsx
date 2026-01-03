@@ -297,7 +297,7 @@ export default function ClientDetail() {
   // Determinar el estado real basado en el saldo y documentos vencidos
   const actualStatus = remaining <= 0 ? "al_corriente" : 
                       hasOverdueDocuments ? "mora" : 
-                      client.status;
+                      "pendiente";
   const status = statusConfig[actualStatus] || statusConfig.pendiente;
 
   return (
