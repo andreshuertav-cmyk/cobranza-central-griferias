@@ -19,7 +19,8 @@ const statusOptions = [
   { value: "vigente", label: "Vigente" },
   { value: "vencido", label: "Vencido" },
   { value: "pagado", label: "Pagado" },
-  { value: "cancelado", label: "Cancelado" }
+  { value: "cancelado", label: "Cancelado" },
+  { value: "factorizada", label: "Factorizada" }
 ];
 
 export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoading, clientId, editDocument }) {

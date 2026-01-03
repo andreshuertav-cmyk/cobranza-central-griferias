@@ -202,6 +202,18 @@ export default function ClientDetail() {
     }
   });
 
+  const factorizeMutation = useMutation({
+    mutationFn: async (doc) => {
+      await base44.entities.Document.update(doc.id, {
+        status: "factorizada"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+    }
+  });
+
   const deleteLogMutation = useMutation({
     mutationFn: async (logId) => {
       // Buscar el log antes de borrarlo
@@ -429,6 +441,7 @@ export default function ClientDetail() {
                     setEditingDocument(doc);
                     setShowAddDocument(true);
                   }}
+                  onFactorize={(doc) => factorizeMutation.mutate(doc)}
                 />
               ))}
             </div>

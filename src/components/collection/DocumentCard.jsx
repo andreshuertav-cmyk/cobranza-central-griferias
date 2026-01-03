@@ -18,10 +18,11 @@ const statusConfig = {
   vigente: { label: "Vigente", color: "bg-blue-100 text-blue-700 border-blue-200" },
   vencido: { label: "Vencido", color: "bg-red-100 text-red-700 border-red-200" },
   pagado: { label: "Pagado", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  cancelado: { label: "Cancelado", color: "bg-slate-100 text-slate-700 border-slate-200" }
+  cancelado: { label: "Cancelado", color: "bg-slate-100 text-slate-700 border-slate-200" },
+  factorizada: { label: "Factorizada", color: "bg-purple-100 text-purple-700 border-purple-200" }
 };
 
-export default function DocumentCard({ document, onPayment, onEdit }) {
+export default function DocumentCard({ document, onPayment, onEdit, onFactorize }) {
   const totalAmount = document.amount || 0;
   const paidAmount = document.paid_amount || 0;
   const remaining = Math.max(0, totalAmount - paidAmount);
@@ -131,7 +132,7 @@ export default function DocumentCard({ document, onPayment, onEdit }) {
               Pagado: ${document.paid_amount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
             </p>
           )}
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-2 mt-3 flex-wrap">
             {onEdit && (
               <Button
                 size="sm"
@@ -151,6 +152,16 @@ export default function DocumentCard({ document, onPayment, onEdit }) {
               >
                 <DollarSign className="h-3 w-3" />
                 Pagar
+              </Button>
+            )}
+            {document.status !== "factorizada" && document.status !== "pagado" && onFactorize && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onFactorize(document)}
+                className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 flex-1 gap-1"
+              >
+                Factorizar
               </Button>
             )}
           </div>
