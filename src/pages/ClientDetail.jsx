@@ -44,6 +44,7 @@ export default function ClientDetail() {
   const [showEditClient, setShowEditClient] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAddDocument, setShowAddDocument] = useState(false);
+  const [editingLog, setEditingLog] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -70,7 +71,41 @@ export default function ClientDetail() {
 
   const createLogMutation = useMutation({
     mutationFn: async (data) => {
-      await base44.entities.CollectionLog.create({ ...data, client_id: clientId });
+      if (editingLog) {
+        // If editing, update the log
+        await base44.entities.CollectionLog.update(editingLog.id, data);
+        return { isEdit: true, data };
+      } else {
+        // If creating new, create the log
+        await base44.entities.CollectionLog.create({ ...data, client_id: clientId });
+        return { isEdit: false, data };
+      }
+    },
+    onSuccess: async ({ isEdit, data }) => {
+      // If we're editing a payment log, we need to recalculate
+      if (isEdit && editingLog.result === "pago_realizado" && editingLog.paid_amount) {
+        // Revert old payment
+        const oldPaidAmount = editingLog.paid_amount;
+        const newClientPaidAmount = Math.max(0, (client.paid_amount || 0) - oldPaidAmount);
+        
+        if (editingLog.document_id) {
+          const doc = documents.find(d => d.id === editingLog.document_id);
+          if (doc) {
+            const newDocPaidAmount = Math.max(0, (doc.paid_amount || 0) - oldPaidAmount);
+            await base44.entities.Document.update(editingLog.document_id, {
+              paid_amount: newDocPaidAmount,
+              status: newDocPaidAmount < doc.amount ? "vencido" : "pagado"
+            });
+          }
+        }
+        
+        await base44.entities.Client.update(clientId, {
+          paid_amount: newClientPaidAmount,
+          status: newClientPaidAmount < client.total_debt ? "mora" : "al_corriente"
+        });
+      }
+      
+      // Now apply new payment if result is pago_realizado
       
       // Si es pago realizado, actualizar el paid_amount del cliente y del documento
       if (data.result === "pago_realizado" && data.paid_amount) {
@@ -103,11 +138,11 @@ export default function ClientDetail() {
         }
       }
     },
-    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
       queryClient.invalidateQueries({ queryKey: ["client", clientId] });
       queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
       setShowAddLog(false);
+      setEditingLog(null);
     }
   });
 
@@ -353,7 +388,12 @@ export default function ClientDetail() {
             {logs.map((log) => (
               <LogEntry 
                 key={log.id} 
-                log={log} 
+                log={log}
+                documents={documents}
+                onEdit={(log) => {
+                  setEditingLog(log);
+                  setShowAddLog(true);
+                }}
                 onDelete={(logId) => deleteLogMutation.mutate(logId)}
               />
             ))}
@@ -364,11 +404,15 @@ export default function ClientDetail() {
       {/* Modals */}
       <AddLogModal
         open={showAddLog}
-        onOpenChange={setShowAddLog}
+        onOpenChange={(open) => {
+          setShowAddLog(open);
+          if (!open) setEditingLog(null);
+        }}
         onSubmit={(data) => createLogMutation.mutate(data)}
         isLoading={createLogMutation.isPending}
         totalDebt={remaining}
         documents={documents}
+        editLog={editingLog}
       />
 
       <AddClientModal

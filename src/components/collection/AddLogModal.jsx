@@ -25,7 +25,7 @@ const resultTypes = [
   { value: "otro", label: "Otro" }
 ];
 
-export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, totalDebt, documents }) {
+export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, totalDebt, documents, editLog }) {
   const getLocalDateTime = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -36,7 +36,17 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(editLog ? {
+    contact_type: editLog.contact_type || "llamada",
+    contact_date: editLog.contact_date ? new Date(editLog.contact_date).toISOString().slice(0, 16) : getLocalDateTime(),
+    result: editLog.result || "",
+    notes: editLog.notes || "",
+    promised_amount: editLog.promised_amount || "",
+    promised_date: editLog.promised_date || "",
+    follow_up_date: editLog.follow_up_date || "",
+    paid_amount: editLog.paid_amount || "",
+    document_id: editLog.document_id || ""
+  } : {
     contact_type: "llamada",
     contact_date: getLocalDateTime(),
     result: "",
@@ -66,7 +76,9 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Registrar gestión</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            {editLog ? "Editar gestión" : "Registrar gestión"}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
