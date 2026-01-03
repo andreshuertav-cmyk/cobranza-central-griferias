@@ -137,7 +137,7 @@ export default function ClientDetail() {
           }
         }
       }
-    },
+      
       queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
       queryClient.invalidateQueries({ queryKey: ["client", clientId] });
       queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
