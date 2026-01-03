@@ -25,6 +25,7 @@ export default function Home() {
   const [showAddClient, setShowAddClient] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPendingFollowUps, setShowPendingFollowUps] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -172,13 +173,19 @@ export default function Home() {
     return isToday(followDate) || (isPast(followDate) && !isToday(followDate));
   });
 
+  // Get client IDs with pending follow-ups
+  const clientsWithPendingFollowUps = new Set(
+    todayFollowUps.map(log => log.client_id)
+  );
+
   // Filter clients and remove duplicates by name
   const filteredClients = clients
     .filter(c => {
       const matchesSearch = c.name?.toLowerCase().includes(search.toLowerCase()) ||
                             c.phone?.includes(search);
       const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesPendingFollowUps = !showPendingFollowUps || clientsWithPendingFollowUps.has(c.id);
+      return matchesSearch && matchesStatus && matchesPendingFollowUps;
     })
     .reduce((unique, client) => {
       // Keep only the first occurrence of each client name
@@ -280,15 +287,37 @@ export default function Home() {
 
         {/* Today's Follow-ups Alert */}
         {todayFollowUps.length > 0 && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            <div className="flex items-center gap-2 text-amber-700 mb-2">
-              <Calendar className="h-5 w-5" />
-              <span className="font-semibold">Seguimientos pendientes: {todayFollowUps.length}</span>
+          <button
+            onClick={() => setShowPendingFollowUps(!showPendingFollowUps)}
+            className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl w-full text-left hover:bg-amber-100 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-amber-700 mb-2">
+                  <Calendar className="h-5 w-5" />
+                  <span className="font-semibold">Seguimientos pendientes: {todayFollowUps.length}</span>
+                </div>
+                <p className="text-sm text-amber-600">
+                  {showPendingFollowUps 
+                    ? "Mostrando clientes con seguimientos pendientes"
+                    : `Tienes ${todayFollowUps.length} seguimiento(s) programado(s) para hoy o atrasado(s). Click para filtrar.`
+                  }
+                </p>
+              </div>
+              {showPendingFollowUps && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPendingFollowUps(false);
+                  }}
+                >
+                  Ver todos
+                </Button>
+              )}
             </div>
-            <p className="text-sm text-amber-600">
-              Tienes {todayFollowUps.length} seguimiento(s) programado(s) para hoy o atrasado(s).
-            </p>
-          </div>
+          </button>
         )}
 
         {/* Filters */}
