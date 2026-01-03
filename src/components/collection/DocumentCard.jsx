@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Calendar, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Calendar, AlertCircle, DollarSign } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,7 @@ const statusConfig = {
   cancelado: { label: "Cancelado", color: "bg-slate-100 text-slate-700 border-slate-200" }
 };
 
-export default function DocumentCard({ document }) {
+export default function DocumentCard({ document, onPayment }) {
   const status = statusConfig[document.status] || statusConfig.vigente;
   const totalAmount = document.amount || 0;
   const paidAmount = document.paid_amount || 0;
@@ -118,6 +119,16 @@ export default function DocumentCard({ document }) {
             <p className="text-xs text-emerald-600 mt-1">
               Pagado: ${document.paid_amount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
             </p>
+          )}
+          {remaining > 0 && onPayment && (
+            <Button
+              size="sm"
+              onClick={() => onPayment(document)}
+              className="mt-3 w-full gap-1"
+            >
+              <DollarSign className="h-3 w-3" />
+              Pagar
+            </Button>
           )}
         </div>
       </div>

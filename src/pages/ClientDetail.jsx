@@ -27,6 +27,7 @@ import AddLogModal from "@/components/collection/AddLogModal";
 import AddClientModal from "@/components/collection/AddClientModal";
 import DocumentCard from "@/components/collection/DocumentCard";
 import AddDocumentModal from "@/components/collection/AddDocumentModal";
+import QuickPaymentModal from "@/components/collection/QuickPaymentModal";
 
 const statusConfig = {
   al_corriente: { label: "Al corriente", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
@@ -45,6 +46,8 @@ export default function ClientDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAddDocument, setShowAddDocument] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
+  const [showQuickPayment, setShowQuickPayment] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -167,6 +170,28 @@ export default function ClientDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
       setShowAddDocument(false);
+    }
+  });
+
+  const quickPaymentMutation = useMutation({
+    mutationFn: async (amount) => {
+      const doc = selectedDocument;
+      const docTotal = doc.amount || 0;
+      const currentPaid = doc.paid_amount || 0;
+      const paymentToApply = Math.min(amount, docTotal - currentPaid);
+      const newDocPaidAmount = currentPaid + paymentToApply;
+      const newDocStatus = newDocPaidAmount >= docTotal ? "pagado" : doc.status;
+      
+      await base44.entities.Document.update(doc.id, {
+        paid_amount: newDocPaidAmount,
+        status: newDocStatus
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      setShowQuickPayment(false);
+      setSelectedDocument(null);
     }
   });
 
@@ -354,7 +379,14 @@ export default function ClientDetail() {
           ) : (
             <div className="space-y-3">
               {documents.map((doc) => (
-                <DocumentCard key={doc.id} document={doc} />
+                <DocumentCard 
+                  key={doc.id} 
+                  document={doc}
+                  onPayment={(doc) => {
+                    setSelectedDocument(doc);
+                    setShowQuickPayment(true);
+                  }}
+                />
               ))}
             </div>
           )}
@@ -432,6 +464,14 @@ export default function ClientDetail() {
         onSubmit={(data) => createDocumentMutation.mutate(data)}
         isLoading={createDocumentMutation.isPending}
         clientId={clientId}
+      />
+
+      <QuickPaymentModal
+        open={showQuickPayment}
+        onOpenChange={setShowQuickPayment}
+        document={selectedDocument}
+        onSubmit={(amount) => quickPaymentMutation.mutate(amount)}
+        isLoading={quickPaymentMutation.isPending}
       />
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
