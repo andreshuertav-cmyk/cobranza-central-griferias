@@ -117,6 +117,44 @@ export default function Home() {
     }
   });
 
+  const updateDocumentStatusMutation = useMutation({
+    mutationFn: async () => {
+      const allDocs = await base44.entities.Document.list("-created_date", 10000);
+      const today = new Date();
+      let updatedCount = 0;
+      
+      for (const doc of allDocs) {
+        const remaining = (doc.amount || 0) - (doc.paid_amount || 0);
+        
+        // Calculate actual status
+        let newStatus = doc.status;
+        if (remaining <= 0) {
+          newStatus = "pagado";
+        } else if (doc.due_date) {
+          const dueDate = new Date(doc.due_date);
+          if (dueDate < today) {
+            newStatus = "vencido";
+          } else {
+            newStatus = "vigente";
+          }
+        }
+        
+        // Update if status changed
+        if (newStatus !== doc.status) {
+          await base44.entities.Document.update(doc.id, { status: newStatus });
+          updatedCount++;
+        }
+      }
+      
+      return updatedCount;
+    },
+    onSuccess: (updatedCount) => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      alert(`Se actualizaron ${updatedCount} documentos`);
+    }
+  });
+
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
       // Helper to delete in batches
@@ -214,6 +252,15 @@ export default function Home() {
             <p className="text-slate-500 mt-1">Gestiona tus clientes y seguimientos</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              onClick={() => updateDocumentStatusMutation.mutate()} 
+              variant="outline" 
+              className="gap-2"
+              disabled={updateDocumentStatusMutation.isPending}
+            >
+              {updateDocumentStatusMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Actualizar status
+            </Button>
             <Button 
               onClick={() => recalculateDebtsMutation.mutate()} 
               variant="outline" 
