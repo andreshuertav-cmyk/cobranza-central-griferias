@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, AlertCircle, DollarSign } from "lucide-react";
+import { FileText, Calendar, AlertCircle, DollarSign, Edit2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ const statusConfig = {
   cancelado: { label: "Cancelado", color: "bg-slate-100 text-slate-700 border-slate-200" }
 };
 
-export default function DocumentCard({ document, onPayment }) {
+export default function DocumentCard({ document, onPayment, onEdit }) {
   const totalAmount = document.amount || 0;
   const paidAmount = document.paid_amount || 0;
   const remaining = Math.max(0, totalAmount - paidAmount);
@@ -131,16 +131,29 @@ export default function DocumentCard({ document, onPayment }) {
               Pagado: ${document.paid_amount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
             </p>
           )}
-          {remaining > 0 && onPayment && (
-            <Button
-              size="sm"
-              onClick={() => onPayment(document)}
-              className="mt-3 w-full gap-1"
-            >
-              <DollarSign className="h-3 w-3" />
-              Pagar
-            </Button>
-          )}
+          <div className="flex gap-2 mt-3">
+            {onEdit && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onEdit(document)}
+                className="flex-1 gap-1"
+              >
+                <Edit2 className="h-3 w-3" />
+                Editar
+              </Button>
+            )}
+            {remaining > 0 && onPayment && (
+              <Button
+                size="sm"
+                onClick={() => onPayment(document)}
+                className="flex-1 gap-1"
+              >
+                <DollarSign className="h-3 w-3" />
+                Pagar
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </Card>

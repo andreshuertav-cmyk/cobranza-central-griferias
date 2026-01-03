@@ -22,8 +22,8 @@ const statusOptions = [
   { value: "cancelado", label: "Cancelado" }
 ];
 
-export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoading, clientId }) {
-  const [formData, setFormData] = useState({
+export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoading, clientId, editDocument }) {
+  const [formData, setFormData] = useState(editDocument || {
     document_number: "",
     document_type: "factura",
     amount: "",
@@ -170,7 +170,7 @@ export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoadi
             </Button>
             <Button type="submit" disabled={!formData.document_number || !formData.amount || !formData.due_date || isLoading}>
               {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Crear documento
+              {editDocument ? "Actualizar documento" : "Crear documento"}
             </Button>
           </div>
         </form>

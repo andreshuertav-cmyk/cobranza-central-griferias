@@ -48,6 +48,7 @@ export default function ClientDetail() {
   const [editingLog, setEditingLog] = useState(null);
   const [showQuickPayment, setShowQuickPayment] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
+  const [editingDocument, setEditingDocument] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -166,10 +167,16 @@ export default function ClientDetail() {
   });
 
   const createDocumentMutation = useMutation({
-    mutationFn: (data) => base44.entities.Document.create(data),
+    mutationFn: (data) => {
+      if (editingDocument) {
+        return base44.entities.Document.update(editingDocument.id, data);
+      }
+      return base44.entities.Document.create(data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
       setShowAddDocument(false);
+      setEditingDocument(null);
     }
   });
 
@@ -418,6 +425,10 @@ export default function ClientDetail() {
                     setSelectedDocument(doc);
                     setShowQuickPayment(true);
                   }}
+                  onEdit={(doc) => {
+                    setEditingDocument(doc);
+                    setShowAddDocument(true);
+                  }}
                 />
               ))}
             </div>
@@ -492,10 +503,14 @@ export default function ClientDetail() {
 
       <AddDocumentModal
         open={showAddDocument}
-        onOpenChange={setShowAddDocument}
+        onOpenChange={(open) => {
+          setShowAddDocument(open);
+          if (!open) setEditingDocument(null);
+        }}
         onSubmit={(data) => createDocumentMutation.mutate(data)}
         isLoading={createDocumentMutation.isPending}
         clientId={clientId}
+        editDocument={editingDocument}
       />
 
       <QuickPaymentModal
