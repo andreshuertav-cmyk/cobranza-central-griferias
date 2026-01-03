@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, MapPin, MessageSquare, Mail, MessageCircle, Calendar, DollarSign, Trash2 } from "lucide-react";
+import { Phone, MapPin, MessageSquare, Mail, MessageCircle, Calendar, DollarSign, Trash2, Edit2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const contactIcons = {
@@ -23,9 +23,12 @@ const resultConfig = {
   otro: { label: "Otro", color: "bg-slate-100 text-slate-600" }
 };
 
-export default function LogEntry({ log, onDelete }) {
+export default function LogEntry({ log, onDelete, onEdit, documents }) {
   const Icon = contactIcons[log.contact_type] || Phone;
   const result = resultConfig[log.result] || resultConfig.otro;
+  
+  // Get document number if document_id exists
+  const relatedDoc = documents?.find(d => d.id === log.document_id);
 
   return (
     <div className="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 hover:shadow-sm transition-all">
@@ -43,10 +46,20 @@ export default function LogEntry({ log, onDelete }) {
               {log.contact_date && format(new Date(log.contact_date), "d MMM yyyy, HH:mm", { locale: es })}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Badge className={cn("text-xs", result.color)}>
               {result.label}
             </Badge>
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-slate-400 hover:text-blue-600"
+                onClick={() => onEdit(log)}
+              >
+                <Edit2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
             {onDelete && (
               <Button
                 variant="ghost"
@@ -65,6 +78,19 @@ export default function LogEntry({ log, onDelete }) {
         )}
 
         <div className="flex flex-wrap gap-3 mt-3">
+          {log.paid_amount > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Pagó: ${log.paid_amount.toLocaleString('es-MX')}</span>
+              </div>
+              {relatedDoc && (
+                <p className="text-xs text-slate-500 ml-5">
+                  Factura Nº {relatedDoc.document_number}
+                </p>
+              )}
+            </div>
+          )}
           {log.promised_amount > 0 && (
             <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
               <DollarSign className="h-3.5 w-3.5" />
