@@ -51,6 +51,44 @@ export default function Home() {
     }
   });
 
+  const removeDuplicatesMutation = useMutation({
+    mutationFn: async () => {
+      const allDocs = await base44.entities.Document.list("-created_date", 10000);
+      
+      // Group documents by client_id + document_number
+      const docGroups = {};
+      allDocs.forEach(doc => {
+        const key = `${doc.client_id}_${doc.document_number}`;
+        if (!docGroups[key]) {
+          docGroups[key] = [];
+        }
+        docGroups[key].push(doc);
+      });
+      
+      // Find duplicates and delete newer ones (keep oldest)
+      let deletedCount = 0;
+      for (const [key, docs] of Object.entries(docGroups)) {
+        if (docs.length > 1) {
+          // Sort by created_date (oldest first)
+          docs.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+          
+          // Delete all except the first (oldest)
+          for (let i = 1; i < docs.length; i++) {
+            await base44.entities.Document.delete(docs[i].id);
+            deletedCount++;
+          }
+        }
+      }
+      
+      return deletedCount;
+    },
+    onSuccess: (deletedCount) => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      alert(`Se eliminaron ${deletedCount} documentos duplicados`);
+    }
+  });
+
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
       // Helper to delete in batches
@@ -142,6 +180,15 @@ export default function Home() {
             <p className="text-slate-500 mt-1">Gestiona tus clientes y seguimientos</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              onClick={() => removeDuplicatesMutation.mutate()} 
+              variant="outline" 
+              className="gap-2"
+              disabled={removeDuplicatesMutation.isPending}
+            >
+              {removeDuplicatesMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Limpiar duplicados
+            </Button>
             <Button 
               onClick={() => setShowDeleteConfirm(true)} 
               variant="outline" 
