@@ -50,7 +50,9 @@ export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoadi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Nuevo documento</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            {editDocument ? "Editar documento" : "Nuevo documento"}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
