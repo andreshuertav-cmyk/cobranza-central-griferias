@@ -51,6 +51,33 @@ export default function Home() {
     }
   });
 
+  const recalculateDebtsMutation = useMutation({
+    mutationFn: async () => {
+      const allClients = await base44.entities.Client.list("-created_date", 10000);
+      const allDocs = await base44.entities.Document.list("-created_date", 10000);
+      
+      for (const client of allClients) {
+        const clientDocs = allDocs.filter(doc => doc.client_id === client.id);
+        
+        const totalDebt = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+        const totalPaid = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+        const hasOverdue = clientDocs.some(doc => (doc.days_overdue || 0) > 0);
+        
+        await base44.entities.Client.update(client.id, {
+          total_debt: totalDebt,
+          paid_amount: totalPaid,
+          status: hasOverdue ? "mora" : (totalPaid >= totalDebt ? "al_corriente" : client.status)
+        });
+      }
+      
+      return allClients.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      alert(`Se recalcularon las deudas de ${count} clientes`);
+    }
+  });
+
   const removeDuplicatesMutation = useMutation({
     mutationFn: async () => {
       const allDocs = await base44.entities.Document.list("-created_date", 10000);
@@ -180,6 +207,15 @@ export default function Home() {
             <p className="text-slate-500 mt-1">Gestiona tus clientes y seguimientos</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              onClick={() => recalculateDebtsMutation.mutate()} 
+              variant="outline" 
+              className="gap-2"
+              disabled={recalculateDebtsMutation.isPending}
+            >
+              {recalculateDebtsMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Recalcular deudas
+            </Button>
             <Button 
               onClick={() => removeDuplicatesMutation.mutate()} 
               variant="outline" 
