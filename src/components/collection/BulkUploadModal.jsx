@@ -22,7 +22,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || processing) return;
 
     setProcessing(true);
     setError(null);
@@ -203,7 +203,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         allExistingDocs.map(doc => `${doc.client_id}_${doc.document_number}`)
       );
 
-      // 9. Prepare all documents data
+      // 9. Re-fetch existing documents to catch any created during this session
+      const refreshedDocs = await base44.entities.Document.list("-created_date", 10000);
+      const refreshedDocNumbers = new Set(
+        refreshedDocs.map(doc => `${doc.client_id}_${doc.document_number}`)
+      );
+
+      // 9b. Prepare all documents data
       const documentsToCreate = [];
       for (const [clientName, clientData] of Object.entries(clientsMap)) {
         const clientId = clientNameToId[clientName];
@@ -217,7 +223,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           const docKey = `${clientId}_${doc.numero}`;
 
           // Skip if document already exists for this client
-          if (existingDocNumbers.has(docKey)) {
+          if (refreshedDocNumbers.has(docKey)) {
             continue;
           }
 
