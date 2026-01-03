@@ -257,8 +257,40 @@ export default function ClientDetail() {
   const remaining = totalDebtFromDocs - totalPaidFromDocs;
   const progress = totalDebtFromDocs > 0 ? (totalPaidFromDocs / totalDebtFromDocs) * 100 : 0;
   
-  // Determinar el estado real basado en el saldo
-  const actualStatus = remaining <= 0 ? "al_corriente" : client.status;
+  // Verificar si hay documentos vencidos actualmente
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const hasOverdueDocuments = documents.some(doc => {
+    const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+    if (docRemaining <= 0) return false; // Ya está pagado
+    
+    if (!doc.due_date) return false;
+    
+    // Parse due date
+    const dateStr = String(doc.due_date).trim();
+    let dueDate;
+    if (dateStr.includes('-')) {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+          dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        }
+      }
+    }
+    if (!dueDate) {
+      dueDate = new Date(dateStr);
+    }
+    dueDate.setHours(0, 0, 0, 0);
+    
+    return dueDate < today; // Está vencido
+  });
+  
+  // Determinar el estado real basado en el saldo y documentos vencidos
+  const actualStatus = remaining <= 0 ? "al_corriente" : 
+                      hasOverdueDocuments ? "mora" : 
+                      client.status;
   const status = statusConfig[actualStatus] || statusConfig.pendiente;
 
   return (
