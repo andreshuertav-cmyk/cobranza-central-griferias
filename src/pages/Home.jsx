@@ -6,8 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Users, DollarSign, AlertTriangle, 
-  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2, ArrowUpDown
+  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2, ArrowUpDown, Settings
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
@@ -252,41 +259,44 @@ export default function Home() {
             <p className="text-slate-500 mt-1">Gestiona tus clientes y seguimientos</p>
           </div>
           <div className="flex gap-2">
-            <Button 
-              onClick={() => updateDocumentStatusMutation.mutate()} 
-              variant="outline" 
-              className="gap-2"
-              disabled={updateDocumentStatusMutation.isPending}
-            >
-              {updateDocumentStatusMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Actualizar status
-            </Button>
-            <Button 
-              onClick={() => recalculateDebtsMutation.mutate()} 
-              variant="outline" 
-              className="gap-2"
-              disabled={recalculateDebtsMutation.isPending}
-            >
-              {recalculateDebtsMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Recalcular deudas
-            </Button>
-            <Button 
-              onClick={() => removeDuplicatesMutation.mutate()} 
-              variant="outline" 
-              className="gap-2"
-              disabled={removeDuplicatesMutation.isPending}
-            >
-              {removeDuplicatesMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Limpiar duplicados
-            </Button>
-            <Button 
-              onClick={() => setShowDeleteConfirm(true)} 
-              variant="outline" 
-              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4" />
-              Borrar todo
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  onClick={() => updateDocumentStatusMutation.mutate()}
+                  disabled={updateDocumentStatusMutation.isPending}
+                >
+                  {updateDocumentStatusMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Actualizar status
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => recalculateDebtsMutation.mutate()}
+                  disabled={recalculateDebtsMutation.isPending}
+                >
+                  {recalculateDebtsMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Recalcular deudas
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => removeDuplicatesMutation.mutate()}
+                  disabled={removeDuplicatesMutation.isPending}
+                >
+                  {removeDuplicatesMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Limpiar duplicados
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Borrar todo
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Link to={createPageUrl("Reports")}>
               <Button variant="outline" className="gap-2">
                 <BarChart3 className="h-4 w-4" />
