@@ -248,11 +248,41 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       // 10. Create all new documents in bulk
       const createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
 
+      // 11. Mark documents as paid if they no longer appear in the upload
+      const documentsMarkedPaid = [];
+      const uploadedDocNumbers = new Set();
+
+      // Collect all document numbers from the upload
+      for (const [clientName, clientData] of Object.entries(clientsMap)) {
+        const clientId = clientNameToId[clientName];
+        for (const doc of clientData.documents) {
+          if (doc.numero) {
+            uploadedDocNumbers.add(`${clientId}_${doc.numero}`);
+          }
+        }
+      }
+
+      // Find and mark documents as paid that are not in the upload
+      for (const existingDoc of allExistingDocs) {
+        const docKey = `${existingDoc.client_id}_${existingDoc.document_number}`;
+        const clientName = Object.keys(clientNameToId).find(name => clientNameToId[name] === existingDoc.client_id);
+
+        // Only process documents for clients in this upload
+        if (clientName && !uploadedDocNumbers.has(docKey) && existingDoc.status !== "pagado") {
+          await base44.entities.Document.update(existingDoc.id, {
+            status: "pagado",
+            paid_amount: existingDoc.amount
+          });
+          documentsMarkedPaid.push(existingDoc);
+        }
+      }
+
       setResult({
         success: true,
         clientsCount: createdClients.length,
         updatedClientsCount: clientsToUpdate.length,
-        documentsCount: createdDocuments.length
+        documentsCount: createdDocuments.length,
+        documentsMarkedPaid: documentsMarkedPaid.length
       });
 
       // Notify parent
@@ -380,6 +410,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
                   {result.clientsCount > 0 && <div>• {result.clientsCount} cliente(s) nuevo(s) creado(s)</div>}
                   {result.updatedClientsCount > 0 && <div>• {result.updatedClientsCount} cliente(s) actualizado(s)</div>}
                   <div>• {result.documentsCount} documento(s) agregado(s)</div>
+                  {result.documentsMarkedPaid > 0 && <div>• {result.documentsMarkedPaid} documento(s) marcado(s) como pagado(s)</div>}
                 </div>
               </AlertDescription>
             </Alert>
