@@ -441,24 +441,64 @@ export default function Home() {
                 : "Agrega tu primer cliente para comenzar"}
             </p>
             {!search && statusFilter === "all" && (
-              <Button onClick={() => setShowAddClient(true)} variant="outline" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Agregar cliente
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredClients.map((client) => {
-              const clientLogs = logs.filter(log => log.client_id === client.id);
-              const lastLog = clientLogs.length > 0 ? clientLogs[0] : null;
+                          <Button onClick={() => setShowAddClient(true)} variant="outline" className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Agregar cliente
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {filteredClients.map((client) => {
+                          const clientLogs = logs.filter(log => log.client_id === client.id);
+                          const lastLog = clientLogs.length > 0 ? clientLogs[0] : null;
 
-              return (
-                <Link key={client.id} to={createPageUrl(`ClientDetail?id=${client.id}`)}>
-                  <ClientCard client={client} lastLog={lastLog} />
-                </Link>
-              );
-            })}
+                          // Calculate actual status based on documents
+                          const clientDocs = documents.filter(d => d.client_id === client.id);
+                          const totalDebtFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+                          const totalPaidFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+                          const remaining = totalDebtFromDocs - totalPaidFromDocs;
+
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+
+                          const hasOverdueDocuments = clientDocs.some(doc => {
+                            const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+                            if (docRemaining <= 0) return false;
+
+                            if (!doc.due_date) return false;
+
+                            const dateStr = String(doc.due_date).trim();
+                            let dueDate;
+                            if (dateStr.includes('-')) {
+                              const parts = dateStr.split('-');
+                              if (parts.length === 3) {
+                                const [day, month, year] = parts;
+                                if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                                  dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                                }
+                              }
+                            }
+                            if (!dueDate) {
+                              dueDate = new Date(dateStr);
+                            }
+                            dueDate.setHours(0, 0, 0, 0);
+
+                            return dueDate < today;
+                          });
+
+                          const actualStatus = remaining <= 0 ? "al_corriente" : 
+                                              hasOverdueDocuments ? "mora" : 
+                                              client.status;
+
+                          const clientWithStatus = { ...client, status: actualStatus };
+
+                          return (
+                            <Link key={client.id} to={createPageUrl(`ClientDetail?id=${client.id}`)}>
+                              <ClientCard client={clientWithStatus} lastLog={lastLog} />
+                            </Link>
+                          );
+                        })}
           </div>
         )}
       </div>
