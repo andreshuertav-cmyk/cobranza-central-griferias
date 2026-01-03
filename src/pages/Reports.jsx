@@ -22,6 +22,7 @@ import CollectionChart from "@/components/reports/CollectionChart";
 import ActivityChart from "@/components/reports/ActivityChart";
 import TopCollectorsTable from "@/components/reports/TopCollectorsTable";
 import PromisesReport from "@/components/reports/PromisesReport";
+import ConsolidatedPromisesReport from "@/components/reports/ConsolidatedPromisesReport";
 
 export default function Reports() {
   const [period, setPeriod] = useState("week"); // day, week, month
@@ -225,9 +226,19 @@ export default function Reports() {
             {/* Top Performers */}
             <TopCollectorsTable logs={periodLogs} />
 
+            {/* Consolidated Promises Report */}
+            <div className="mt-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Promesas de pago consolidadas</h2>
+              <ConsolidatedPromisesReport 
+                logs={logs} 
+                period={period}
+                dateRange={dateRange}
+              />
+            </div>
+
             {/* Promises Report */}
             <div className="mt-8">
-              <h2 className="text-xl font-bold text-slate-900 mb-4">Reporte de promesas de pago</h2>
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Detalle de promesas del período</h2>
               <PromisesReport logs={periodLogs} />
             </div>
           </>
