@@ -495,7 +495,12 @@ export default function Home() {
 
                           return (
                             <Link key={client.id} to={createPageUrl(`ClientDetail?id=${client.id}`)}>
-                              <ClientCard client={clientWithStatus} lastLog={lastLog} />
+                              <ClientCard 
+                                client={clientWithStatus} 
+                                lastLog={lastLog}
+                                totalDebt={totalDebtFromDocs}
+                                totalPaid={totalPaidFromDocs}
+                              />
                             </Link>
                           );
                         })}
