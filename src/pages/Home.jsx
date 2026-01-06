@@ -33,6 +33,7 @@ export default function Home() {
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPendingFollowUps, setShowPendingFollowUps] = useState(false);
+  const [showDocsWithoutLogs, setShowDocsWithoutLogs] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -223,6 +224,15 @@ export default function Home() {
     todayFollowUps.map(log => log.client_id)
   );
 
+  // Get clients with documents but no logs
+  const clientsWithDocsButNoLogs = new Set(
+    clients.filter(client => {
+      const hasDocuments = documents.some(d => d.client_id === client.id);
+      const hasLogs = logs.some(l => l.client_id === client.id);
+      return hasDocuments && !hasLogs;
+    }).map(c => c.id)
+  );
+
   // Filter clients and remove duplicates by name
   const filteredClients = clients
     .filter(c => {
@@ -269,7 +279,8 @@ export default function Home() {
       
       const matchesStatus = statusFilter === "all" || actualStatus === statusFilter;
       const matchesPendingFollowUps = !showPendingFollowUps || clientsWithPendingFollowUps.has(c.id);
-      return matchesSearch && matchesStatus && matchesPendingFollowUps;
+      const matchesDocsWithoutLogs = !showDocsWithoutLogs || clientsWithDocsButNoLogs.has(c.id);
+      return matchesSearch && matchesStatus && matchesPendingFollowUps && matchesDocsWithoutLogs;
     })
     .reduce((unique, client) => {
       // Keep only the first occurrence of each client name
@@ -415,6 +426,18 @@ export default function Home() {
             </div>
           </button>
         )}
+
+        {/* Docs without logs filter */}
+        <div className="mb-6 flex gap-2">
+          <Button
+            variant={showDocsWithoutLogs ? "default" : "outline"}
+            onClick={() => setShowDocsWithoutLogs(!showDocsWithoutLogs)}
+            className="gap-2"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            {showDocsWithoutLogs ? "Mostrando sin gestiones" : "Ver sin gestiones"}
+          </Button>
+        </div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
