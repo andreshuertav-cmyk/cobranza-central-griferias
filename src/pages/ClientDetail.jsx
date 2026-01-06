@@ -55,10 +55,11 @@ export default function ClientDetail() {
   const { data: client, isLoading: loadingClient } = useQuery({
     queryKey: ["client", clientId],
     queryFn: async () => {
-      const allClients = await base44.entities.Client.list();
+      const allClients = await base44.entities.Client.list("-created_date", 10000);
       return allClients.find(c => c.id === clientId);
     },
-    enabled: !!clientId
+    enabled: !!clientId,
+    retry: 1
   });
 
   const { data: logs = [], isLoading: loadingLogs } = useQuery({
