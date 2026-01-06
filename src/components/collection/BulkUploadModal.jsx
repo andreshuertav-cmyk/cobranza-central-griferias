@@ -235,11 +235,26 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         throw new Error("No se encontraron documentos nuevos para procesar. Todos los documentos ya existen o faltan datos requeridos.");
       }
 
-      // 10. Create all new documents in bulk
-      const createdDocuments = await base44.entities.Document.bulkCreate(documentsToCreate);
+      // Helper function to add delay between batches
+      const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-      // 11. Recalculate total_debt and paid_amount for existing clients
+      // 10. Create all new documents in batches with delays
+      const BATCH_SIZE = 50;
+      const createdDocuments = [];
+      for (let i = 0; i < documentsToCreate.length; i += BATCH_SIZE) {
+        const batch = documentsToCreate.slice(i, i + BATCH_SIZE);
+        const batchResult = await base44.entities.Document.bulkCreate(batch);
+        createdDocuments.push(...batchResult);
+        
+        // Add delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < documentsToCreate.length) {
+          await delay(300);
+        }
+      }
+
+      // 11. Recalculate total_debt and paid_amount for existing clients with delays
       const allClientsInUpload = new Set(Object.keys(clientsMap));
+      let clientUpdateCount = 0;
       for (const clientName of allClientsInUpload) {
         const existingClient = existingClientsByName[clientName];
         if (existingClient) {
@@ -257,10 +272,16 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             paid_amount: totalPaid,
             status: hasOverdue ? "mora" : (totalPaid >= totalDebt ? "al_corriente" : existingClient.status)
           });
+          
+          clientUpdateCount++;
+          // Add delay every 10 client updates
+          if (clientUpdateCount % 10 === 0) {
+            await delay(200);
+          }
         }
       }
 
-      // 12. Mark documents as paid if they no longer appear in the upload
+      // 12. Mark documents as paid if they no longer appear in the upload with delays
       const documentsMarkedPaid = [];
       const uploadedDocNumbers = new Set();
 
@@ -275,6 +296,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       }
 
       // Find and mark documents as paid that are not in the upload
+      let docUpdateCount = 0;
       for (const existingDoc of allExistingDocs) {
         const docKey = `${existingDoc.client_id}_${existingDoc.document_number}`;
         const clientName = Object.keys(clientNameToId).find(name => clientNameToId[name] === existingDoc.client_id);
@@ -286,6 +308,12 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             paid_amount: existingDoc.amount
           });
           documentsMarkedPaid.push(existingDoc);
+          
+          docUpdateCount++;
+          // Add delay every 10 document updates
+          if (docUpdateCount % 10 === 0) {
+            await delay(200);
+          }
         }
       }
 
