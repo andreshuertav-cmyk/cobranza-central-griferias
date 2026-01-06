@@ -9,6 +9,13 @@ export default function QuickPaymentModal({ open, onOpenChange, document, onSubm
   const remaining = document ? Math.max(0, (document.amount || 0) - (document.paid_amount || 0)) : 0;
   const [amount, setAmount] = useState(remaining);
 
+  useEffect(() => {
+    if (document) {
+      const pendingAmount = Math.max(0, (document.amount || 0) - (document.paid_amount || 0));
+      setAmount(pendingAmount);
+    }
+  }, [document]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(parseFloat(amount) || 0);
