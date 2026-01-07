@@ -61,31 +61,12 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Ajustar fechas para evitar problemas de zona horaria
-    const contactDate = new Date(formData.contact_date);
-    contactDate.setMinutes(contactDate.getMinutes() - contactDate.getTimezoneOffset());
-    
-    const submittedData = {
+    onSubmit({
       ...formData,
       promised_amount: formData.promised_amount ? parseFloat(formData.promised_amount) : null,
       paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : null,
-      document_id: formData.document_id || null,
-      contact_date: contactDate.toISOString()
-    };
-    
-    // Ajustar promised_date si existe
-    if (formData.promised_date) {
-      const promisedDate = new Date(formData.promised_date + 'T12:00:00');
-      submittedData.promised_date = promisedDate.toISOString().split('T')[0];
-    }
-    
-    // Ajustar follow_up_date si existe
-    if (formData.follow_up_date) {
-      const followUpDate = new Date(formData.follow_up_date + 'T12:00:00');
-      submittedData.follow_up_date = followUpDate.toISOString().split('T')[0];
-    }
-    
-    onSubmit(submittedData);
+      document_id: formData.document_id || null
+    });
   };
 
   const showPromiseFields = formData.result === "promesa_pago";
