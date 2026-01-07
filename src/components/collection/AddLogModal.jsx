@@ -198,13 +198,28 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
               
               <div className="space-y-2">
                 <Label>Monto pagado</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.paid_amount}
-                  onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formData.paid_amount}
+                    onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (totalDebt !== undefined) {
+                        setFormData({ ...formData, paid_amount: totalDebt.toString() });
+                      }
+                    }}
+                  >
+                    Pagar todo
+                  </Button>
+                </div>
               </div>
             </div>
           )}
