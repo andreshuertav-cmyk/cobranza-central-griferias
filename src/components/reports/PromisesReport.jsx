@@ -4,7 +4,7 @@ import { HandshakeIcon, Calendar, DollarSign, CheckCircle2, XCircle, Clock } fro
 import { format, parseISO, isPast, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 
-export default function PromisesReport({ logs }) {
+export default function PromisesReport({ logs, clients }) {
   // Filter promises
   const promises = logs.filter(log => log.result === "promesa_pago" && log.promised_date);
 
@@ -114,12 +114,14 @@ export default function PromisesReport({ logs }) {
             const promisedDate = parseISO(promise.promised_date);
             const wasPaid = fulfilled.includes(promise);
             const isOverdue = overdue.includes(promise);
+            const client = clients?.find(c => c.id === promise.client_id);
+            const clientName = client?.name || `Cliente ID: ${promise.client_id.slice(0, 8)}...`;
             
             return (
               <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    <p className="font-medium text-slate-900">Cliente ID: {promise.client_id.slice(0, 8)}...</p>
+                    <p className="font-medium text-slate-900">{clientName}</p>
                     {wasPaid && (
                       <Badge className="bg-green-100 text-green-700 border-green-200">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
