@@ -61,12 +61,26 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    onSubmit({
+    const submittedData = {
       ...formData,
       promised_amount: formData.promised_amount ? parseFloat(formData.promised_amount) : null,
       paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : null,
       document_id: formData.document_id || null
-    });
+    };
+
+    // Ajustar promised_date para evitar cambio de día por zona horaria
+    if (formData.promised_date) {
+      const [year, month, day] = formData.promised_date.split('-');
+      submittedData.promised_date = `${year}-${month}-${day}`;
+    }
+
+    // Ajustar follow_up_date para evitar cambio de día por zona horaria
+    if (formData.follow_up_date) {
+      const [year, month, day] = formData.follow_up_date.split('-');
+      submittedData.follow_up_date = `${year}-${month}-${day}`;
+    }
+    
+    onSubmit(submittedData);
   };
 
   const showPromiseFields = formData.result === "promesa_pago";
