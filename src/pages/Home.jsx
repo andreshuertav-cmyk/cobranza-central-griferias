@@ -200,16 +200,40 @@ export default function Home() {
     }
   });
 
-  // Calculate stats
-  const totalDebt = clients.reduce((sum, c) => sum + (c.total_debt || 0), 0);
-  const totalPaid = clients.reduce((sum, c) => sum + (c.paid_amount || 0), 0);
+  // Calculate stats from real documents
+  const totalDebt = documents.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+  const totalPaid = documents.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
   const pendingAmount = totalDebt - totalPaid;
-  
+
   // Count clients with overdue documents
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const inMora = clients.filter(client => {
-    return documents.some(doc => 
-      doc.client_id === client.id && (doc.days_overdue || 0) > 0
-    );
+    return documents.some(doc => {
+      if (doc.client_id !== client.id) return false;
+      const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+      if (docRemaining <= 0) return false;
+      if (!doc.due_date) return false;
+
+      const dateStr = String(doc.due_date).trim();
+      let dueDate;
+      if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+          const [day, month, year] = parts;
+          if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+            dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          }
+        }
+      }
+      if (!dueDate) {
+        dueDate = new Date(dateStr);
+      }
+      dueDate.setHours(0, 0, 0, 0);
+
+      return dueDate < today;
+    });
   }).length;
 
   // Get today's follow-ups
