@@ -241,7 +241,7 @@ export default function Reports() {
             {/* Promises Report */}
             <div className="mt-8">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Detalle de promesas del período</h2>
-              <PromisesReport logs={periodLogs} />
+              <PromisesReport logs={periodLogs} clients={clients} />
             </div>
 
             {/* Sales Rep Report */}
