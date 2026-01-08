@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 
 const statusOptions = [
-  { value: "al_corriente", label: "Al corriente" },
+  { value: "al_corriente", label: "Al día" },
   { value: "pendiente", label: "Pendiente" },
   { value: "en_negociacion", label: "En negociación" },
   { value: "mora", label: "En mora" },
