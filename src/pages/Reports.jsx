@@ -235,6 +235,7 @@ export default function Reports() {
                 logs={logs} 
                 period={period}
                 dateRange={dateRange}
+                clients={clients}
               />
             </div>
 

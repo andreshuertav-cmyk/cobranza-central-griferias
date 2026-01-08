@@ -9,7 +9,7 @@ import {
 import { es } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-export default function ConsolidatedPromisesReport({ logs, period, dateRange }) {
+export default function ConsolidatedPromisesReport({ logs, period, dateRange, clients }) {
   // Filter promises
   const promises = logs.filter(log => log.result === "promesa_pago" && log.promised_date);
 
@@ -59,7 +59,10 @@ export default function ConsolidatedPromisesReport({ logs, period, dateRange }) 
 
     // Check if promise was fulfilled
     const fulfilled = periodPromises.filter(promise => {
-      return logs.some(log => 
+      const client = clients?.find(c => c.id === promise.client_id);
+      const clientHasNoDebt = client && (client.total_debt || 0) <= (client.paid_amount || 0);
+      
+      return clientHasNoDebt || logs.some(log => 
         log.client_id === promise.client_id && 
         log.result === "pago_realizado" &&
         parseISO(log.contact_date) >= parseISO(promise.contact_date)
@@ -84,7 +87,10 @@ export default function ConsolidatedPromisesReport({ logs, period, dateRange }) 
   const totalPromises = promises.length;
   const totalAmount = promises.reduce((sum, p) => sum + (p.promised_amount || 0), 0);
   const totalFulfilled = promises.filter(promise => {
-    return logs.some(log => 
+    const client = clients?.find(c => c.id === promise.client_id);
+    const clientHasNoDebt = client && (client.total_debt || 0) <= (client.paid_amount || 0);
+    
+    return clientHasNoDebt || logs.some(log => 
       log.client_id === promise.client_id && 
       log.result === "pago_realizado" &&
       parseISO(log.contact_date) >= parseISO(promise.contact_date)
