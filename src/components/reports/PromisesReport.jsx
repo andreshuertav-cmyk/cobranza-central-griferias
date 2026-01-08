@@ -25,7 +25,12 @@ export default function PromisesReport({ logs, clients }) {
 
   promises.forEach(promise => {
     const promisedDate = parseISO(promise.promised_date);
-    const wasPaid = logs.some(log => 
+    
+    // Check if client has paid (either specific payment log or client balance is 0)
+    const client = clients?.find(c => c.id === promise.client_id);
+    const clientHasNoDebt = client && (client.total_debt || 0) <= (client.paid_amount || 0);
+    
+    const wasPaid = clientHasNoDebt || logs.some(log => 
       log.client_id === promise.client_id && 
       log.result === "pago_realizado" &&
       parseISO(log.contact_date) >= parseISO(promise.contact_date)
