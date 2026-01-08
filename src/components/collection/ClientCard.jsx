@@ -7,7 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 const statusConfig = {
-  al_corriente: { label: "Al corriente", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  al_corriente: { label: "Al día", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   pendiente: { label: "Pendiente", color: "bg-amber-100 text-amber-700 border-amber-200" },
   en_negociacion: { label: "En negociación", color: "bg-blue-100 text-blue-700 border-blue-200" },
   mora: { label: "En mora", color: "bg-red-100 text-red-700 border-red-200" },
