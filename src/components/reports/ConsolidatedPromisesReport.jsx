@@ -9,7 +9,7 @@ import {
 import { es } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-export default function ConsolidatedPromisesReport({ logs, period, dateRange, clients }) {
+export default function ConsolidatedPromisesReport({ logs, period, dateRange, clients, documents }) {
   // Filter promises
   const promises = logs.filter(log => log.result === "promesa_pago" && log.promised_date);
 
@@ -59,8 +59,11 @@ export default function ConsolidatedPromisesReport({ logs, period, dateRange, cl
 
     // Check if promise was fulfilled
     const fulfilled = periodPromises.filter(promise => {
-      const client = clients?.find(c => c.id === promise.client_id);
-      const clientHasNoDebt = client && (client.total_debt || 0) <= (client.paid_amount || 0);
+      // Calculate real debt from documents
+      const clientDocs = documents?.filter(d => d.client_id === promise.client_id) || [];
+      const totalDebtFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+      const totalPaidFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+      const clientHasNoDebt = totalDebtFromDocs > 0 && totalPaidFromDocs >= totalDebtFromDocs;
       
       return clientHasNoDebt || logs.some(log => 
         log.client_id === promise.client_id && 
@@ -87,8 +90,11 @@ export default function ConsolidatedPromisesReport({ logs, period, dateRange, cl
   const totalPromises = promises.length;
   const totalAmount = promises.reduce((sum, p) => sum + (p.promised_amount || 0), 0);
   const totalFulfilled = promises.filter(promise => {
-    const client = clients?.find(c => c.id === promise.client_id);
-    const clientHasNoDebt = client && (client.total_debt || 0) <= (client.paid_amount || 0);
+    // Calculate real debt from documents
+    const clientDocs = documents?.filter(d => d.client_id === promise.client_id) || [];
+    const totalDebtFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+    const totalPaidFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+    const clientHasNoDebt = totalDebtFromDocs > 0 && totalPaidFromDocs >= totalDebtFromDocs;
     
     return clientHasNoDebt || logs.some(log => 
       log.client_id === promise.client_id && 

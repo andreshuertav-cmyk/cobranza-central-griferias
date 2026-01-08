@@ -4,7 +4,7 @@ import { HandshakeIcon, Calendar, DollarSign, CheckCircle2, XCircle, Clock } fro
 import { format, parseISO, isPast, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 
-export default function PromisesReport({ logs, clients }) {
+export default function PromisesReport({ logs, clients, documents }) {
   // Filter promises
   const promises = logs.filter(log => log.result === "promesa_pago" && log.promised_date);
 
@@ -26,9 +26,11 @@ export default function PromisesReport({ logs, clients }) {
   promises.forEach(promise => {
     const promisedDate = parseISO(promise.promised_date);
     
-    // Check if client has paid (either specific payment log or client balance is 0)
-    const client = clients?.find(c => c.id === promise.client_id);
-    const clientHasNoDebt = client && (client.total_debt || 0) <= (client.paid_amount || 0);
+    // Calculate real debt from documents
+    const clientDocs = documents?.filter(d => d.client_id === promise.client_id) || [];
+    const totalDebtFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+    const totalPaidFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+    const clientHasNoDebt = totalDebtFromDocs > 0 && totalPaidFromDocs >= totalDebtFromDocs;
     
     const wasPaid = clientHasNoDebt || logs.some(log => 
       log.client_id === promise.client_id && 
