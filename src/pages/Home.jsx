@@ -236,11 +236,21 @@ export default function Home() {
     });
   }).length;
 
-  // Get today's follow-ups
+  // Get today's follow-ups (excluding clients that are already "al corriente")
   const todayFollowUps = logs.filter(log => {
     if (!log.follow_up_date) return false;
     const followDate = new Date(log.follow_up_date);
-    return isToday(followDate) || (isPast(followDate) && !isToday(followDate));
+    const isPending = isToday(followDate) || (isPast(followDate) && !isToday(followDate));
+    
+    if (!isPending) return false;
+    
+    // Check if client is "al corriente"
+    const clientDocs = documents.filter(d => d.client_id === log.client_id);
+    const totalDebt = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+    const totalPaid = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+    const hasDebt = totalDebt > totalPaid;
+    
+    return hasDebt; // Only include if client still has debt
   });
 
   // Get client IDs with pending follow-ups
