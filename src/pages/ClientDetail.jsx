@@ -41,6 +41,11 @@ const statusConfig = {
 export default function ClientDetail() {
   const urlParams = new URLSearchParams(window.location.search);
   const clientId = urlParams.get("id");
+  const statusFilter = urlParams.get("statusFilter") || "all";
+  const sortBy = urlParams.get("sortBy") || "name";
+  const search = urlParams.get("search") || "";
+  const showPendingFollowUps = urlParams.get("showPendingFollowUps") === "true";
+  const showDocsWithoutLogs = urlParams.get("showDocsWithoutLogs") === "true";
 
   const [showAddLog, setShowAddLog] = useState(false);
   const [showEditClient, setShowEditClient] = useState(false);
@@ -53,9 +58,19 @@ export default function ClientDetail() {
 
   const queryClient = useQueryClient();
 
-  const { data: allClientsData, isLoading: loadingAllClients } = useQuery({
-    queryKey: ["allClients"],
-    queryFn: () => base44.entities.Client.list("-created_date", 10000)
+  const { data: allClients = [], isLoading: loadingAllClients } = useQuery({
+    queryKey: ["clients"],
+    queryFn: () => base44.entities.Client.list("-created_date")
+  });
+
+  const { data: allLogs = [] } = useQuery({
+    queryKey: ["logs"],
+    queryFn: () => base44.entities.CollectionLog.list("-contact_date", 100)
+  });
+
+  const { data: allDocuments = [] } = useQuery({
+    queryKey: ["documents"],
+    queryFn: () => base44.entities.Document.list()
   });
 
   const { data: client, isLoading: loadingClient } = useQuery({
@@ -68,10 +83,79 @@ export default function ClientDetail() {
     retry: 1
   });
 
+  // Apply same filters as Home page
+  const todayFollowUps = allLogs.filter(log => {
+    if (!log.follow_up_date) return false;
+    const followDate = new Date(log.follow_up_date);
+    const isPending = new Date(followDate).setHours(0,0,0,0) <= new Date().setHours(0,0,0,0);
+    if (!isPending) return false;
+    const clientDocs = allDocuments.filter(d => d.client_id === log.client_id);
+    const totalDebt = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+    const totalPaid = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+    return totalDebt > totalPaid;
+  });
+
+  const clientsWithPendingFollowUps = new Set(todayFollowUps.map(log => log.client_id));
+  const clientsWithDocsButNoLogs = new Set(
+    allClients.filter(client => {
+      const hasDocuments = allDocuments.some(d => d.client_id === client.id);
+      const hasLogs = allLogs.some(l => l.client_id === client.id);
+      return hasDocuments && !hasLogs;
+    }).map(c => c.id)
+  );
+
+  const filteredClients = allClients
+    .filter(c => {
+      const matchesSearch = c.name?.toLowerCase().includes(search.toLowerCase()) || c.phone?.includes(search);
+      const clientDocs = allDocuments.filter(d => d.client_id === c.id);
+      const totalDebtFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+      const totalPaidFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+      const remaining = totalDebtFromDocs - totalPaidFromDocs;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const hasOverdueDocuments = clientDocs.some(doc => {
+        const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+        if (docRemaining <= 0) return false;
+        if (!doc.due_date) return false;
+        const dateStr = String(doc.due_date).trim();
+        let dueDate;
+        if (dateStr.includes('-')) {
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            const [day, month, year] = parts;
+            if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+              dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            }
+          }
+        }
+        if (!dueDate) dueDate = new Date(dateStr);
+        dueDate.setHours(0, 0, 0, 0);
+        return dueDate < today;
+      });
+      const actualStatus = remaining <= 0 ? "al_corriente" : hasOverdueDocuments ? "mora" : "pendiente";
+      const matchesStatus = statusFilter === "all" || actualStatus === statusFilter;
+      const matchesPendingFollowUps = !showPendingFollowUps || clientsWithPendingFollowUps.has(c.id);
+      const matchesDocsWithoutLogs = !showDocsWithoutLogs || clientsWithDocsButNoLogs.has(c.id);
+      return matchesSearch && matchesStatus && matchesPendingFollowUps && matchesDocsWithoutLogs;
+    })
+    .reduce((unique, client) => {
+      if (!unique.find(c => c.name === client.name)) unique.push(client);
+      return unique;
+    }, [])
+    .sort((a, b) => {
+      if (sortBy === "name") {
+        return (a.name || "").localeCompare(b.name || "");
+      } else {
+        const debtA = (a.total_debt || 0) - (a.paid_amount || 0);
+        const debtB = (b.total_debt || 0) - (b.paid_amount || 0);
+        return debtB - debtA;
+      }
+    });
+
   // Find previous and next clients
-  const currentIndex = allClientsData?.findIndex(c => c.id === clientId) ?? -1;
-  const previousClient = currentIndex > 0 ? allClientsData[currentIndex - 1] : null;
-  const nextClient = currentIndex >= 0 && currentIndex < (allClientsData?.length ?? 0) - 1 ? allClientsData[currentIndex + 1] : null;
+  const currentIndex = filteredClients.findIndex(c => c.id === clientId);
+  const previousClient = currentIndex > 0 ? filteredClients[currentIndex - 1] : null;
+  const nextClient = currentIndex >= 0 && currentIndex < filteredClients.length - 1 ? filteredClients[currentIndex + 1] : null;
 
   const { data: logs = [], isLoading: loadingLogs } = useQuery({
     queryKey: ["logs", clientId],
@@ -332,7 +416,16 @@ export default function ClientDetail() {
           <Button
             size="icon"
             className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-            onClick={() => window.location.href = createPageUrl(`ClientDetail?id=${previousClient.id}`)}
+            onClick={() => {
+              const filterParams = new URLSearchParams({
+                statusFilter,
+                sortBy,
+                search,
+                showPendingFollowUps: showPendingFollowUps.toString(),
+                showDocsWithoutLogs: showDocsWithoutLogs.toString()
+              }).toString();
+              window.location.href = createPageUrl(`ClientDetail?id=${previousClient.id}&${filterParams}`);
+            }}
           >
             <ChevronLeft className="h-6 w-6" />
           </Button>
@@ -352,7 +445,16 @@ export default function ClientDetail() {
           <Button
             size="icon"
             className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-            onClick={() => window.location.href = createPageUrl(`ClientDetail?id=${nextClient.id}`)}
+            onClick={() => {
+              const filterParams = new URLSearchParams({
+                statusFilter,
+                sortBy,
+                search,
+                showPendingFollowUps: showPendingFollowUps.toString(),
+                showDocsWithoutLogs: showDocsWithoutLogs.toString()
+              }).toString();
+              window.location.href = createPageUrl(`ClientDetail?id=${nextClient.id}&${filterParams}`);
+            }}
           >
             <ChevronRight className="h-6 w-6" />
           </Button>

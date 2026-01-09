@@ -589,8 +589,16 @@ export default function Home() {
 
                           const clientWithStatus = { ...client, status: actualStatus };
 
+                          const filterParams = new URLSearchParams({
+                            statusFilter,
+                            sortBy,
+                            search,
+                            showPendingFollowUps: showPendingFollowUps.toString(),
+                            showDocsWithoutLogs: showDocsWithoutLogs.toString()
+                          }).toString();
+
                           return (
-                            <Link key={client.id} to={createPageUrl(`ClientDetail?id=${client.id}`)}>
+                            <Link key={client.id} to={createPageUrl(`ClientDetail?id=${client.id}&${filterParams}`)}>
                               <ClientCard 
                                 client={clientWithStatus} 
                                 lastLog={lastLog}
