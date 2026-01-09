@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { 
   ArrowLeft, Phone, Mail, Plus, Edit2, Trash2, 
-  Loader2, Calendar, DollarSign, TrendingUp, History
+  Loader2, Calendar, DollarSign, TrendingUp, History,
+  ChevronLeft, ChevronRight, Home
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -52,6 +53,11 @@ export default function ClientDetail() {
 
   const queryClient = useQueryClient();
 
+  const { data: allClientsData, isLoading: loadingAllClients } = useQuery({
+    queryKey: ["allClients"],
+    queryFn: () => base44.entities.Client.list("-created_date", 10000)
+  });
+
   const { data: client, isLoading: loadingClient } = useQuery({
     queryKey: ["client", clientId],
     queryFn: async () => {
@@ -61,6 +67,11 @@ export default function ClientDetail() {
     enabled: !!clientId,
     retry: 1
   });
+
+  // Find previous and next clients
+  const currentIndex = allClientsData?.findIndex(c => c.id === clientId) ?? -1;
+  const previousClient = currentIndex > 0 ? allClientsData[currentIndex - 1] : null;
+  const nextClient = currentIndex >= 0 && currentIndex < (allClientsData?.length ?? 0) - 1 ? allClientsData[currentIndex + 1] : null;
 
   const { data: logs = [], isLoading: loadingLogs } = useQuery({
     queryKey: ["logs", clientId],
@@ -315,6 +326,60 @@ export default function ClientDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Fixed Navigation Buttons */}
+      <div className="fixed top-1/2 left-4 -translate-y-1/2 z-50">
+        {previousClient ? (
+          <Link to={createPageUrl(`ClientDetail?id=${previousClient.id}`)}>
+            <Button
+              size="icon"
+              className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+          </Link>
+        ) : (
+          <Button
+            size="icon"
+            className="h-12 w-12 rounded-full shadow-lg bg-slate-100 text-slate-300 cursor-not-allowed"
+            disabled
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+        )}
+      </div>
+
+      <div className="fixed top-1/2 right-4 -translate-y-1/2 z-50">
+        {nextClient ? (
+          <Link to={createPageUrl(`ClientDetail?id=${nextClient.id}`)}>
+            <Button
+              size="icon"
+              className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </Button>
+          </Link>
+        ) : (
+          <Button
+            size="icon"
+            className="h-12 w-12 rounded-full shadow-lg bg-slate-100 text-slate-300 cursor-not-allowed"
+            disabled
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        )}
+      </div>
+
+      <div className="fixed bottom-6 right-6 z-50">
+        <Link to={createPageUrl("Home")}>
+          <Button
+            size="icon"
+            className="h-14 w-14 rounded-full shadow-lg bg-slate-900 text-white hover:bg-slate-800"
+          >
+            <Home className="h-6 w-6" />
+          </Button>
+        </Link>
+      </div>
+
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
