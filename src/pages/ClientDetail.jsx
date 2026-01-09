@@ -473,7 +473,16 @@ export default function ClientDetail() {
         <Button
           size="icon"
           className="h-14 w-14 rounded-full shadow-lg bg-slate-900 text-white hover:bg-slate-800"
-          onClick={() => window.location.href = createPageUrl("Home")}
+          onClick={() => {
+            const filterParams = new URLSearchParams({
+              statusFilter,
+              sortBy,
+              search,
+              showPendingFollowUps: showPendingFollowUps.toString(),
+              showDocsWithoutLogs: showDocsWithoutLogs.toString()
+            }).toString();
+            window.location.href = createPageUrl(`Home?${filterParams}`);
+          }}
         >
           <Home className="h-6 w-6" />
         </Button>

@@ -26,14 +26,16 @@ import BulkUploadModal from "@/components/collection/BulkUploadModal";
 
 
 export default function Home() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState(() => localStorage.getItem("sortBy") || "name");
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  const [search, setSearch] = useState(urlParams.get("search") || "");
+  const [statusFilter, setStatusFilter] = useState(urlParams.get("statusFilter") || "all");
+  const [sortBy, setSortBy] = useState(urlParams.get("sortBy") || localStorage.getItem("sortBy") || "name");
   const [showAddClient, setShowAddClient] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showPendingFollowUps, setShowPendingFollowUps] = useState(false);
-  const [showDocsWithoutLogs, setShowDocsWithoutLogs] = useState(false);
+  const [showPendingFollowUps, setShowPendingFollowUps] = useState(urlParams.get("showPendingFollowUps") === "true");
+  const [showDocsWithoutLogs, setShowDocsWithoutLogs] = useState(urlParams.get("showDocsWithoutLogs") === "true");
   
   const queryClient = useQueryClient();
 
