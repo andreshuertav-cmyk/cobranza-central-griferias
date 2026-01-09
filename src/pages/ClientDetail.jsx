@@ -55,6 +55,7 @@ export default function ClientDetail() {
   const [showQuickPayment, setShowQuickPayment] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [editingDocument, setEditingDocument] = useState(null);
+  const [showOnlyOverdue, setShowOnlyOverdue] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -584,12 +585,22 @@ export default function ClientDetail() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-slate-400" />
-              <h2 className="text-lg font-semibold text-slate-900">Documentos en mora</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Documentos</h2>
             </div>
-            <Button onClick={() => setShowAddDocument(true)} variant="outline" size="sm" className="gap-2">
-              <Plus className="h-3 w-3" />
-              Agregar documento
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => setShowOnlyOverdue(!showOnlyOverdue)} 
+                variant={showOnlyOverdue ? "default" : "outline"} 
+                size="sm" 
+                className="gap-2"
+              >
+                {showOnlyOverdue ? "Mostrando morosos" : "Ver morosos"}
+              </Button>
+              <Button onClick={() => setShowAddDocument(true)} variant="outline" size="sm" className="gap-2">
+                <Plus className="h-3 w-3" />
+                Agregar documento
+              </Button>
+            </div>
           </div>
 
           {loadingDocuments ? (
@@ -603,7 +614,9 @@ export default function ClientDetail() {
             </Card>
           ) : (
             <div className="space-y-3">
-              {documents.map((doc) => (
+              {documents
+                .filter(doc => !showOnlyOverdue || doc.status === "vencido")
+                .map((doc) => (
                 <DocumentCard 
                   key={doc.id} 
                   document={doc}
