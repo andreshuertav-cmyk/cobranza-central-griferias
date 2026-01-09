@@ -329,14 +329,13 @@ export default function ClientDetail() {
       {/* Fixed Navigation Buttons */}
       <div className="fixed top-1/2 left-4 -translate-y-1/2 z-50">
         {previousClient ? (
-          <Link to={createPageUrl(`ClientDetail?id=${previousClient.id}`)}>
-            <Button
-              size="icon"
-              className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </Button>
-          </Link>
+          <Button
+            size="icon"
+            className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+            onClick={() => window.location.href = createPageUrl(`ClientDetail?id=${previousClient.id}`)}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
         ) : (
           <Button
             size="icon"
@@ -350,14 +349,13 @@ export default function ClientDetail() {
 
       <div className="fixed top-1/2 right-4 -translate-y-1/2 z-50">
         {nextClient ? (
-          <Link to={createPageUrl(`ClientDetail?id=${nextClient.id}`)}>
-            <Button
-              size="icon"
-              className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </Button>
-          </Link>
+          <Button
+            size="icon"
+            className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+            onClick={() => window.location.href = createPageUrl(`ClientDetail?id=${nextClient.id}`)}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
         ) : (
           <Button
             size="icon"
@@ -370,14 +368,13 @@ export default function ClientDetail() {
       </div>
 
       <div className="fixed bottom-6 right-6 z-50">
-        <Link to={createPageUrl("Home")}>
-          <Button
-            size="icon"
-            className="h-14 w-14 rounded-full shadow-lg bg-slate-900 text-white hover:bg-slate-800"
-          >
-            <Home className="h-6 w-6" />
-          </Button>
-        </Link>
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full shadow-lg bg-slate-900 text-white hover:bg-slate-800"
+          onClick={() => window.location.href = createPageUrl("Home")}
+        >
+          <Home className="h-6 w-6" />
+        </Button>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
