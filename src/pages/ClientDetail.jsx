@@ -55,7 +55,7 @@ export default function ClientDetail() {
   const [showQuickPayment, setShowQuickPayment] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [editingDocument, setEditingDocument] = useState(null);
-  const [showOnlyOverdue, setShowOnlyOverdue] = useState(false);
+  const [showOnlyOverdue, setShowOnlyOverdue] = useState(true);
 
   const queryClient = useQueryClient();
 
@@ -590,11 +590,11 @@ export default function ClientDetail() {
             <div className="flex items-center gap-2">
               <Button 
                 onClick={() => setShowOnlyOverdue(!showOnlyOverdue)} 
-                variant={showOnlyOverdue ? "default" : "outline"} 
+                variant={showOnlyOverdue ? "outline" : "default"} 
                 size="sm" 
                 className="gap-2"
               >
-                {showOnlyOverdue ? "Mostrando morosos" : "Ver morosos"}
+                {showOnlyOverdue ? "Mostrar todas" : "Solo morosas"}
               </Button>
               <Button onClick={() => setShowAddDocument(true)} variant="outline" size="sm" className="gap-2">
                 <Plus className="h-3 w-3" />
