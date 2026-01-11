@@ -232,7 +232,7 @@ export default function Reports() {
             {/* Daily Promises Summary */}
             <div className="mt-8">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Consolidado diario de promesas de pago</h2>
-              <DailyPromisesSummary logs={logs} />
+              <DailyPromisesSummary logs={logs} clients={clients} />
             </div>
 
             {/* Consolidated Promises Report */}

@@ -5,7 +5,7 @@ import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDa
 import { es } from "date-fns/locale";
 import { Calendar, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function DailyPromisesSummary({ logs }) {
+export default function DailyPromisesSummary({ logs, clients }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   // Filter logs with payment promises
@@ -179,24 +179,49 @@ export default function DailyPromisesSummary({ logs }) {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-700">Detalle de promesas:</p>
-                  {selectedData.logs.map((log, idx) => (
-                    <div key={idx} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="text-sm text-slate-600">
-                            {log.notes || "Sin notas"}
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            {format(parseISO(log.contact_date), "HH:mm", { locale: es })}
+                  <p className="text-sm font-medium text-slate-700">Detalle por cliente:</p>
+                  {(() => {
+                    // Group by client
+                    const byClient = {};
+                    selectedData.logs.forEach(log => {
+                      if (!byClient[log.client_id]) {
+                        const client = clients.find(c => c.id === log.client_id);
+                        byClient[log.client_id] = {
+                          name: client?.name || "Cliente desconocido",
+                          amount: 0,
+                          logs: []
+                        };
+                      }
+                      byClient[log.client_id].amount += log.promised_amount || 0;
+                      byClient[log.client_id].logs.push(log);
+                    });
+
+                    return Object.values(byClient).map((clientData, idx) => (
+                      <div key={idx} className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <p className="font-semibold text-slate-900">{clientData.name}</p>
+                          <p className="text-lg font-bold text-blue-900">
+                            ${clientData.amount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                           </p>
                         </div>
-                        <p className="text-sm font-semibold text-slate-900 ml-3">
-                          ${(log.promised_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
-                        </p>
+                        <div className="space-y-1 pt-2 border-t border-slate-200">
+                          {clientData.logs.map((log, logIdx) => (
+                            <div key={logIdx} className="flex justify-between items-start text-xs">
+                              <div className="flex-1">
+                                <p className="text-slate-600">{log.notes || "Sin notas"}</p>
+                                <p className="text-slate-400">
+                                  {format(parseISO(log.contact_date), "HH:mm", { locale: es })}
+                                </p>
+                              </div>
+                              <p className="text-slate-700 font-medium ml-2">
+                                ${(log.promised_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </div>
             )}
