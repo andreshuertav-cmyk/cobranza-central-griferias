@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { format, parseISO } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar, DollarSign } from "lucide-react";
+import { Calendar, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function DailyPromisesSummary({ logs }) {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
   // Filter logs with payment promises
   const promises = logs.filter(log => 
     log.result === "promesa_pago" && log.promised_date && log.promised_amount
@@ -25,20 +29,29 @@ export default function DailyPromisesSummary({ logs }) {
       acc[date] = {
         date: date,
         totalAmount: 0,
-        count: 0
+        count: 0,
+        logs: []
       };
     }
     acc[date].totalAmount += log.promised_amount || 0;
     acc[date].count += 1;
+    acc[date].logs.push(log);
     return acc;
   }, {});
 
-  // Convert to array and sort by date
-  const sortedPromises = Object.values(promisesByDate).sort((a, b) => {
-    return new Date(a.date) - new Date(b.date);
-  });
+  const totalPromised = Object.values(promisesByDate).reduce((sum, item) => sum + item.totalAmount, 0);
 
-  const totalPromised = sortedPromises.reduce((sum, item) => sum + item.totalAmount, 0);
+  // Generate calendar days
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  // Get day of week for first day (0 = Sunday, need to adjust to Monday = 0)
+  const firstDayOfWeek = (monthStart.getDay() + 6) % 7;
+
+  // Find data for selected date
+  const selectedDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
+  const selectedData = selectedDateStr ? promisesByDate[selectedDateStr] : null;
 
   return (
     <div className="space-y-4">
@@ -54,63 +67,142 @@ export default function DailyPromisesSummary({ logs }) {
           <DollarSign className="h-12 w-12 text-blue-300" />
         </div>
         <p className="text-sm text-blue-600 mt-2">
-          {promises.length} promesa{promises.length !== 1 ? 's' : ''} en {sortedPromises.length} día{sortedPromises.length !== 1 ? 's' : ''}
+          {promises.length} promesa{promises.length !== 1 ? 's' : ''}
         </p>
       </Card>
 
-      {/* Daily Breakdown */}
-      <Card className="overflow-hidden">
-        <div className="bg-slate-50 px-6 py-3 border-b border-slate-200">
-          <h3 className="font-semibold text-slate-900">Consolidado diario</h3>
-        </div>
-        <div className="divide-y divide-slate-200">
-          {sortedPromises.map((item, index) => {
-            const dateObj = new Date(item.date);
-            const isToday = format(new Date(), 'yyyy-MM-dd') === item.date;
-            const isPast = dateObj < new Date() && !isToday;
+      <div className="grid lg:grid-cols-2 gap-4">
+        {/* Calendar */}
+        <Card className="overflow-hidden">
+          <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-slate-900">
+                {format(currentMonth, "MMMM yyyy", { locale: es })}
+              </h3>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
 
-            return (
-              <div 
-                key={index} 
-                className={`px-6 py-4 hover:bg-slate-50 transition-colors ${
-                  isPast ? 'bg-red-50' : isToday ? 'bg-amber-50' : ''
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                      isPast ? 'bg-red-100' : isToday ? 'bg-amber-100' : 'bg-blue-100'
-                    }`}>
-                      <Calendar className={`h-5 w-5 ${
-                        isPast ? 'text-red-600' : isToday ? 'text-amber-600' : 'text-blue-600'
-                      }`} />
+          <div className="p-4">
+            {/* Days of week */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => (
+                <div key={day} className="text-center text-xs font-semibold text-slate-500 py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar days */}
+            <div className="grid grid-cols-7 gap-1">
+              {/* Empty cells for days before month starts */}
+              {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                <div key={`empty-${i}`} />
+              ))}
+
+              {/* Actual days */}
+              {daysInMonth.map((day) => {
+                const dateStr = format(day, 'yyyy-MM-dd');
+                const hasPromises = promisesByDate[dateStr];
+                const isSelected = selectedDate && isSameDay(day, selectedDate);
+                const isToday = isSameDay(day, new Date());
+
+                return (
+                  <button
+                    key={dateStr}
+                    onClick={() => setSelectedDate(day)}
+                    className={`
+                      aspect-square rounded-lg text-sm font-medium transition-all
+                      ${hasPromises 
+                        ? 'bg-blue-100 text-blue-900 hover:bg-blue-200' 
+                        : 'text-slate-600 hover:bg-slate-100'
+                      }
+                      ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
+                      ${isToday && !isSelected ? 'border-2 border-blue-500' : ''}
+                    `}
+                  >
+                    {format(day, 'd')}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
+
+        {/* Selected day details */}
+        <Card className="overflow-hidden">
+          <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+            <h3 className="font-semibold text-slate-900">
+              {selectedDate 
+                ? format(selectedDate, "EEEE, d 'de' MMMM", { locale: es })
+                : "Selecciona un día"
+              }
+            </h3>
+          </div>
+
+          <div className="p-6">
+            {!selectedDate ? (
+              <div className="text-center py-12">
+                <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm text-slate-500">Haz click en un día del calendario</p>
+              </div>
+            ) : !selectedData ? (
+              <div className="text-center py-12">
+                <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm text-slate-500">Sin promesas de pago este día</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                  <p className="text-sm text-blue-600 mb-1">Total del día</p>
+                  <p className="text-3xl font-bold text-blue-900">
+                    ${selectedData.totalAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+                  </p>
+                  <p className="text-sm text-blue-600 mt-1">
+                    {selectedData.count} promesa{selectedData.count !== 1 ? 's' : ''}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-700">Detalle de promesas:</p>
+                  {selectedData.logs.map((log, idx) => (
+                    <div key={idx} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="text-sm text-slate-600">
+                            {log.notes || "Sin notas"}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {format(parseISO(log.contact_date), "HH:mm", { locale: es })}
+                          </p>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900 ml-3">
+                          ${(log.promised_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">
-                        {format(dateObj, "EEEE, d 'de' MMMM yyyy", { locale: es })}
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        {item.count} promesa{item.count !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-slate-900">
-                      ${item.totalAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
-                    </p>
-                    {isPast && (
-                      <p className="text-xs text-red-600 font-medium">Vencida</p>
-                    )}
-                    {isToday && (
-                      <p className="text-xs text-amber-600 font-medium">Hoy</p>
-                    )}
-                  </div>
+                  ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </Card>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
