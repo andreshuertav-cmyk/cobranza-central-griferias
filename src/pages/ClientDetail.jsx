@@ -612,27 +612,35 @@ export default function ClientDetail() {
               <DollarSign className="h-10 w-10 text-slate-300 mx-auto mb-3" />
               <p className="text-sm text-slate-500">Sin documentos registrados</p>
             </Card>
-          ) : (
-            <div className="space-y-3">
-              {documents
-                .filter(doc => !showOnlyOverdue || doc.status === "vencido")
-                .map((doc) => (
-                <DocumentCard 
-                  key={doc.id} 
-                  document={doc}
-                  onPayment={(doc) => {
-                    setSelectedDocument(doc);
-                    setShowQuickPayment(true);
-                  }}
-                  onEdit={(doc) => {
-                    setEditingDocument(doc);
-                    setShowAddDocument(true);
-                  }}
-                  onFactorize={(doc) => factorizeMutation.mutate(doc)}
-                />
-              ))}
-            </div>
-          )}
+          ) : (() => {
+            const filteredDocs = documents.filter(doc => !showOnlyOverdue || doc.status === "vencido");
+            return filteredDocs.length === 0 ? (
+              <Card className="p-8 text-center bg-slate-50">
+                <DollarSign className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm text-slate-500">
+                  {showOnlyOverdue ? "Sin documentos vencidos" : "Sin documentos"}
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {filteredDocs.map((doc) => (
+                  <DocumentCard 
+                    key={doc.id} 
+                    document={doc}
+                    onPayment={(doc) => {
+                      setSelectedDocument(doc);
+                      setShowQuickPayment(true);
+                    }}
+                    onEdit={(doc) => {
+                      setEditingDocument(doc);
+                      setShowAddDocument(true);
+                    }}
+                    onFactorize={(doc) => factorizeMutation.mutate(doc)}
+                  />
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Collection History */}
