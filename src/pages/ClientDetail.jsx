@@ -55,7 +55,7 @@ export default function ClientDetail() {
   const [showQuickPayment, setShowQuickPayment] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [editingDocument, setEditingDocument] = useState(null);
-  const [showOnlyOverdue, setShowOnlyOverdue] = useState(true);
+  const [showOnlyOverdue, setShowOnlyOverdue] = useState(false);
 
   const queryClient = useQueryClient();
 
