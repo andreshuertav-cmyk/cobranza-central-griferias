@@ -613,7 +613,34 @@ export default function ClientDetail() {
               <p className="text-sm text-slate-500">Sin documentos registrados</p>
             </Card>
           ) : (() => {
-            const filteredDocs = documents.filter(doc => !showOnlyOverdue || doc.status === "vencido");
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const filteredDocs = documents.filter(doc => {
+              const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+              if (docRemaining <= 0) return false;
+
+              if (!showOnlyOverdue) return true;
+
+              if (!doc.due_date) return false;
+
+              const dateStr = String(doc.due_date).trim();
+              let dueDate;
+              if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                  const [day, month, year] = parts;
+                  if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                    dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                  }
+                }
+              }
+              if (!dueDate) dueDate = new Date(dateStr);
+              dueDate.setHours(0, 0, 0, 0);
+
+              return dueDate < today;
+            });
+
             return filteredDocs.length === 0 ? (
               <Card className="p-8 text-center bg-slate-50">
                 <DollarSign className="h-10 w-10 text-slate-300 mx-auto mb-3" />
