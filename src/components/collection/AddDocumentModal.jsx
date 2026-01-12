@@ -9,10 +9,7 @@ import { Loader2 } from "lucide-react";
 
 const documentTypes = [
   { value: "factura", label: "Factura" },
-  { value: "pagare", label: "Pagaré" },
-  { value: "contrato", label: "Contrato" },
-  { value: "credito", label: "Crédito" },
-  { value: "otro", label: "Otro" }
+  { value: "boleta", label: "Boleta" }
 ];
 
 const statusOptions = [

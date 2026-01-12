@@ -8,10 +8,7 @@ import { cn } from "@/lib/utils";
 
 const documentTypeLabels = {
   factura: "Factura",
-  pagare: "Pagaré",
-  contrato: "Contrato",
-  credito: "Crédito",
-  otro: "Otro"
+  boleta: "Boleta"
 };
 
 const statusConfig = {
