@@ -338,7 +338,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Floating "Ver sin gestiones" button */}
-      <div className="fixed bottom-6 right-24 z-50">
+      <div className="fixed top-6 right-6 z-50">
         <Button
           size="lg"
           variant={showDocsWithoutLogs ? "default" : "outline"}
