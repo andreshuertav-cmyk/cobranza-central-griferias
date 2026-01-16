@@ -31,6 +31,7 @@ export default function Home() {
   const [search, setSearch] = useState(urlParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState(urlParams.get("statusFilter") || "all");
   const [sortBy, setSortBy] = useState(urlParams.get("sortBy") || localStorage.getItem("sortBy") || "name");
+  const [debtSortDirection, setDebtSortDirection] = useState(localStorage.getItem("debtSortDirection") || "desc");
   const [showAddClient, setShowAddClient] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -331,7 +332,7 @@ export default function Home() {
       } else {
         const debtA = (a.total_debt || 0) - (a.paid_amount || 0);
         const debtB = (b.total_debt || 0) - (b.paid_amount || 0);
-        return debtB - debtA; // Mayor a menor
+        return debtSortDirection === "desc" ? debtB - debtA : debtA - debtB;
       }
     });
 
@@ -514,13 +515,19 @@ export default function Home() {
               variant={sortBy === "debt" ? "default" : "outline"}
               size="sm"
               onClick={() => {
-                setSortBy("debt");
-                localStorage.setItem("sortBy", "debt");
+                if (sortBy === "debt") {
+                  const newDirection = debtSortDirection === "desc" ? "asc" : "desc";
+                  setDebtSortDirection(newDirection);
+                  localStorage.setItem("debtSortDirection", newDirection);
+                } else {
+                  setSortBy("debt");
+                  localStorage.setItem("sortBy", "debt");
+                }
               }}
               className="gap-2"
             >
               <ArrowUpDown className="h-3 w-3" />
-              Deuda
+              Deuda {sortBy === "debt" && (debtSortDirection === "desc" ? "↓" : "↑")}
             </Button>
           </div>
         </div>
