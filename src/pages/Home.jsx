@@ -40,6 +40,15 @@ export default function Home() {
   
   const queryClient = useQueryClient();
 
+  // Restore scroll position when returning to this page
+  useEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
+    if (savedScrollPosition) {
+      window.scrollTo(0, parseInt(savedScrollPosition));
+      sessionStorage.removeItem('homeScrollPosition');
+    }
+  }, []);
+
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
     queryFn: () => base44.entities.Client.list("-created_date")
@@ -610,7 +619,13 @@ export default function Home() {
                           }).toString();
 
                           return (
-                            <Link key={client.id} to={createPageUrl(`ClientDetail?id=${client.id}&${filterParams}`)}>
+                            <Link 
+                              key={client.id} 
+                              to={createPageUrl(`ClientDetail?id=${client.id}&${filterParams}`)}
+                              onClick={() => {
+                                sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
+                              }}
+                            >
                               <ClientCard 
                                 client={clientWithStatus} 
                                 lastLog={lastLog}
