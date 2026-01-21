@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, AlertCircle, DollarSign, Edit2 } from "lucide-react";
+import { FileText, Calendar, AlertCircle, DollarSign, Edit2, Trash2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ const statusConfig = {
   factorizada: { label: "Factorizada", color: "bg-purple-100 text-purple-700 border-purple-200" }
 };
 
-export default function DocumentCard({ document, onPayment, onEdit, onFactorize }) {
+export default function DocumentCard({ document, onPayment, onEdit, onFactorize, onDelete }) {
   const totalAmount = document.amount || 0;
   const paidAmount = document.paid_amount || 0;
   const remaining = Math.max(0, totalAmount - paidAmount);
@@ -161,9 +161,20 @@ export default function DocumentCard({ document, onPayment, onEdit, onFactorize 
                 Factorizar
               </Button>
             )}
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-}
+            {document.status === "factorizada" && onDelete && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onDelete(document)}
+                className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200 flex-1 gap-1"
+              >
+                <Trash2 className="h-3 w-3" />
+                Borrar
+              </Button>
+            )}
+            </div>
+            </div>
+            </div>
+            </Card>
+            );
+            }

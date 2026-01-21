@@ -311,6 +311,16 @@ export default function ClientDetail() {
     }
   });
 
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (doc) => {
+      await base44.entities.Document.delete(doc.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+    }
+  });
+
   const deleteLogMutation = useMutation({
     mutationFn: async (logId) => {
       // Buscar el log antes de borrarlo
@@ -666,6 +676,7 @@ export default function ClientDetail() {
                       setShowAddDocument(true);
                     }}
                     onFactorize={(doc) => factorizeMutation.mutate(doc)}
+                    onDelete={(doc) => deleteDocumentMutation.mutate(doc)}
                   />
                 ))}
               </div>
