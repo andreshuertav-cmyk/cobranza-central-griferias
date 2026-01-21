@@ -25,6 +25,14 @@ const resultTypes = [
   { value: "otro", label: "Otro" }
 ];
 
+const paymentMethods = [
+  { value: "tarjeta_credito", label: "Tarjeta de Crédito" },
+  { value: "tarjeta_debito", label: "Tarjeta de Débito" },
+  { value: "efectivo", label: "Efectivo" },
+  { value: "cheque", label: "Cheque" },
+  { value: "transferencia_electronica", label: "Transferencia Electrónica" }
+];
+
 export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, totalDebt, documents, editLog }) {
   const getLocalDateTime = () => {
     const now = new Date();
@@ -45,7 +53,8 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     promised_date: editLog.promised_date || "",
     follow_up_date: editLog.follow_up_date || "",
     paid_amount: editLog.paid_amount || "",
-    document_id: editLog.document_id || ""
+    document_id: editLog.document_id || "",
+    payment_method: editLog.payment_method || ""
   } : {
     contact_type: "llamada",
     contact_date: getLocalDateTime(),
@@ -55,7 +64,8 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     promised_date: "",
     follow_up_date: "",
     paid_amount: "",
-    document_id: ""
+    document_id: "",
+    payment_method: ""
   });
 
   const handleSubmit = (e) => {
@@ -234,6 +244,25 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                     Pagar todo
                   </Button>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Método de pago</Label>
+                <Select
+                  value={formData.payment_method}
+                  onValueChange={(v) => setFormData({ ...formData, payment_method: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona método de pago" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentMethods.map((method) => (
+                      <SelectItem key={method.value} value={method.value}>
+                        {method.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

@@ -3,11 +3,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+
+const paymentMethods = [
+  { value: "tarjeta_credito", label: "Tarjeta de Crédito" },
+  { value: "tarjeta_debito", label: "Tarjeta de Débito" },
+  { value: "efectivo", label: "Efectivo" },
+  { value: "cheque", label: "Cheque" },
+  { value: "transferencia_electronica", label: "Transferencia Electrónica" }
+];
 
 export default function QuickPaymentModal({ open, onOpenChange, document, onSubmit, isLoading }) {
   const remaining = document ? Math.max(0, (document.amount || 0) - (document.paid_amount || 0)) : 0;
   const [amount, setAmount] = useState(remaining);
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   useEffect(() => {
     if (document) {
@@ -18,7 +28,8 @@ export default function QuickPaymentModal({ open, onOpenChange, document, onSubm
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(parseFloat(amount) || 0);
+    onSubmit({ amount: parseFloat(amount) || 0, paymentMethod });
+    setPaymentMethod("");
   };
 
   return (
@@ -60,11 +71,31 @@ export default function QuickPaymentModal({ open, onOpenChange, document, onSubm
               </p>
             </div>
 
+            <div className="space-y-2">
+              <Label>Método de pago *</Label>
+              <Select
+                value={paymentMethod}
+                onValueChange={setPaymentMethod}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona método de pago" />
+                </SelectTrigger>
+                <SelectContent>
+                  {paymentMethods.map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={!amount || isLoading}>
+              <Button type="submit" disabled={!amount || !paymentMethod || isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Registrar pago
               </Button>

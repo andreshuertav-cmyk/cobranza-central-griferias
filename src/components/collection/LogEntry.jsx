@@ -23,6 +23,14 @@ const resultConfig = {
   otro: { label: "Otro", color: "bg-slate-100 text-slate-600" }
 };
 
+const paymentMethodLabels = {
+  tarjeta_credito: "Tarjeta de Crédito",
+  tarjeta_debito: "Tarjeta de Débito",
+  efectivo: "Efectivo",
+  cheque: "Cheque",
+  transferencia_electronica: "Transferencia Electrónica"
+};
+
 export default function LogEntry({ log, onDelete, onEdit, documents }) {
   const Icon = contactIcons[log.contact_type] || Phone;
   const result = resultConfig[log.result] || resultConfig.otro;
@@ -87,6 +95,11 @@ export default function LogEntry({ log, onDelete, onEdit, documents }) {
               {relatedDoc && (
                 <p className="text-xs text-slate-500 ml-5">
                   Factura Nº {relatedDoc.document_number}
+                </p>
+              )}
+              {log.payment_method && (
+                <p className="text-xs text-slate-500 ml-5">
+                  {paymentMethodLabels[log.payment_method] || log.payment_method}
                 </p>
               )}
             </div>
