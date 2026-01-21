@@ -278,7 +278,7 @@ export default function ClientDetail() {
   });
 
   const quickPaymentMutation = useMutation({
-    mutationFn: async (amount) => {
+    mutationFn: async ({ amount, paymentMethod }) => {
       const doc = selectedDocument;
       const docTotal = doc.amount || 0;
       const currentPaid = doc.paid_amount || 0;
@@ -290,10 +290,22 @@ export default function ClientDetail() {
         paid_amount: newDocPaidAmount,
         status: newDocStatus
       });
+
+      await base44.entities.CollectionLog.create({
+        client_id: clientId,
+        contact_type: "otro",
+        contact_date: new Date().toISOString(),
+        result: "pago_realizado",
+        paid_amount: amount,
+        payment_method: paymentMethod,
+        document_id: doc.id,
+        notes: `Pago rápido registrado para ${doc.document_number}`
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
       queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
       setShowQuickPayment(false);
       setSelectedDocument(null);
     }
