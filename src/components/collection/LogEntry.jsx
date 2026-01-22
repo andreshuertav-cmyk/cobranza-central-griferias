@@ -28,7 +28,8 @@ const paymentMethodLabels = {
   tarjeta_debito: "Tarjeta de Débito",
   efectivo: "Efectivo",
   cheque: "Cheque",
-  transferencia_electronica: "Transferencia Electrónica"
+  transferencia_electronica: "Transferencia Electrónica",
+  nota_credito: "Nota de Crédito"
 };
 
 export default function LogEntry({ log, onDelete, onEdit, documents }) {

@@ -30,7 +30,8 @@ const paymentMethods = [
   { value: "tarjeta_debito", label: "Tarjeta de Débito" },
   { value: "efectivo", label: "Efectivo" },
   { value: "cheque", label: "Cheque" },
-  { value: "transferencia_electronica", label: "Transferencia Electrónica" }
+  { value: "transferencia_electronica", label: "Transferencia Electrónica" },
+  { value: "nota_credito", label: "Nota de Crédito" }
 ];
 
 export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, totalDebt, documents, editLog }) {
