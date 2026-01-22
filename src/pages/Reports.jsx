@@ -26,6 +26,7 @@ import ConsolidatedPromisesReport from "@/components/reports/ConsolidatedPromise
 import SalesRepReport from "@/components/reports/SalesRepReport";
 import FactorizedReport from "@/components/reports/FactorizedReport";
 import DailyPromisesSummary from "@/components/reports/DailyPromisesSummary";
+import PaymentMethodsReport from "@/components/reports/PaymentMethodsReport";
 
 export default function Reports() {
   const [period, setPeriod] = useState("week"); // day, week, month
@@ -228,6 +229,12 @@ export default function Reports() {
 
             {/* Top Performers */}
             <TopCollectorsTable logs={periodLogs} />
+
+            {/* Payment Methods Report */}
+            <div className="mt-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Pagos por método</h2>
+              <PaymentMethodsReport logs={periodLogs} />
+            </div>
 
             {/* Daily Promises Summary */}
             <div className="mt-8">
