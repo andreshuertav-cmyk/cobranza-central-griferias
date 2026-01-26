@@ -239,7 +239,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
       // 10. Create all new documents in batches with delays
-      const BATCH_SIZE = 50;
+      const BATCH_SIZE = 20;
       const createdDocuments = [];
       for (let i = 0; i < documentsToCreate.length; i += BATCH_SIZE) {
         const batch = documentsToCreate.slice(i, i + BATCH_SIZE);
@@ -248,7 +248,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         
         // Add delay between batches to avoid rate limiting
         if (i + BATCH_SIZE < documentsToCreate.length) {
-          await delay(300);
+          await delay(500);
         }
       }
 
@@ -274,9 +274,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           });
           
           clientUpdateCount++;
-          // Add delay every 10 client updates
-          if (clientUpdateCount % 10 === 0) {
-            await delay(200);
+          // Add delay every 5 client updates
+          if (clientUpdateCount % 5 === 0) {
+            await delay(300);
           }
         }
       }
@@ -310,9 +310,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           documentsMarkedPaid.push(existingDoc);
           
           docUpdateCount++;
-          // Add delay every 10 document updates
-          if (docUpdateCount % 10 === 0) {
-            await delay(200);
+          // Add delay every 5 document updates
+          if (docUpdateCount % 5 === 0) {
+            await delay(300);
           }
         }
       }
