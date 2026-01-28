@@ -73,8 +73,8 @@ export default function Reports() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link to={createPageUrl("Home")}>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-12 w-12">
+              <ArrowLeft className="h-6 w-6" />
             </Button>
           </Link>
           <div>
