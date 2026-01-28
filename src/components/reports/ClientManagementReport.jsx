@@ -141,6 +141,7 @@ export default function ClientManagementReport({ logs, clients, documents }) {
                     <div className="flex items-center justify-center gap-1 flex-wrap">
                       {Object.entries(stat.contactTypes).map(([type, count]) => {
                         const TypeIcon = contactIcons[type];
+                        if (!TypeIcon) return null;
                         return (
                           <div key={type} className="flex items-center gap-1 text-xs text-slate-600">
                             <TypeIcon className="h-3 w-3" />
