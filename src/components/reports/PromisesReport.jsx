@@ -1,10 +1,48 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { HandshakeIcon, Calendar, DollarSign, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { format, parseISO, isPast, isToday } from "date-fns";
 import { es } from "date-fns/locale";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 export default function PromisesReport({ logs, clients, documents }) {
+  const queryClient = useQueryClient();
+
+  const markAsFulfilledMutation = useMutation({
+    mutationFn: async (promise) => {
+      // Create a payment log to mark the promise as fulfilled
+      await base44.entities.CollectionLog.create({
+        client_id: promise.client_id,
+        contact_type: "otro",
+        contact_date: new Date().toISOString(),
+        result: "pago_realizado",
+        paid_amount: promise.promised_amount,
+        payment_method: "transferencia_electronica",
+        document_id: promise.document_id || null,
+        notes: `Cumplimiento de promesa del ${format(parseISO(promise.contact_date), "d MMM yyyy", { locale: es })}`
+      });
+
+      // Update document if specified
+      if (promise.document_id) {
+        const doc = documents.find(d => d.id === promise.document_id);
+        if (doc) {
+          const newPaid = (doc.paid_amount || 0) + promise.promised_amount;
+          await base44.entities.Document.update(promise.document_id, {
+            paid_amount: newPaid,
+            status: newPaid >= doc.amount ? "pagado" : doc.status
+          });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["logs"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    }
+  });
+
   // Filter promises
   const promises = logs.filter(log => log.result === "promesa_pago" && log.promised_date);
 
@@ -132,7 +170,7 @@ export default function PromisesReport({ logs, clients, documents }) {
             const clientName = client?.name || `Cliente ID: ${promise.client_id.slice(0, 8)}...`;
             
             return (
-              <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
                     <p className="font-medium text-slate-900">{clientName}</p>
@@ -173,6 +211,18 @@ export default function PromisesReport({ logs, clients, documents }) {
                     Registrado: {format(parseISO(promise.contact_date), "d MMM", { locale: es })}
                   </p>
                 </div>
+                {!wasPaid && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => markAsFulfilledMutation.mutate(promise)}
+                    disabled={markAsFulfilledMutation.isPending}
+                    className="gap-1"
+                  >
+                    <CheckCircle2 className="h-3 w-3" />
+                    Marcar cumplida
+                  </Button>
+                )}
               </div>
             );
           })}
