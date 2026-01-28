@@ -26,17 +26,24 @@ export default function PromisesReport({ logs, clients, documents }) {
   promises.forEach(promise => {
     const promisedDate = parseISO(promise.promised_date);
     
-    // Calculate real debt from documents
-    const clientDocs = documents?.filter(d => d.client_id === promise.client_id) || [];
-    const totalDebtFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
-    const totalPaidFromDocs = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
-    const clientHasNoDebt = totalDebtFromDocs > 0 && totalPaidFromDocs >= totalDebtFromDocs;
+    // Check if promise was fulfilled
+    let wasPaid = false;
     
-    const wasPaid = clientHasNoDebt || logs.some(log => 
-      log.client_id === promise.client_id && 
-      log.result === "pago_realizado" &&
-      parseISO(log.contact_date) >= parseISO(promise.contact_date)
-    );
+    // If promise has a specific document, check if that document is paid
+    if (promise.document_id) {
+      const doc = documents?.find(d => d.id === promise.document_id);
+      if (doc) {
+        const remaining = (doc.amount || 0) - (doc.paid_amount || 0);
+        wasPaid = remaining <= 0;
+      }
+    } else {
+      // No specific document: check if there was ANY payment after the promise
+      wasPaid = logs.some(log => 
+        log.client_id === promise.client_id && 
+        log.result === "pago_realizado" &&
+        parseISO(log.contact_date) >= parseISO(promise.contact_date)
+      );
+    }
 
     if (wasPaid) {
       fulfilled.push(promise);
