@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Phone, MapPin, MessageSquare, Mail, MessageCircle, Search } from "lucide-react";
+import { Phone, MapPin, MessageSquare, Mail, Search } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -11,7 +11,7 @@ const contactIcons = {
   visita: MapPin,
   mensaje: MessageSquare,
   correo: Mail,
-  whatsapp: MessageCircle
+  whatsapp: MessageSquare
 };
 
 const resultLabels = {
