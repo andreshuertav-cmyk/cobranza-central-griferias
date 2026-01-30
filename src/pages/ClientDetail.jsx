@@ -221,8 +221,33 @@ export default function ClientDetail() {
           status: newStatus
         });
         
-        // Si se especificó un documento, actualizarlo
-        if (data.document_id) {
+        // Si se seleccionaron múltiples documentos, distribuir el pago entre ellos
+        if (data.selected_documents && data.selected_documents.length > 0) {
+          let remainingPayment = data.paid_amount;
+          
+          for (const docId of data.selected_documents) {
+            if (remainingPayment <= 0) break;
+            
+            const doc = documents.find(d => d.id === docId);
+            if (doc) {
+              const docTotal = doc.amount || 0;
+              const currentPaid = doc.paid_amount || 0;
+              const docRemaining = docTotal - currentPaid;
+              const paymentToApply = Math.min(remainingPayment, docRemaining);
+              const newDocPaidAmount = currentPaid + paymentToApply;
+              const newDocStatus = newDocPaidAmount >= docTotal ? "pagado" : doc.status;
+              
+              await base44.entities.Document.update(docId, {
+                paid_amount: newDocPaidAmount,
+                status: newDocStatus
+              });
+              
+              remainingPayment -= paymentToApply;
+            }
+          }
+        }
+        // Si se especificó un documento único (legacy), actualizarlo
+        else if (data.document_id) {
           const doc = documents.find(d => d.id === data.document_id);
           if (doc) {
             const docTotal = doc.amount || 0;

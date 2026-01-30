@@ -94,7 +94,8 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
       ...formData,
       promised_amount: formData.promised_amount ? parseFloat(formData.promised_amount) : null,
       paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : null,
-      document_id: formData.document_id || null
+      document_id: formData.document_id || null,
+      selected_documents: selectedDocuments.length > 0 ? selectedDocuments : null
     };
 
     // Ajustar promised_date para evitar cambio de día por zona horaria
