@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Phone, MapPin, MessageSquare, Mail, MessageCircle, Loader2 } from "lucide-react";
 
 const contactTypes = [
@@ -68,6 +69,23 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     document_id: "",
     payment_method: ""
   });
+
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
+
+  // Update paid amount when selected documents change
+  useEffect(() => {
+    if (selectedDocuments.length > 0 && documents) {
+      const total = selectedDocuments.reduce((sum, docId) => {
+        const doc = documents.find(d => d.id === docId);
+        if (doc) {
+          const pending = (doc.amount || 0) - (doc.paid_amount || 0);
+          return sum + pending;
+        }
+        return sum;
+      }, 0);
+      setFormData(prev => ({ ...prev, paid_amount: total.toString() }));
+    }
+  }, [selectedDocuments, documents]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -199,25 +217,36 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
               
               {documents && documents.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Documento a pagar</Label>
-                  <Select
-                    value={formData.document_id}
-                    onValueChange={(v) => setFormData({ ...formData, document_id: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un documento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {documents.map((doc) => {
-                        const pending = (doc.amount || 0) - (doc.paid_amount || 0);
-                        return (
-                          <SelectItem key={doc.id} value={doc.id}>
-                            {doc.document_number} - ${pending.toLocaleString('es-MX', { minimumFractionDigits: 0 })} pendiente
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
+                  <Label>Documento(s) a pagar</Label>
+                  <div className="border rounded-lg p-3 bg-white max-h-48 overflow-y-auto space-y-2">
+                    {documents.map((doc) => {
+                      const pending = (doc.amount || 0) - (doc.paid_amount || 0);
+                      const isSelected = selectedDocuments.includes(doc.id);
+                      return (
+                        <div key={doc.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedDocuments([...selectedDocuments, doc.id]);
+                              } else {
+                                setSelectedDocuments(selectedDocuments.filter(id => id !== doc.id));
+                              }
+                            }}
+                          />
+                          <label className="flex-1 text-sm cursor-pointer">
+                            <span className="font-medium">{doc.document_number}</span>
+                            <span className="text-slate-600"> - ${pending.toLocaleString('es-MX', { minimumFractionDigits: 0 })} pendiente</span>
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {selectedDocuments.length > 0 && (
+                    <p className="text-xs text-slate-500">
+                      {selectedDocuments.length} documento{selectedDocuments.length !== 1 ? 's' : ''} seleccionado{selectedDocuments.length !== 1 ? 's' : ''}
+                    </p>
+                  )}
                 </div>
               )}
               
