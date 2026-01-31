@@ -9,6 +9,19 @@ import { base44 } from "@/api/base44Client";
 
 export default function PromisesReport({ logs, clients, documents }) {
   const queryClient = useQueryClient();
+  const [activeFilters, setActiveFilters] = useState(new Set(['fulfilled', 'pending', 'overdue']));
+
+  const toggleFilter = (filter) => {
+    setActiveFilters(prev => {
+      const newFilters = new Set(prev);
+      if (newFilters.has(filter)) {
+        newFilters.delete(filter);
+      } else {
+        newFilters.add(filter);
+      }
+      return newFilters;
+    });
+  };
 
   const markAsFulfilledMutation = useMutation({
     mutationFn: async (promise) => {
@@ -99,45 +112,85 @@ export default function PromisesReport({ logs, clients, documents }) {
 
   const fulfillmentRate = promises.length > 0 ? (fulfilled.length / promises.length * 100).toFixed(0) : 0;
 
+  // Filter promises based on active filters
+  const filteredPromises = promises.filter(promise => {
+    const wasPaid = fulfilled.includes(promise);
+    const isOverdue = overdue.includes(promise);
+    const isPending = !wasPaid && !isOverdue;
+
+    if (wasPaid && activeFilters.has('fulfilled')) return true;
+    if (isPending && activeFilters.has('pending')) return true;
+    if (isOverdue && activeFilters.has('overdue')) return true;
+    return false;
+  });
+
   return (
     <div className="space-y-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-2 text-slate-500 mb-2">
-            <HandshakeIcon className="h-4 w-4" />
-            <span className="text-sm">Total promesas</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{promises.length}</p>
-          <p className="text-sm text-slate-500 mt-1">${totalPromised.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
-        </Card>
+        <button
+          onClick={() => toggleFilter('all')}
+          className="text-left"
+        >
+          <Card className={`p-4 transition-all cursor-pointer hover:shadow-md ${
+            activeFilters.size === 3 ? 'ring-2 ring-slate-300' : 'opacity-60'
+          }`}>
+            <div className="flex items-center gap-2 text-slate-500 mb-2">
+              <HandshakeIcon className="h-4 w-4" />
+              <span className="text-sm">Total promesas</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{promises.length}</p>
+            <p className="text-sm text-slate-500 mt-1">${totalPromised.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
+          </Card>
+        </button>
 
-        <Card className="p-4 bg-green-50 border-green-200">
-          <div className="flex items-center gap-2 text-green-700 mb-2">
-            <CheckCircle2 className="h-4 w-4" />
-            <span className="text-sm">Cumplidas</span>
-          </div>
-          <p className="text-2xl font-bold text-green-900">{fulfilled.length}</p>
-          <p className="text-sm text-green-600 mt-1">${fulfilledAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
-        </Card>
+        <button
+          onClick={() => toggleFilter('fulfilled')}
+          className="text-left"
+        >
+          <Card className={`p-4 bg-green-50 border-green-200 transition-all cursor-pointer hover:shadow-md ${
+            activeFilters.has('fulfilled') ? 'ring-2 ring-green-400' : 'opacity-60'
+          }`}>
+            <div className="flex items-center gap-2 text-green-700 mb-2">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="text-sm">Cumplidas</span>
+            </div>
+            <p className="text-2xl font-bold text-green-900">{fulfilled.length}</p>
+            <p className="text-sm text-green-600 mt-1">${fulfilledAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
+          </Card>
+        </button>
 
-        <Card className="p-4 bg-amber-50 border-amber-200">
-          <div className="flex items-center gap-2 text-amber-700 mb-2">
-            <Clock className="h-4 w-4" />
-            <span className="text-sm">Pendientes</span>
-          </div>
-          <p className="text-2xl font-bold text-amber-900">{pending.length}</p>
-          <p className="text-sm text-amber-600 mt-1">${pendingAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
-        </Card>
+        <button
+          onClick={() => toggleFilter('pending')}
+          className="text-left"
+        >
+          <Card className={`p-4 bg-amber-50 border-amber-200 transition-all cursor-pointer hover:shadow-md ${
+            activeFilters.has('pending') ? 'ring-2 ring-amber-400' : 'opacity-60'
+          }`}>
+            <div className="flex items-center gap-2 text-amber-700 mb-2">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm">Pendientes</span>
+            </div>
+            <p className="text-2xl font-bold text-amber-900">{pending.length}</p>
+            <p className="text-sm text-amber-600 mt-1">${pendingAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
+          </Card>
+        </button>
 
-        <Card className="p-4 bg-red-50 border-red-200">
-          <div className="flex items-center gap-2 text-red-700 mb-2">
-            <XCircle className="h-4 w-4" />
-            <span className="text-sm">Vencidas</span>
-          </div>
-          <p className="text-2xl font-bold text-red-900">{overdue.length}</p>
-          <p className="text-sm text-red-600 mt-1">${overdueAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
-        </Card>
+        <button
+          onClick={() => toggleFilter('overdue')}
+          className="text-left"
+        >
+          <Card className={`p-4 bg-red-50 border-red-200 transition-all cursor-pointer hover:shadow-md ${
+            activeFilters.has('overdue') ? 'ring-2 ring-red-400' : 'opacity-60'
+          }`}>
+            <div className="flex items-center gap-2 text-red-700 mb-2">
+              <XCircle className="h-4 w-4" />
+              <span className="text-sm">Vencidas</span>
+            </div>
+            <p className="text-2xl font-bold text-red-900">{overdue.length}</p>
+            <p className="text-sm text-red-600 mt-1">${overdueAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
+          </Card>
+        </button>
       </div>
 
       {/* Fulfillment Rate */}
@@ -158,11 +211,18 @@ export default function PromisesReport({ logs, clients, documents }) {
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <HandshakeIcon className="h-5 w-5 text-slate-400" />
-          <h3 className="text-lg font-semibold text-slate-900">Detalle de promesas</h3>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Detalle de promesas ({filteredPromises.length} de {promises.length})
+          </h3>
         </div>
 
-        <div className="space-y-3">
-          {promises.map((promise, idx) => {
+        {filteredPromises.length === 0 ? (
+          <div className="text-center py-8 text-slate-500">
+            No hay promesas que coincidan con los filtros seleccionados
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredPromises.map((promise, idx) => {
             const promisedDate = parseISO(promise.promised_date);
             const wasPaid = fulfilled.includes(promise);
             const isOverdue = overdue.includes(promise);
@@ -225,9 +285,10 @@ export default function PromisesReport({ logs, clients, documents }) {
                 )}
               </div>
             );
-          })}
-        </div>
-      </Card>
-    </div>
-  );
-}
+            })}
+            </div>
+            )}
+            </Card>
+            </div>
+            );
+            }
