@@ -12,7 +12,8 @@ const paymentMethods = [
   { value: "efectivo", label: "Efectivo" },
   { value: "cheque", label: "Cheque" },
   { value: "transferencia_electronica", label: "Transferencia Electrónica" },
-  { value: "nota_credito", label: "Nota de Crédito" }
+  { value: "nota_credito", label: "Nota de Crédito" },
+  { value: "pagada_factoring", label: "Pagada a Factoring" }
 ];
 
 export default function QuickPaymentModal({ open, onOpenChange, document, onSubmit, isLoading }) {

@@ -29,7 +29,8 @@ const paymentMethodLabels = {
   efectivo: "Efectivo",
   cheque: "Cheque",
   transferencia_electronica: "Transferencia Electrónica",
-  nota_credito: "Nota de Crédito"
+  nota_credito: "Nota de Crédito",
+  pagada_factoring: "Pagada a Factoring"
 };
 
 export default function LogEntry({ log, onDelete, onEdit, documents }) {
