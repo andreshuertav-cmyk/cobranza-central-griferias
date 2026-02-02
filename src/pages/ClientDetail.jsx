@@ -324,7 +324,7 @@ export default function ClientDetail() {
         paid_amount: amount,
         payment_method: paymentMethod,
         document_id: doc.id,
-        notes: `Pago rápido registrado para ${doc.document_number}`
+        notes: `[SIN GESTION] Pago cliente - ${doc.document_number}`
       });
     },
     onSuccess: () => {

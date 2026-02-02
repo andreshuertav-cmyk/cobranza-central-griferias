@@ -46,6 +46,9 @@ export default function ClientManagementReport({ logs, clients, documents }) {
 
     // Payments
     const paymentsReceived = clientLogs.filter(l => l.result === "pago_realizado").length;
+    const paymentsWithoutManagement = clientLogs.filter(l => 
+      l.result === "pago_realizado" && l.notes?.includes("[SIN GESTION]")
+    ).length;
     const totalPaid = clientLogs
       .filter(l => l.result === "pago_realizado")
       .reduce((sum, l) => sum + (l.paid_amount || 0), 0);
@@ -69,6 +72,7 @@ export default function ClientManagementReport({ logs, clients, documents }) {
       contactTypes,
       results,
       paymentsReceived,
+      paymentsWithoutManagement,
       totalPaid,
       promises,
       promisedAmount,
@@ -118,6 +122,7 @@ export default function ClientManagementReport({ logs, clients, documents }) {
               <th className="text-center px-4 py-3 text-sm font-semibold text-slate-700">Tipos contacto</th>
               <th className="text-center px-4 py-3 text-sm font-semibold text-slate-700">Promesas</th>
               <th className="text-center px-4 py-3 text-sm font-semibold text-slate-700">Pagos</th>
+              <th className="text-center px-4 py-3 text-sm font-semibold text-slate-700">Sin gestión</th>
               <th className="text-right px-4 py-3 text-sm font-semibold text-slate-700">Saldo</th>
               <th className="text-left px-4 py-3 text-sm font-semibold text-slate-700">Última gestión</th>
             </tr>
@@ -171,6 +176,11 @@ export default function ClientManagementReport({ logs, clients, documents }) {
                       )}
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="text-sm">
+                      <div className="font-semibold text-blue-600">{stat.paymentsWithoutManagement}</div>
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <div className="font-semibold text-slate-900">
                       ${stat.remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
@@ -201,7 +211,7 @@ export default function ClientManagementReport({ logs, clients, documents }) {
       </div>
 
       {/* Summary */}
-      <div className="mt-6 p-4 bg-slate-50 rounded-lg grid grid-cols-4 gap-4">
+      <div className="mt-6 p-4 bg-slate-50 rounded-lg grid grid-cols-5 gap-4">
         <div>
           <p className="text-xs text-slate-500 mb-1">Clientes gestionados</p>
           <p className="text-lg font-bold text-slate-900">{clientStats.length}</p>
@@ -222,6 +232,12 @@ export default function ClientManagementReport({ logs, clients, documents }) {
           <p className="text-xs text-slate-500 mb-1">Total pagos</p>
           <p className="text-lg font-bold text-emerald-600">
             {clientStats.reduce((sum, s) => sum + s.paymentsReceived, 0)}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 mb-1">Pagos sin gestión</p>
+          <p className="text-lg font-bold text-blue-600">
+            {clientStats.reduce((sum, s) => sum + s.paymentsWithoutManagement, 0)}
           </p>
         </div>
       </div>
