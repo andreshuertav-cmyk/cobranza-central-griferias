@@ -7,7 +7,8 @@ const paymentMethodLabels = {
   efectivo: "Efectivo",
   cheque: "Cheque",
   transferencia_electronica: "Transferencia Electrónica",
-  nota_credito: "Nota de Crédito"
+  nota_credito: "Nota de Crédito",
+  pagada_factoring: "Pagada a Factoring"
 };
 
 const COLORS = {
@@ -16,7 +17,8 @@ const COLORS = {
   efectivo: "#10b981",
   cheque: "#f59e0b",
   transferencia_electronica: "#8b5cf6",
-  nota_credito: "#ec4899"
+  nota_credito: "#ec4899",
+  pagada_factoring: "#f97316"
 };
 
 export default function PaymentMethodsReport({ logs }) {
