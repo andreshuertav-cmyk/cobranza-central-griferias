@@ -53,8 +53,8 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     result: editLog.result || "",
     notes: editLog.notes || "",
     promised_amount: editLog.promised_amount || "",
-    promised_date: editLog.promised_date || "",
-    follow_up_date: editLog.follow_up_date || "",
+    promised_date: editLog.promised_date ? editLog.promised_date.split('T')[0] : "",
+    follow_up_date: editLog.follow_up_date ? editLog.follow_up_date.split('T')[0] : "",
     paid_amount: editLog.paid_amount || "",
     document_id: editLog.document_id || "",
     payment_method: editLog.payment_method || ""
