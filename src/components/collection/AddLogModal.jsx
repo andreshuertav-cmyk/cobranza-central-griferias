@@ -221,7 +221,10 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                 <div className="space-y-2">
                   <Label>Documento(s) a pagar</Label>
                   <div className="border rounded-lg p-3 bg-white max-h-48 overflow-y-auto space-y-2">
-                    {documents.map((doc) => {
+                    {documents.filter(doc => {
+                      const pending = (doc.amount || 0) - (doc.paid_amount || 0);
+                      return pending > 0;
+                    }).map((doc) => {
                       const pending = (doc.amount || 0) - (doc.paid_amount || 0);
                       const isSelected = selectedDocuments.includes(doc.id);
                       return (
