@@ -115,13 +115,13 @@ export default function LogEntry({ log, onDelete, onEdit, documents }) {
           {log.promised_date && (
             <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
               <Calendar className="h-3.5 w-3.5" />
-              <span>Fecha: {format(new Date(log.promised_date), "d MMM", { locale: es })}</span>
+              <span>Fecha: {format(new Date(log.promised_date + 'T12:00:00'), "d MMM", { locale: es })}</span>
             </div>
           )}
           {log.follow_up_date && (
             <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
               <Calendar className="h-3.5 w-3.5" />
-              <span>Seguimiento: {format(new Date(log.follow_up_date), "d MMM", { locale: es })}</span>
+              <span>Seguimiento: {format(new Date(log.follow_up_date + 'T12:00:00'), "d MMM", { locale: es })}</span>
             </div>
           )}
         </div>
