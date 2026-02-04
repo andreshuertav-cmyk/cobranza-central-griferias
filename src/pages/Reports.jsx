@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
   ArrowLeft, BarChart3, Users, DollarSign, Calendar, 
-  TrendingUp, FileText, CreditCard, ClipboardList, ChevronRight
+  TrendingUp, FileText, CreditCard, ClipboardList, ChevronRight, CheckCircle2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -43,6 +43,13 @@ export default function Reports() {
       icon: ClipboardList,
       color: "bg-indigo-500",
       page: "ConsolidatedPromisesReport"
+    },
+    {
+      title: "Gestión de Pagos",
+      description: "Pagos con gestión vs pagos sin gestión",
+      icon: CheckCircle2,
+      color: "bg-teal-500",
+      page: "PaymentManagementReport"
     },
     {
       title: "Reporte por Vendedor",
