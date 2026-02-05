@@ -200,11 +200,12 @@ export default function SalesRepReport({ documents, clients }) {
                 <div className="space-y-2">
                   {Object.entries(rep.overdueClientDocs).map(([clientId, docs]) => {
                     const client = clients.find(c => c.id === clientId);
+                    const clientName = client?.name || `Cliente ID: ${clientId}`;
                     return (
                       <div key={clientId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <div className="flex-1">
                           <p className="font-medium text-slate-900">
-                            {client?.name || "Cliente desconocido"}
+                            {clientName}
                           </p>
                           <p className="text-xs text-slate-500">
                             Saldo en mora: ${docs.reduce((sum, doc) => sum + ((doc.amount || 0) - (doc.paid_amount || 0)), 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
