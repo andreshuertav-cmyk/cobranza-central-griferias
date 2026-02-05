@@ -1,12 +1,42 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, DollarSign } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay, startOfWeek, startOfMonth, subDays, subWeeks, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function PaymentManagementReport({ logs, clients }) {
-  // Filtrar solo pagos realizados
-  const paymentLogs = logs.filter(log => log.result === "pago_realizado" && log.paid_amount > 0);
+  const [timeFilter, setTimeFilter] = useState("all"); // all, day, week, month
+
+  // Calcular fecha de inicio según el filtro
+  const getStartDate = () => {
+    const now = new Date();
+    switch (timeFilter) {
+      case "day":
+        return startOfDay(now);
+      case "week":
+        return startOfWeek(now, { weekStartsOn: 1 });
+      case "month":
+        return startOfMonth(now);
+      default:
+        return null;
+    }
+  };
+
+  const startDate = getStartDate();
+
+  // Filtrar solo pagos realizados y por fecha
+  const paymentLogs = logs.filter(log => {
+    if (log.result !== "pago_realizado" || !log.paid_amount || log.paid_amount <= 0) return false;
+    
+    if (startDate && log.contact_date) {
+      const logDate = new Date(log.contact_date);
+      return logDate >= startDate;
+    }
+    
+    return true;
+  });
 
   // Separar en pagos con gestión y sin gestión
   const paymentsWithManagement = paymentLogs.filter(log => !log.notes?.includes("[SIN GESTION]"));
@@ -39,6 +69,43 @@ export default function PaymentManagementReport({ logs, clients }) {
 
   return (
     <div className="space-y-6">
+      {/* Filtros de tiempo */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-slate-600 mr-2">Período:</span>
+            <Button
+              variant={timeFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTimeFilter("all")}
+            >
+              Todo
+            </Button>
+            <Button
+              variant={timeFilter === "day" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTimeFilter("day")}
+            >
+              Hoy
+            </Button>
+            <Button
+              variant={timeFilter === "week" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTimeFilter("week")}
+            >
+              Esta Semana
+            </Button>
+            <Button
+              variant={timeFilter === "month" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTimeFilter("month")}
+            >
+              Este Mes
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Resumen */}
       <div className="grid md:grid-cols-3 gap-4">
         <Card>
