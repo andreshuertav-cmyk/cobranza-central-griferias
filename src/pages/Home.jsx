@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Users, DollarSign, AlertTriangle, 
-  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2, ArrowUpDown, Settings
+  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2, ArrowUpDown, Settings, X
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -494,10 +494,18 @@ export default function Home() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Buscar por nombre o teléfono..."
-              className="pl-10"
+              className="pl-10 pr-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <Tabs value={statusFilter} onValueChange={setStatusFilter}>
             <TabsList>

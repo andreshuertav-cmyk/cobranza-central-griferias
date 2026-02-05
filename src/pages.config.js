@@ -54,11 +54,11 @@ import ConsolidatedPromisesReport from './pages/ConsolidatedPromisesReport';
 import DailyPromisesReport from './pages/DailyPromisesReport';
 import FactorizedReport from './pages/FactorizedReport';
 import Home from './pages/Home';
+import PaymentManagementReport from './pages/PaymentManagementReport';
 import PaymentMethodsReport from './pages/PaymentMethodsReport';
 import PromisesReport from './pages/PromisesReport';
 import Reports from './pages/Reports';
 import SalesRepReport from './pages/SalesRepReport';
-import PaymentManagementReport from './pages/PaymentManagementReport';
 
 
 export const PAGES = {
@@ -69,11 +69,11 @@ export const PAGES = {
     "DailyPromisesReport": DailyPromisesReport,
     "FactorizedReport": FactorizedReport,
     "Home": Home,
+    "PaymentManagementReport": PaymentManagementReport,
     "PaymentMethodsReport": PaymentMethodsReport,
     "PromisesReport": PromisesReport,
     "Reports": Reports,
     "SalesRepReport": SalesRepReport,
-    "PaymentManagementReport": PaymentManagementReport,
 }
 
 export const pagesConfig = {
