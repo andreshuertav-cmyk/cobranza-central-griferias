@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Users, DollarSign, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Users, DollarSign, AlertTriangle, FileText } from "lucide-react";
 
 export default function SalesRepReport({ documents, clients }) {
+  const [showOverdueModal, setShowOverdueModal] = useState(false);
   // Extract sales rep from document notes
   const salesRepData = {};
 
@@ -20,7 +24,8 @@ export default function SalesRepReport({ documents, clients }) {
         clientIds: new Set(),
         totalDebt: 0,
         overdueDebt: 0,
-        overdueClients: new Set()
+        overdueClients: new Set(),
+        overdueClientDocs: {}
       };
     }
 
@@ -35,6 +40,12 @@ export default function SalesRepReport({ documents, clients }) {
     if (doc.status === "vencido" && debt > 0) {
       salesRepData[salesRep].overdueDebt += debt;
       salesRepData[salesRep].overdueClients.add(doc.client_id);
+      
+      // Track overdue documents per client
+      if (!salesRepData[salesRep].overdueClientDocs[doc.client_id]) {
+        salesRepData[salesRep].overdueClientDocs[doc.client_id] = [];
+      }
+      salesRepData[salesRep].overdueClientDocs[doc.client_id].push(doc);
     }
   });
 
@@ -44,7 +55,8 @@ export default function SalesRepReport({ documents, clients }) {
     totalClients: data.clientIds.size,
     overdueClients: data.overdueClients.size,
     totalDebt: data.totalDebt,
-    overdueDebt: data.overdueDebt
+    overdueDebt: data.overdueDebt,
+    overdueClientDocs: data.overdueClientDocs
   })).sort((a, b) => b.totalDebt - a.totalDebt);
 
   const totals = salesRepArray.reduce((acc, rep) => ({
@@ -84,12 +96,16 @@ export default function SalesRepReport({ documents, clients }) {
           <p className="text-2xl font-bold text-slate-900">{totals.clients}</p>
         </Card>
 
-        <Card className="p-4 bg-red-50 border-red-200">
+        <Card 
+          className="p-4 bg-red-50 border-red-200 cursor-pointer hover:bg-red-100 transition-colors"
+          onClick={() => setShowOverdueModal(true)}
+        >
           <div className="flex items-center gap-2 text-red-700 mb-2">
             <AlertTriangle className="h-4 w-4" />
             <span className="text-sm">Clientes en mora</span>
           </div>
           <p className="text-2xl font-bold text-red-900">{totals.overdueClients}</p>
+          <p className="text-xs text-red-600 mt-1">Click para ver detalle</p>
         </Card>
 
         <Card className="p-4 bg-amber-50 border-amber-200">
@@ -160,6 +176,55 @@ export default function SalesRepReport({ documents, clients }) {
           </table>
         </div>
       </Card>
+
+      {/* Modal de clientes en mora */}
+      <Dialog open={showOverdueModal} onOpenChange={setShowOverdueModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              Clientes en Mora por Vendedor
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 mt-4">
+            {salesRepArray.filter(rep => rep.overdueClients > 0).map((rep) => (
+              <Card key={rep.name} className="p-4">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center justify-between">
+                  <span>{rep.name}</span>
+                  <span className="text-sm text-red-600">
+                    {rep.overdueClients} cliente{rep.overdueClients !== 1 ? 's' : ''} en mora
+                  </span>
+                </h3>
+                
+                <div className="space-y-2">
+                  {Object.entries(rep.overdueClientDocs).map(([clientId, docs]) => {
+                    const client = clients.find(c => c.id === clientId);
+                    return (
+                      <div key={clientId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-900">
+                            {client?.name || "Cliente desconocido"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Saldo en mora: ${docs.reduce((sum, doc) => sum + ((doc.amount || 0) - (doc.paid_amount || 0)), 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-red-500" />
+                          <span className="text-sm font-semibold text-red-600">
+                            {docs.length} doc{docs.length !== 1 ? 's' : ''} en mora
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
