@@ -2,37 +2,48 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, DollarSign } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CheckCircle2, AlertCircle, DollarSign, CalendarIcon } from "lucide-react";
 import { format, startOfDay, startOfWeek, startOfMonth, subDays, subWeeks, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function PaymentManagementReport({ logs, clients }) {
-  const [timeFilter, setTimeFilter] = useState("all"); // all, day, week, month
+  const [timeFilter, setTimeFilter] = useState("all"); // all, day, week, month, custom
+  const [startDateCustom, setStartDateCustom] = useState("");
+  const [endDateCustom, setEndDateCustom] = useState("");
 
-  // Calcular fecha de inicio según el filtro
-  const getStartDate = () => {
+  // Calcular fecha de inicio y fin según el filtro
+  const getDateRange = () => {
     const now = new Date();
     switch (timeFilter) {
       case "day":
-        return startOfDay(now);
+        return { start: startOfDay(now), end: null };
       case "week":
-        return startOfWeek(now, { weekStartsOn: 1 });
+        return { start: startOfWeek(now, { weekStartsOn: 1 }), end: null };
       case "month":
-        return startOfMonth(now);
+        return { start: startOfMonth(now), end: null };
+      case "custom":
+        return {
+          start: startDateCustom ? new Date(startDateCustom + "T00:00:00") : null,
+          end: endDateCustom ? new Date(endDateCustom + "T23:59:59") : null
+        };
       default:
-        return null;
+        return { start: null, end: null };
     }
   };
 
-  const startDate = getStartDate();
+  const { start: startDate, end: endDate } = getDateRange();
 
   // Filtrar solo pagos realizados y por fecha
   const paymentLogs = logs.filter(log => {
     if (log.result !== "pago_realizado" || !log.paid_amount || log.paid_amount <= 0) return false;
     
-    if (startDate && log.contact_date) {
+    if (log.contact_date) {
       const logDate = new Date(log.contact_date);
-      return logDate >= startDate;
+      
+      if (startDate && logDate < startDate) return false;
+      if (endDate && logDate > endDate) return false;
     }
     
     return true;
@@ -72,36 +83,67 @@ export default function PaymentManagementReport({ logs, clients }) {
       {/* Filtros de tiempo */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-slate-600 mr-2">Período:</span>
-            <Button
-              variant={timeFilter === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeFilter("all")}
-            >
-              Todo
-            </Button>
-            <Button
-              variant={timeFilter === "day" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeFilter("day")}
-            >
-              Hoy
-            </Button>
-            <Button
-              variant={timeFilter === "week" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeFilter("week")}
-            >
-              Esta Semana
-            </Button>
-            <Button
-              variant={timeFilter === "month" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeFilter("month")}
-            >
-              Este Mes
-            </Button>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-slate-600 mr-2">Período:</span>
+              <Button
+                variant={timeFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeFilter("all")}
+              >
+                Todo
+              </Button>
+              <Button
+                variant={timeFilter === "day" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeFilter("day")}
+              >
+                Hoy
+              </Button>
+              <Button
+                variant={timeFilter === "week" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeFilter("week")}
+              >
+                Esta Semana
+              </Button>
+              <Button
+                variant={timeFilter === "month" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeFilter("month")}
+              >
+                Este Mes
+              </Button>
+              <Button
+                variant={timeFilter === "custom" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeFilter("custom")}
+              >
+                <CalendarIcon className="h-4 w-4 mr-1" />
+                Personalizado
+              </Button>
+            </div>
+
+            {timeFilter === "custom" && (
+              <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t">
+                <div className="space-y-2">
+                  <Label>Fecha inicio</Label>
+                  <Input
+                    type="date"
+                    value={startDateCustom}
+                    onChange={(e) => setStartDateCustom(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fecha fin</Label>
+                  <Input
+                    type="date"
+                    value={endDateCustom}
+                    onChange={(e) => setEndDateCustom(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
