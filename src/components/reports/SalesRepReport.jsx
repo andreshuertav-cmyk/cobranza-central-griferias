@@ -25,7 +25,8 @@ export default function SalesRepReport({ documents, clients }) {
         totalDebt: 0,
         overdueDebt: 0,
         overdueClients: new Set(),
-        overdueClientDocs: {}
+        overdueClientDocs: {},
+        allClientDocs: {}
       };
     }
 
@@ -35,6 +36,12 @@ export default function SalesRepReport({ documents, clients }) {
     // Calculate debt
     const debt = (doc.amount || 0) - (doc.paid_amount || 0);
     salesRepData[salesRep].totalDebt += debt;
+
+    // Track all documents per client
+    if (!salesRepData[salesRep].allClientDocs[doc.client_id]) {
+      salesRepData[salesRep].allClientDocs[doc.client_id] = [];
+    }
+    salesRepData[salesRep].allClientDocs[doc.client_id].push(doc);
 
     // Check if overdue
     if (doc.status === "vencido" && debt > 0) {
@@ -56,7 +63,8 @@ export default function SalesRepReport({ documents, clients }) {
     overdueClients: data.overdueClients.size,
     totalDebt: data.totalDebt,
     overdueDebt: data.overdueDebt,
-    overdueClientDocs: data.overdueClientDocs
+    overdueClientDocs: data.overdueClientDocs,
+    allClientDocs: data.allClientDocs
   })).sort((a, b) => b.totalDebt - a.totalDebt);
 
   const totals = salesRepArray.reduce((acc, rep) => ({
@@ -200,8 +208,10 @@ export default function SalesRepReport({ documents, clients }) {
                 <div className="space-y-2">
                   {Object.entries(rep.overdueClientDocs)
                     .filter(([clientId]) => clients.find(c => c.id === clientId))
-                    .map(([clientId, docs]) => {
+                    .map(([clientId, overdueDocs]) => {
                     const client = clients.find(c => c.id === clientId);
+                    const allDocs = rep.allClientDocs[clientId] || [];
+                    const totalClientDebt = allDocs.reduce((sum, doc) => sum + ((doc.amount || 0) - (doc.paid_amount || 0)), 0);
                     return (
                       <div key={clientId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <div className="flex-1">
@@ -209,13 +219,13 @@ export default function SalesRepReport({ documents, clients }) {
                             {client.name}
                           </p>
                           <p className="text-xs text-slate-500">
-                            Saldo en mora: ${docs.reduce((sum, doc) => sum + ((doc.amount || 0) - (doc.paid_amount || 0)), 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+                            Saldo en mora: ${totalClientDebt.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-red-500" />
                           <span className="text-sm font-semibold text-red-600">
-                            {docs.length} doc{docs.length !== 1 ? 's' : ''} en mora
+                            {overdueDocs.length} doc{overdueDocs.length !== 1 ? 's' : ''} en mora
                           </span>
                         </div>
                       </div>
