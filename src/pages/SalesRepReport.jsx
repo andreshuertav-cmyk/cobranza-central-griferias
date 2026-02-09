@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { format } from "date-fns";
+import * as XLSX from 'xlsx';
 import SalesRepReport from "@/components/reports/SalesRepReport";
 
 export default function SalesRepReportPage() {
@@ -66,16 +68,22 @@ export default function SalesRepReportPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Link to={createPageUrl("Reports")}>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Reporte por Vendedor</h1>
-            <p className="text-slate-500 mt-1">Análisis de cartera por vendedor</p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link to={createPageUrl("Reports")}>
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Reporte por Vendedor</h1>
+              <p className="text-slate-500 mt-1">Análisis de cartera por vendedor</p>
+            </div>
           </div>
+          <Button onClick={exportToExcel} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
         </div>
 
         {isLoading ? (
