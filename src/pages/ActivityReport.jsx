@@ -7,6 +7,7 @@ import {
   ArrowLeft, Phone, DollarSign, CheckCircle2, Clock, 
   Loader2, Download
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
@@ -83,29 +84,45 @@ export default function ActivityReport() {
   const isLoading = loadingLogs || loadingDocuments;
 
   const exportReport = () => {
-    const reportData = {
-      periodo: period === "day" ? "Diario" : period === "week" ? "Semanal" : "Mensual",
-      fecha: format(customDate, "dd/MM/yyyy", { locale: es }),
-      rango: `${format(dateRange.start, "dd/MM/yyyy")} - ${format(dateRange.end, "dd/MM/yyyy")}`,
-      metricas: {
-        contactos_totales: totalContacts,
-        contactos_exitosos: successfulContacts,
-        promesas_pago: paymentPromises,
-        pagos_recibidos: paymentsReceived,
-        monto_prometido: promisedAmount,
-        documentos_vencidos: overdueDocuments,
-        monto_vencido: overdueAmount
-      },
-      contactos_por_tipo: contactsByType,
-      resultados: resultsByType
-    };
+    const wb = XLSX.utils.book_new();
 
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `reporte_actividad_${format(new Date(), "ddMMyyyy")}.json`;
-    link.click();
+    // Hoja 1: Resumen
+    const resumenData = [
+      ['REPORTE DE ACTIVIDAD'],
+      ['Período:', period === "day" ? "Diario" : period === "week" ? "Semanal" : "Mensual"],
+      ['Rango:', `${format(dateRange.start, "dd/MM/yyyy")} - ${format(dateRange.end, "dd/MM/yyyy")}`],
+      [],
+      ['MÉTRICAS GENERALES'],
+      ['Contactos totales', totalContacts],
+      ['Contactos exitosos', successfulContacts],
+      ['Promesas de pago', paymentPromises],
+      ['Pagos recibidos', paymentsReceived],
+      ['Monto prometido', `$${promisedAmount.toLocaleString('es-MX')}`],
+      ['Documentos vencidos', overdueDocuments],
+      ['Monto vencido', `$${overdueAmount.toLocaleString('es-MX')}`]
+    ];
+    const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+    XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+
+    // Hoja 2: Contactos por tipo
+    const contactsData = [
+      ['CONTACTOS POR TIPO'],
+      ['Tipo', 'Cantidad'],
+      ...Object.entries(contactsByType).map(([type, count]) => [type, count])
+    ];
+    const wsContacts = XLSX.utils.aoa_to_sheet(contactsData);
+    XLSX.utils.book_append_sheet(wb, wsContacts, 'Contactos por Tipo');
+
+    // Hoja 3: Resultados
+    const resultsData = [
+      ['RESULTADOS DE GESTIONES'],
+      ['Resultado', 'Cantidad'],
+      ...Object.entries(resultsByType).map(([type, count]) => [type, count])
+    ];
+    const wsResults = XLSX.utils.aoa_to_sheet(resultsData);
+    XLSX.utils.book_append_sheet(wb, wsResults, 'Resultados');
+
+    XLSX.writeFile(wb, `reporte_actividad_${format(new Date(), "ddMMyyyy")}.xlsx`);
   };
 
   return (

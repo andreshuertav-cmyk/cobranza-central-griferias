@@ -3,14 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
   startOfDay, endOfDay, startOfWeek, endOfWeek, 
-  startOfMonth, endOfMonth, format
+  startOfMonth, endOfMonth, format, parseISO, isWithinInterval
 } from "date-fns";
 import { es } from "date-fns/locale";
+import * as XLSX from 'xlsx';
 import ConsolidatedPromisesReport from "@/components/reports/ConsolidatedPromisesReport";
 
 export default function ConsolidatedPromisesReportPage() {
@@ -48,6 +49,29 @@ export default function ConsolidatedPromisesReportPage() {
   const dateRange = getDateRange();
   const isLoading = loadingClients || loadingLogs || loadingDocuments;
 
+  const exportToExcel = () => {
+    const periodLogs = logs.filter(log => {
+      if (!log.contact_date) return false;
+      const logDate = parseISO(log.contact_date);
+      return isWithinInterval(logDate, dateRange);
+    });
+
+    const promises = periodLogs.filter(l => l.result === "promesa_pago");
+    const data = promises.map(log => {
+      const client = clients.find(c => c.id === log.client_id);
+      return {
+        'Cliente': client?.name || 'N/A',
+        'Fecha Promesa': log.promised_date ? format(new Date(log.promised_date), "dd/MM/yyyy", { locale: es }) : 'N/A',
+        'Monto Prometido': log.promised_amount || 0
+      };
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Promesas Consolidadas');
+    XLSX.writeFile(wb, `promesas_consolidadas_${format(new Date(), "ddMMyyyy")}.xlsx`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -65,6 +89,10 @@ export default function ConsolidatedPromisesReportPage() {
               </p>
             </div>
           </div>
+          <Button onClick={exportToExcel} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6">

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
@@ -11,6 +11,7 @@ import {
   startOfMonth, endOfMonth, format, parseISO, isWithinInterval
 } from "date-fns";
 import { es } from "date-fns/locale";
+import * as XLSX from 'xlsx';
 import PaymentMethodsReport from "@/components/reports/PaymentMethodsReport";
 
 export default function PaymentMethodsReportPage() {
@@ -43,6 +44,30 @@ export default function PaymentMethodsReportPage() {
     return isWithinInterval(logDate, dateRange);
   });
 
+  const exportToExcel = () => {
+    const paymentLogs = periodLogs.filter(l => l.result === "pago_realizado" && l.payment_method);
+    const paymentsByMethod = paymentLogs.reduce((acc, log) => {
+      const method = log.payment_method || "sin_especificar";
+      if (!acc[method]) {
+        acc[method] = { count: 0, total: 0 };
+      }
+      acc[method].count += 1;
+      acc[method].total += log.paid_amount || 0;
+      return acc;
+    }, {});
+
+    const data = Object.entries(paymentsByMethod).map(([method, data]) => ({
+      'Método de Pago': method,
+      'Cantidad': data.count,
+      'Monto Total': data.total
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Métodos de Pago');
+    XLSX.writeFile(wb, `metodos_pago_${format(new Date(), "ddMMyyyy")}.xlsx`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -60,6 +85,10 @@ export default function PaymentMethodsReportPage() {
               </p>
             </div>
           </div>
+          <Button onClick={exportToExcel} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6">

@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Phone, MapPin, MessageSquare, Mail, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Phone, MapPin, MessageSquare, Mail, Search, Download } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import * as XLSX from 'xlsx';
 
 const contactIcons = {
   llamada: Phone,
@@ -26,6 +28,28 @@ const resultLabels = {
 
 export default function ClientManagementReport({ logs, clients, documents }) {
   const [search, setSearch] = useState("");
+
+  const exportToExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const data = filteredStats.map(stat => ({
+      'Cliente': stat.client.name,
+      'Teléfono': stat.client.phone || '',
+      'Total Gestiones': stat.totalLogs,
+      'Promesas': stat.promises,
+      'Monto Prometido': stat.promisedAmount,
+      'Pagos': stat.paymentsReceived,
+      'Monto Pagado': stat.totalPaid,
+      'Pagos sin Gestión': stat.paymentsWithoutManagement,
+      'Saldo': stat.remaining,
+      'Última Gestión': stat.lastLog ? format(new Date(stat.lastLog.contact_date), "dd/MM/yyyy", { locale: es }) : 'N/A',
+      'Resultado': stat.lastLog ? resultLabels[stat.lastLog.result] : 'N/A'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Gestiones por Cliente');
+    XLSX.writeFile(wb, `gestiones_clientes_${format(new Date(), "ddMMyyyy")}.xlsx`);
+  };
 
   // Group logs by client
   const clientStats = clients.map(client => {
@@ -99,9 +123,9 @@ export default function ClientManagementReport({ logs, clients, documents }) {
 
   return (
     <Card className="p-6">
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
+      {/* Search and Export */}
+      <div className="mb-6 flex items-center gap-4">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Buscar cliente..."
@@ -110,6 +134,10 @@ export default function ClientManagementReport({ logs, clients, documents }) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <Button onClick={exportToExcel} variant="outline" className="gap-2">
+          <Download className="h-4 w-4" />
+          Exportar
+        </Button>
       </div>
 
       {/* Client Stats Table */}

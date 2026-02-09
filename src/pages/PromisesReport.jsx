@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
@@ -11,6 +11,7 @@ import {
   startOfMonth, endOfMonth, format, parseISO, isWithinInterval
 } from "date-fns";
 import { es } from "date-fns/locale";
+import * as XLSX from 'xlsx';
 import PromisesReport from "@/components/reports/PromisesReport";
 
 export default function PromisesReportPage() {
@@ -55,6 +56,25 @@ export default function PromisesReportPage() {
 
   const isLoading = loadingClients || loadingLogs || loadingDocuments;
 
+  const exportToExcel = () => {
+    const promises = periodLogs.filter(l => l.result === "promesa_pago");
+    const data = promises.map(log => {
+      const client = clients.find(c => c.id === log.client_id);
+      return {
+        'Cliente': client?.name || 'N/A',
+        'Fecha Contacto': format(new Date(log.contact_date), "dd/MM/yyyy", { locale: es }),
+        'Monto Prometido': log.promised_amount || 0,
+        'Fecha Prometida': log.promised_date ? format(new Date(log.promised_date), "dd/MM/yyyy", { locale: es }) : 'N/A',
+        'Notas': log.notes || ''
+      };
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Promesas de Pago');
+    XLSX.writeFile(wb, `promesas_pago_${format(new Date(), "ddMMyyyy")}.xlsx`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -72,6 +92,10 @@ export default function PromisesReportPage() {
               </p>
             </div>
           </div>
+          <Button onClick={exportToExcel} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6">

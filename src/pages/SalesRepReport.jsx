@@ -19,6 +19,50 @@ export default function SalesRepReportPage() {
 
   const isLoading = loadingClients || loadingDocuments;
 
+  const exportToExcel = () => {
+    const salesRepData = {};
+
+    documents.forEach(doc => {
+      if (!doc.notes) return;
+      const match = doc.notes.match(/Vendedor:\s*([^|]+)/i);
+      if (!match) return;
+      const salesRep = match[1].trim();
+      if (!salesRep) return;
+
+      if (!salesRepData[salesRep]) {
+        salesRepData[salesRep] = {
+          clientIds: new Set(),
+          totalDebt: 0,
+          overdueDebt: 0,
+          overdueClients: new Set()
+        };
+      }
+
+      salesRepData[salesRep].clientIds.add(doc.client_id);
+      const debt = (doc.amount || 0) - (doc.paid_amount || 0);
+      salesRepData[salesRep].totalDebt += debt;
+
+      if (doc.status === "vencido" && debt > 0) {
+        salesRepData[salesRep].overdueDebt += debt;
+        salesRepData[salesRep].overdueClients.add(doc.client_id);
+      }
+    });
+
+    const data = Object.entries(salesRepData).map(([name, data]) => ({
+      'Vendedor': name,
+      'Total Clientes': data.clientIds.size,
+      'Clientes en Mora': data.overdueClients.size,
+      'Saldo Total': data.totalDebt,
+      'Saldo en Mora': data.overdueDebt,
+      '% Mora': data.clientIds.size > 0 ? Math.round((data.overdueClients.size / data.clientIds.size) * 100) : 0
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte Vendedores');
+    XLSX.writeFile(wb, `reporte_vendedores_${format(new Date(), "ddMMyyyy")}.xlsx`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
