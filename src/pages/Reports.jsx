@@ -71,6 +71,13 @@ export default function Reports() {
       icon: DollarSign,
       color: "bg-rose-500",
       page: "DailyPromisesReport"
+    },
+    {
+      title: "Gestiones Detalladas por Cliente",
+      description: "Vista matricial de todas las gestiones por cliente",
+      icon: ClipboardList,
+      color: "bg-violet-500",
+      page: "DetailedManagementReport"
     }
   ];
 
