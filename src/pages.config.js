@@ -59,6 +59,7 @@ import PaymentMethodsReport from './pages/PaymentMethodsReport';
 import PromisesReport from './pages/PromisesReport';
 import Reports from './pages/Reports';
 import SalesRepReport from './pages/SalesRepReport';
+import DetailedManagementReport from './pages/DetailedManagementReport';
 
 
 export const PAGES = {
@@ -74,6 +75,7 @@ export const PAGES = {
     "PromisesReport": PromisesReport,
     "Reports": Reports,
     "SalesRepReport": SalesRepReport,
+    "DetailedManagementReport": DetailedManagementReport,
 }
 
 export const pagesConfig = {
