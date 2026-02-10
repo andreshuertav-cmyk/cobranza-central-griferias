@@ -9,7 +9,8 @@ import { Loader2 } from "lucide-react";
 
 const documentTypes = [
   { value: "factura", label: "Factura" },
-  { value: "boleta", label: "Boleta" }
+  { value: "boleta", label: "Boleta" },
+  { value: "cheque_pendiente", label: "Cheque pendiente" }
 ];
 
 const statusOptions = [
