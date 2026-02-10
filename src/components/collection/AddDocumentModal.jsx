@@ -62,6 +62,25 @@ export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoadi
     }
   }, [editDocument, open]);
 
+  const calculateDaysOverdue = (dueDate) => {
+    if (!dueDate) return 0;
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = today - due;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  const handleDueDateChange = (e) => {
+    const newDueDate = e.target.value;
+    const daysOverdue = calculateDaysOverdue(newDueDate);
+    setFormData({ 
+      ...formData, 
+      due_date: newDueDate,
+      days_overdue: daysOverdue.toString()
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
@@ -149,7 +168,7 @@ export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoadi
               <Input
                 type="date"
                 value={formData.due_date}
-                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                onChange={handleDueDateChange}
                 required
               />
             </div>
