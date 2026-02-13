@@ -167,10 +167,10 @@ export default function DocumentCard({ document, onPayment, onEdit, onFactorize,
                 size="sm"
                 variant="outline"
                 onClick={() => onDelete(document)}
-                className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200 flex-1 gap-1"
+                className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 flex-1 gap-1"
               >
                 <Trash2 className="h-3 w-3" />
-                Borrar
+                Factorizada
               </Button>
             )}
             </div>
