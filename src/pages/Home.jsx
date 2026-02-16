@@ -347,17 +347,85 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Floating "Ver sin gestiones" button */}
-      <div className="fixed top-6 right-6 z-50">
-        <Button
-          size="lg"
-          variant={showDocsWithoutLogs ? "default" : "outline"}
-          onClick={() => setShowDocsWithoutLogs(!showDocsWithoutLogs)}
-          className="gap-2 h-14 px-6 rounded-full shadow-lg"
-        >
-          <AlertTriangle className="h-5 w-5" />
-          {showDocsWithoutLogs ? "Mostrando sin gestiones" : "Ver sin gestiones"}
-        </Button>
+      {/* Floating filters and search - fixed on the right */}
+      <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
+        {/* Search bar */}
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Buscar por nombre o teléfono..."
+            className="pl-10 pr-10 shadow-lg"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter buttons row */}
+        <div className="flex gap-2 justify-end">
+          <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+            <TabsList className="shadow-lg">
+              <TabsTrigger value="all">Todos</TabsTrigger>
+              <TabsTrigger value="pendiente">Pendientes</TabsTrigger>
+              <TabsTrigger value="mora">En mora</TabsTrigger>
+              <TabsTrigger value="en_negociacion">Negociando</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {/* Sort buttons row */}
+        <div className="flex gap-2 justify-end">
+          <Button
+            variant={sortBy === "name" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setSortBy("name");
+              localStorage.setItem("sortBy", "name");
+            }}
+            className="gap-2 shadow-lg"
+          >
+            <ArrowUpDown className="h-3 w-3" />
+            Nombre
+          </Button>
+          <Button
+            variant={sortBy === "debt" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              if (sortBy === "debt") {
+                const newDirection = debtSortDirection === "desc" ? "asc" : "desc";
+                setDebtSortDirection(newDirection);
+                localStorage.setItem("debtSortDirection", newDirection);
+              } else {
+                setSortBy("debt");
+                localStorage.setItem("sortBy", "debt");
+              }
+            }}
+            className="gap-2 shadow-lg"
+          >
+            <ArrowUpDown className="h-3 w-3" />
+            Deuda {sortBy === "debt" && (debtSortDirection === "desc" ? "↓" : "↑")}
+          </Button>
+        </div>
+
+        {/* Ver sin gestiones button */}
+        <div className="flex justify-end">
+          <Button
+            size="lg"
+            variant={showDocsWithoutLogs ? "default" : "outline"}
+            onClick={() => setShowDocsWithoutLogs(!showDocsWithoutLogs)}
+            className="gap-2 h-14 px-6 rounded-full shadow-lg"
+          >
+            <AlertTriangle className="h-5 w-5" />
+            {showDocsWithoutLogs ? "Mostrando sin gestiones" : "Ver sin gestiones"}
+          </Button>
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -488,66 +556,7 @@ export default function Home() {
 
 
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Buscar por nombre o teléfono..."
-              className="pl-10 pr-10"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-          <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-            <TabsList>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="pendiente">Pendientes</TabsTrigger>
-              <TabsTrigger value="mora">En mora</TabsTrigger>
-              <TabsTrigger value="en_negociacion">Negociando</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <div className="flex gap-2">
-            <Button
-              variant={sortBy === "name" ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setSortBy("name");
-                localStorage.setItem("sortBy", "name");
-              }}
-              className="gap-2"
-            >
-              <ArrowUpDown className="h-3 w-3" />
-              Nombre
-            </Button>
-            <Button
-              variant={sortBy === "debt" ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                if (sortBy === "debt") {
-                  const newDirection = debtSortDirection === "desc" ? "asc" : "desc";
-                  setDebtSortDirection(newDirection);
-                  localStorage.setItem("debtSortDirection", newDirection);
-                } else {
-                  setSortBy("debt");
-                  localStorage.setItem("sortBy", "debt");
-                }
-              }}
-              className="gap-2"
-            >
-              <ArrowUpDown className="h-3 w-3" />
-              Deuda {sortBy === "debt" && (debtSortDirection === "desc" ? "↓" : "↑")}
-            </Button>
-          </div>
-        </div>
+
 
         {/* Client List */}
         {isLoading ? (
