@@ -23,6 +23,7 @@ const resultTypes = [
   { value: "promesa_pago", label: "Promesa de pago" },
   { value: "pago_realizado", label: "Pago realizado" },
   { value: "rechaza_pago", label: "Rechaza pago" },
+  { value: "pendiente", label: "Pendiente" },
   { value: "otro", label: "Otro" }
 ];
 

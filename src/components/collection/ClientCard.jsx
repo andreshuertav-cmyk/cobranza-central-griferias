@@ -21,6 +21,7 @@ const resultLabels = {
   promesa_pago: "Promesa de pago",
   pago_realizado: "Pago realizado",
   rechaza_pago: "Rechaza pago",
+  pendiente: "Pendiente",
   otro: "Otro"
 };
 
@@ -29,9 +30,14 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
   const remaining = totalDebt !== undefined ? (totalDebt - totalPaid) : ((client.total_debt || 0) - (client.paid_amount || 0));
   const progress = totalDebt !== undefined && totalDebt > 0 ? (totalPaid / totalDebt) * 100 : (client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0);
 
+  const isPendingLog = lastLog?.result === "pendiente";
+
   return (
     <Card 
-      className="p-4 hover:shadow-lg transition-all cursor-pointer border-slate-200 hover:border-slate-300 group"
+      className={cn(
+        "p-4 hover:shadow-lg transition-all cursor-pointer border-slate-200 hover:border-slate-300 group",
+        isPendingLog && "bg-amber-50 border-amber-300"
+      )}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-4">
@@ -68,14 +74,17 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
             </div>
             
             {lastLog && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg px-2 py-1.5">
+              <div className={cn(
+                "border rounded-lg px-2 py-1.5",
+                isPendingLog ? "bg-amber-100 border-amber-300" : "bg-blue-50 border-blue-200"
+              )}>
                 <div className="flex items-center gap-1.5 text-xs">
-                  <Clock className="h-3 w-3 text-blue-600 shrink-0" />
-                  <span className="text-blue-900 font-medium">
+                  <Clock className={cn("h-3 w-3 shrink-0", isPendingLog ? "text-amber-600" : "text-blue-600")} />
+                  <span className={cn("font-medium", isPendingLog ? "text-amber-900" : "text-blue-900")}>
                     {resultLabels[lastLog.result] || lastLog.result}
                   </span>
-                  <span className="text-blue-600">•</span>
-                  <span className="text-blue-700">
+                  <span className={isPendingLog ? "text-amber-600" : "text-blue-600"}>•</span>
+                  <span className={isPendingLog ? "text-amber-700" : "text-blue-700"}>
                     {formatDistanceToNow(new Date(lastLog.contact_date), { addSuffix: true, locale: es })}
                   </span>
                 </div>
