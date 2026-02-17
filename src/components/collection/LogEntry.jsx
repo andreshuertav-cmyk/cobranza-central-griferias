@@ -20,6 +20,7 @@ const resultConfig = {
   promesa_pago: { label: "Promesa de pago", color: "bg-blue-100 text-blue-700" },
   pago_realizado: { label: "Pago realizado", color: "bg-emerald-100 text-emerald-700" },
   rechaza_pago: { label: "Rechaza pago", color: "bg-red-100 text-red-700" },
+  pendiente: { label: "Pendiente", color: "bg-amber-100 text-amber-700" },
   otro: { label: "Otro", color: "bg-slate-100 text-slate-600" }
 };
 
