@@ -36,7 +36,9 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
     <Card 
       className={cn(
         "p-4 hover:shadow-lg transition-all cursor-pointer border-slate-200 hover:border-slate-300 group",
-        isPendingLog && "bg-amber-50 border-amber-300"
+        isPendingLog && "bg-amber-50 border-amber-300",
+        client.status === "al_corriente" && !isPendingLog && "bg-emerald-50 border-emerald-300",
+        client.status === "mora" && !isPendingLog && "bg-red-50 border-red-300"
       )}
       onClick={onClick}
     >
