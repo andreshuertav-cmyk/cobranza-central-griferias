@@ -265,7 +265,9 @@ export default function ClientDetail() {
       }
       
       queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["logs"] });
       queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
       setShowAddLog(false);
       setEditingLog(null);
@@ -330,7 +332,9 @@ export default function ClientDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
       queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["logs"] });
       setShowQuickPayment(false);
       setSelectedDocument(null);
     }
@@ -388,7 +392,9 @@ export default function ClientDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["logs", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["logs"] });
       queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["documents", clientId] });
     }
   });

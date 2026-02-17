@@ -584,7 +584,8 @@ export default function Home() {
                     ) : (
                       <div className="space-y-3">
                         {filteredClients.map((client) => {
-                          const clientLogs = logs.filter(log => log.client_id === client.id);
+                          const clientLogs = logs.filter(log => log.client_id === client.id)
+                            .sort((a, b) => new Date(b.contact_date) - new Date(a.contact_date));
                           const lastLog = clientLogs.length > 0 ? clientLogs[0] : null;
 
                           // Calculate actual status based on documents
