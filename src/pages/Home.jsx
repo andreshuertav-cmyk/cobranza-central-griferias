@@ -347,8 +347,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Floating filters and search - fixed on the right */}
-      <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
+      {/* Floating filters and search - fixed on the right, hidden on mobile */}
+      <div className="hidden lg:flex fixed top-6 right-6 z-50 flex-col gap-3">
         {/* Search bar */}
         <div className="relative w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -435,7 +435,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-slate-900">Bitácora de Cobranza</h1>
             <p className="text-slate-500 mt-1">Gestiona tus clientes y seguimientos</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -477,18 +477,94 @@ export default function Home() {
             <Link to={createPageUrl("Reports")}>
               <Button variant="outline" className="gap-2">
                 <BarChart3 className="h-4 w-4" />
-                Reportes
+                <span className="hidden sm:inline">Reportes</span>
               </Button>
             </Link>
             <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="gap-2">
               <Upload className="h-4 w-4" />
-              Carga masiva
+              <span className="hidden sm:inline">Carga masiva</span>
             </Button>
             <Button onClick={() => setShowAddClient(true)} className="gap-2">
               <Plus className="h-4 w-4" />
-              Nuevo cliente
+              <span className="hidden sm:inline">Nuevo cliente</span>
             </Button>
           </div>
+        </div>
+        
+        {/* Mobile filters - shown only on mobile */}
+        <div className="lg:hidden mb-6 space-y-3">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Buscar por nombre o teléfono..."
+              className="pl-10 pr-10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter tabs */}
+          <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+            <TabsList className="w-full grid grid-cols-4">
+              <TabsTrigger value="all" className="text-xs">Todos</TabsTrigger>
+              <TabsTrigger value="pendiente" className="text-xs">Pendientes</TabsTrigger>
+              <TabsTrigger value="mora" className="text-xs">En mora</TabsTrigger>
+              <TabsTrigger value="en_negociacion" className="text-xs">Negociando</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Sort buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant={sortBy === "name" ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setSortBy("name");
+                localStorage.setItem("sortBy", "name");
+              }}
+              className="gap-2 flex-1"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              Nombre
+            </Button>
+            <Button
+              variant={sortBy === "debt" ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                if (sortBy === "debt") {
+                  const newDirection = debtSortDirection === "desc" ? "asc" : "desc";
+                  setDebtSortDirection(newDirection);
+                  localStorage.setItem("debtSortDirection", newDirection);
+                } else {
+                  setSortBy("debt");
+                  localStorage.setItem("sortBy", "debt");
+                }
+              }}
+              className="gap-2 flex-1"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              Deuda {sortBy === "debt" && (debtSortDirection === "desc" ? "↓" : "↑")}
+            </Button>
+          </div>
+
+          {/* Ver sin gestiones button */}
+          <Button
+            variant={showDocsWithoutLogs ? "default" : "outline"}
+            onClick={() => setShowDocsWithoutLogs(!showDocsWithoutLogs)}
+            className="gap-2 w-full"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            {showDocsWithoutLogs ? "Mostrando sin gestiones" : "Ver sin gestiones"}
+          </Button>
         </div>
 
         {/* Stats */}
