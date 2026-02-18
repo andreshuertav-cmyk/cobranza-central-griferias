@@ -31,14 +31,16 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
   const progress = totalDebt !== undefined && totalDebt > 0 ? (totalPaid / totalDebt) * 100 : (client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0);
 
   const isPendingLog = lastLog?.result === "pendiente";
+  const isPromiseLog = lastLog?.result === "promesa_pago";
 
   return (
     <Card 
       className={cn(
         "p-4 hover:shadow-lg transition-all cursor-pointer border-slate-200 hover:border-slate-300 group",
         isPendingLog && "bg-amber-50 border-amber-300",
-        client.status === "al_corriente" && !isPendingLog && "bg-emerald-50 border-emerald-300",
-        client.status === "mora" && !isPendingLog && "bg-red-50 border-red-300"
+        isPromiseLog && !isPendingLog && "bg-blue-50 border-blue-300",
+        client.status === "al_corriente" && !isPendingLog && !isPromiseLog && "bg-emerald-50 border-emerald-300",
+        client.status === "mora" && !isPendingLog && !isPromiseLog && "bg-red-50 border-red-300"
       )}
       onClick={onClick}
     >
