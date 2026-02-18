@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, Phone, DollarSign, CheckCircle2, Clock, 
-  Loader2, Download
+  Loader2, Download, AlertTriangle
 } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { Link } from "react-router-dom";
@@ -81,6 +81,9 @@ export default function ActivityReport() {
     .filter(d => d.status === "vencido")
     .reduce((sum, d) => sum + ((d.amount || 0) - (d.paid_amount || 0)), 0);
 
+  // Calcular gestiones pendientes
+  const pendingLogs = logs.filter(log => log.result === "pendiente").length;
+
   const isLoading = loadingLogs || loadingDocuments;
 
   const exportReport = () => {
@@ -98,6 +101,7 @@ export default function ActivityReport() {
       ['Promesas de pago', paymentPromises],
       ['Pagos recibidos', paymentsReceived],
       ['Monto prometido', `$${promisedAmount.toLocaleString('es-MX')}`],
+      ['Gestiones pendientes', pendingLogs],
       ['Documentos vencidos', overdueDocuments],
       ['Monto vencido', `$${overdueAmount.toLocaleString('es-MX')}`]
     ];
@@ -170,7 +174,7 @@ export default function ActivityReport() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
               <StatsCard
                 title="Contactos"
                 value={totalContacts}
@@ -190,6 +194,12 @@ export default function ActivityReport() {
                 value={paymentsReceived}
                 icon={CheckCircle2}
                 variant="success"
+              />
+              <StatsCard
+                title="Pendientes"
+                value={pendingLogs}
+                icon={AlertTriangle}
+                variant="warning"
               />
               <StatsCard
                 title="Docs vencidos"
