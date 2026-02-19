@@ -674,9 +674,12 @@ export default function ClientDetail() {
 
             const filteredDocs = documents.filter(doc => {
               const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
-              if (docRemaining <= 0) return false;
-
+              
+              // Si "Mostrar todas" está activo, mostrar todos los documentos (incluso pagados)
               if (!showOnlyOverdue) return true;
+              
+              // Si solo queremos morosas, excluir documentos pagados
+              if (docRemaining <= 0) return false;
 
               if (!doc.due_date) return false;
 
