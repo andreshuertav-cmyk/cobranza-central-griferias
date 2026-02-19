@@ -375,14 +375,41 @@ export default function ClientDetail() {
           status: newPaidAmount < client.total_debt ? "mora" : "al_corriente"
         });
         
-        // Si había un documento asociado, revertir también su pago
+        // Si había un documento asociado, revertir también su pago (pero NO borrar el documento)
         if (logToDelete.document_id) {
           const doc = documents.find(d => d.id === logToDelete.document_id);
           if (doc) {
             const newDocPaidAmount = Math.max(0, (doc.paid_amount || 0) - logToDelete.paid_amount);
+            
+            // Calcular el nuevo status basado en la fecha de vencimiento
+            let newStatus = "vigente";
+            if (newDocPaidAmount >= doc.amount) {
+              newStatus = "pagado";
+            } else if (doc.due_date) {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const dateStr = String(doc.due_date).trim();
+              let dueDate;
+              if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                  const [day, month, year] = parts;
+                  if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                    dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                  }
+                }
+              }
+              if (!dueDate) dueDate = new Date(dateStr);
+              dueDate.setHours(0, 0, 0, 0);
+              
+              if (dueDate < today) {
+                newStatus = "vencido";
+              }
+            }
+            
             await base44.entities.Document.update(logToDelete.document_id, {
               paid_amount: newDocPaidAmount,
-              status: newDocPaidAmount < doc.amount ? "vencido" : "pagado"
+              status: newStatus
             });
           }
         }
