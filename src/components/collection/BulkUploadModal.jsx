@@ -297,8 +297,15 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           clientUpdateCount++;
           // Add delay after every client update
           await delay(400);
+          
+          // Update progress (85% to 95% range for client updates)
+          const updateProgress = 85 + Math.floor((clientUpdateCount / allClientsInUpload.size) * 10);
+          setProgress(updateProgress);
         }
       }
+
+      setProgress(100);
+      setProgressMessage("¡Completado!");
 
       // 12. Mark documents as paid if they no longer appear in the upload with delays
       const documentsMarkedPaid = [];
