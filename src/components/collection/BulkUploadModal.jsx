@@ -239,7 +239,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
       // 10. Create all new documents in batches with delays
-      const BATCH_SIZE = 20;
+      const BATCH_SIZE = 10; // Reduced batch size
       const createdDocuments = [];
       for (let i = 0; i < documentsToCreate.length; i += BATCH_SIZE) {
         const batch = documentsToCreate.slice(i, i + BATCH_SIZE);
@@ -248,7 +248,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         
         // Add delay between batches to avoid rate limiting
         if (i + BATCH_SIZE < documentsToCreate.length) {
-          await delay(500);
+          await delay(1200); // Increased delay
         }
       }
 
