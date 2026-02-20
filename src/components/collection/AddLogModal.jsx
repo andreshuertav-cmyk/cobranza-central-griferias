@@ -48,28 +48,17 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  const [formData, setFormData] = useState(editLog ? {
-    contact_type: editLog.contact_type || "llamada",
-    contact_date: editLog.contact_date ? new Date(editLog.contact_date).toISOString().slice(0, 16) : getLocalDateTime(),
-    result: editLog.result || "",
-    notes: editLog.notes || "",
-    promised_amount: editLog.promised_amount || "",
-    promised_date: editLog.promised_date ? editLog.promised_date.split('T')[0] : "",
-    follow_up_date: editLog.follow_up_date ? editLog.follow_up_date.split('T')[0] : "",
-    paid_amount: editLog.paid_amount || "",
-    document_id: editLog.document_id || "",
-    payment_method: editLog.payment_method || ""
-  } : {
-    contact_type: "llamada",
+  const [formData, setFormData] = useState({
+    contact_type: editLog?.contact_type || "llamada",
     contact_date: getLocalDateTime(),
-    result: "",
-    notes: "",
-    promised_amount: "",
-    promised_date: "",
-    follow_up_date: "",
-    paid_amount: "",
-    document_id: "",
-    payment_method: ""
+    result: editLog?.result || "",
+    notes: editLog?.notes || "",
+    promised_amount: editLog?.promised_amount || "",
+    promised_date: editLog?.promised_date ? editLog.promised_date.split('T')[0] : "",
+    follow_up_date: editLog?.follow_up_date ? editLog.follow_up_date.split('T')[0] : "",
+    paid_amount: editLog?.paid_amount || "",
+    document_id: editLog?.document_id || "",
+    payment_method: editLog?.payment_method || ""
   });
 
   const [selectedDocuments, setSelectedDocuments] = useState([]);
