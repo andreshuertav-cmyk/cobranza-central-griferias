@@ -274,10 +274,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           });
           
           clientUpdateCount++;
-          // Add delay every 5 client updates
-          if (clientUpdateCount % 5 === 0) {
-            await delay(300);
-          }
+          // Add delay after every client update
+          await delay(400);
         }
       }
 
