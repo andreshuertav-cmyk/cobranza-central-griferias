@@ -248,6 +248,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       // Helper function to add delay between batches
       const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+      setProgress(30);
+      setProgressMessage(`Creando ${documentsToCreate.length} documentos...`);
+      
       // 10. Create all new documents in batches with delays
       const BATCH_SIZE = 10; // Reduced batch size
       const createdDocuments = [];
@@ -255,6 +258,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         const batch = documentsToCreate.slice(i, i + BATCH_SIZE);
         const batchResult = await base44.entities.Document.bulkCreate(batch);
         createdDocuments.push(...batchResult);
+        
+        // Update progress (30% to 80% range for documents)
+        const progressPercent = 30 + Math.floor((i / documentsToCreate.length) * 50);
+        setProgress(progressPercent);
+        setProgressMessage(`Creando documentos: ${i + batch.length}/${documentsToCreate.length}`);
         
         // Add delay between batches to avoid rate limiting
         if (i + BATCH_SIZE < documentsToCreate.length) {
