@@ -11,6 +11,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("");
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
