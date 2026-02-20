@@ -448,12 +448,23 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
           {/* Processing Status */}
           {processing && (
-            <Alert className="border-blue-200 bg-blue-50">
-              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-              <AlertDescription className="text-blue-900">
-                Procesando datos y creando registros...
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-3">
+              <Alert className="border-blue-200 bg-blue-50">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                <AlertDescription className="text-blue-900">
+                  {progressMessage}
+                </AlertDescription>
+              </Alert>
+              <div className="space-y-2">
+                <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-600 transition-all duration-500 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-center text-slate-600">{progress}%</p>
+              </div>
+            </div>
           )}
 
           {/* Error */}
