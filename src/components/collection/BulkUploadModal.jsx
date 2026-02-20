@@ -270,6 +270,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         }
       }
 
+      setProgress(85);
+      setProgressMessage("Recalculando deudas de clientes...");
+      
       // 11. Recalculate total_debt and paid_amount for existing clients with delays
       const allClientsInUpload = new Set(Object.keys(clientsMap));
       let clientUpdateCount = 0;
