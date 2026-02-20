@@ -29,6 +29,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
     setProcessing(true);
     setError(null);
     setResult(null);
+    setProgress(0);
+    setProgressMessage("Leyendo archivo...");
 
     try {
       // 1. Read Excel file in frontend
