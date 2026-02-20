@@ -140,6 +140,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         clientsMap[clientName].documents.push(docData);
       }
 
+      setProgress(10);
+      setProgressMessage("Verificando clientes existentes...");
+      
       // 4. Get existing clients to check for duplicates
       const existingClients = await base44.entities.Client.list("-created_date", 10000);
       const existingClientsByName = {};
