@@ -176,6 +176,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         }
       }
 
+      setProgress(20);
+      setProgressMessage(`Creando ${clientsToCreate.length} clientes nuevos...`);
+      
       // 6. Create new clients
       const createdClients = clientsToCreate.length > 0 
         ? await base44.entities.Client.bulkCreate(clientsToCreate)
