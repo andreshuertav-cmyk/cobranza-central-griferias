@@ -212,9 +212,11 @@ export default function Home() {
     }
   });
 
-  // Calculate stats from real documents
-  const totalDebt = documents.reduce((sum, doc) => sum + (doc.amount || 0), 0);
-  const totalPaid = documents.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+  // Calculate stats from real documents (only from existing clients)
+  const clientIds = new Set(clients.map(c => c.id));
+  const validDocuments = documents.filter(doc => clientIds.has(doc.client_id));
+  const totalDebt = validDocuments.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+  const totalPaid = validDocuments.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
   const pendingAmount = totalDebt - totalPaid;
 
   // Count clients with overdue documents
