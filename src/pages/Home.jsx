@@ -581,7 +581,7 @@ export default function Home() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <StatsCard
             title="Clientes"
             value={clients.length}
@@ -605,6 +605,12 @@ export default function Home() {
             value={inMora}
             icon={AlertTriangle}
             variant="danger"
+          />
+          <StatsCard
+            title="Promesas activas"
+            value={activePromises}
+            icon={Calendar}
+            variant="info"
           />
         </div>
 
