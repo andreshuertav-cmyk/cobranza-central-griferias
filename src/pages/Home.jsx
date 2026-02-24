@@ -272,6 +272,17 @@ export default function Home() {
     todayFollowUps.map(log => log.client_id)
   );
 
+  // Count active payment promises
+  const activePromises = logs.filter(log => {
+    if (log.result !== "promesa_pago" || !log.promised_date) return false;
+    
+    const promiseDate = new Date(log.promised_date);
+    promiseDate.setHours(0, 0, 0, 0);
+    
+    // Check if promise date is today or in the future (not expired)
+    return promiseDate >= today;
+  }).length;
+
   // Get clients with documents but no logs
   const clientsWithDocsButNoLogs = new Set(
     clients.filter(client => {
