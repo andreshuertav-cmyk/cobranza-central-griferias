@@ -273,35 +273,32 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       setProgress(85);
       setProgressMessage("Recalculando deudas de clientes...");
       
-      // 11. Recalculate total_debt and paid_amount for existing clients with delays
+      // 11. Recalculate total_debt and paid_amount for ALL clients (new and existing) with delays
       const allClientsInUpload = new Set(Object.keys(clientsMap));
       let clientUpdateCount = 0;
       for (const clientName of allClientsInUpload) {
-        const existingClient = existingClientsByName[clientName];
-        if (existingClient) {
-          const clientId = existingClient.id;
+        const clientId = clientNameToId[clientName];
 
-          // Get ALL documents for this client (old + new)
-          const clientDocs = await base44.entities.Document.filter({ client_id: clientId });
+        // Get ALL documents for this client (old + new)
+        const clientDocs = await base44.entities.Document.filter({ client_id: clientId });
 
-          const totalDebt = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
-          const totalPaid = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
-          const hasOverdue = clientDocs.some(doc => (doc.days_overdue || 0) > 0);
+        const totalDebt = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+        const totalPaid = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+        const hasOverdue = clientDocs.some(doc => (doc.days_overdue || 0) > 0);
 
-          await base44.entities.Client.update(clientId, {
-            total_debt: totalDebt,
-            paid_amount: totalPaid,
-            status: hasOverdue ? "mora" : (totalPaid >= totalDebt ? "al_corriente" : existingClient.status)
-          });
-          
-          clientUpdateCount++;
-          // Add delay after every client update
-          await delay(400);
-          
-          // Update progress (85% to 95% range for client updates)
-          const updateProgress = 85 + Math.floor((clientUpdateCount / allClientsInUpload.size) * 10);
-          setProgress(updateProgress);
-        }
+        await base44.entities.Client.update(clientId, {
+          total_debt: totalDebt,
+          paid_amount: totalPaid,
+          status: hasOverdue ? "mora" : (totalPaid >= totalDebt ? "al_corriente" : "pendiente")
+        });
+        
+        clientUpdateCount++;
+        // Add delay after every client update
+        await delay(400);
+        
+        // Update progress (85% to 95% range for client updates)
+        const updateProgress = 85 + Math.floor((clientUpdateCount / allClientsInUpload.size) * 10);
+        setProgress(updateProgress);
       }
 
       setProgress(100);
