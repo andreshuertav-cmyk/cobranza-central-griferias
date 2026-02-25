@@ -201,8 +201,17 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                     type="number"
                     step="0.01"
                     placeholder="0.00"
+                    max={totalDebt || undefined}
                     value={formData.promised_amount}
-                    onChange={(e) => setFormData({ ...formData, promised_amount: e.target.value })}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseFloat(value);
+                      if (totalDebt !== undefined && numValue > totalDebt) {
+                        setFormData({ ...formData, promised_amount: totalDebt.toString() });
+                      } else {
+                        setFormData({ ...formData, promised_amount: value });
+                      }
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
