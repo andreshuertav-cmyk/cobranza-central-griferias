@@ -40,6 +40,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
+      console.log("📄 Datos del Excel:", jsonData);
+      console.log("📊 Total de filas:", jsonData.length);
+
       if (jsonData.length === 0) {
         throw new Error("El archivo está vacío o no tiene datos válidos");
       }
