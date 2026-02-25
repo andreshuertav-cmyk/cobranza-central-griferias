@@ -215,6 +215,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
       // 9. Re-fetch existing documents to catch any created during this session
       const refreshedDocs = await base44.entities.Document.list("-created_date", 10000);
+      console.log("📚 Total documentos existentes en DB:", refreshedDocs.length);
+      if (refreshedDocs.length > 0) {
+        console.log("📋 Primeros 5 documentos existentes:", refreshedDocs.slice(0, 5).map(d => ({ 
+          client_id: d.client_id, 
+          doc_number: d.document_number 
+        })));
+      }
       const refreshedDocNumbers = new Set(
         refreshedDocs.map(doc => `${doc.client_id}_${doc.document_number}`)
       );
