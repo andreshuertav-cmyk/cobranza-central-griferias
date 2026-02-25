@@ -311,7 +311,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         for (let i = 0; i < documentsToUpdate.length; i += BATCH_SIZE) {
           const batch = documentsToUpdate.slice(i, i + BATCH_SIZE);
           for (const { id, data } of batch) {
-            await base44.entities.Document.update(id, data);
+            console.log(`💾 Actualizando documento ID ${id}:`, data);
+            const updated = await base44.entities.Document.update(id, data);
+            console.log(`✅ Documento actualizado:`, updated);
             updatedDocuments.push(id);
           }
           
