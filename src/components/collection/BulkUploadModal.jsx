@@ -203,8 +203,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         refreshedDocs.map(doc => `${doc.client_id}_${doc.document_number}`)
       );
 
-      // 9b. Prepare all documents data
+      // 9b. Prepare all documents data (create or update)
       const documentsToCreate = [];
+      const documentsToUpdate = [];
+      
       for (const [clientName, clientData] of Object.entries(clientsMap)) {
         const clientId = clientNameToId[clientName];
 
@@ -214,20 +216,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             continue;
           }
 
-          const docKey = `${clientId}_${doc.numero}`;
-
-          // Skip if document already exists for this client
-          if (refreshedDocNumbers.has(docKey)) {
-            continue;
-          }
-
           const docType = doc.tipo?.toLowerCase() || "factura";
           const mappedType = docType.includes("factura") ? "factura" : 
                              docType.includes("pagar") ? "pagare" : 
                              docType.includes("contrato") ? "contrato" :
                              docType.includes("crédito") || docType.includes("credito") ? "credito" : "otro";
 
-          documentsToCreate.push({
+          const docData = {
             client_id: clientId,
             document_number: String(doc.numero),
             document_type: mappedType,
@@ -237,12 +232,23 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
             status: (doc.dias_mora || 0) > 0 ? "vencido" : "vigente",
             days_overdue: doc.dias_mora || 0,
             notes: doc.vendedor ? `Vendedor: ${doc.vendedor}${doc.forma_pago ? ` | Forma de pago: ${doc.forma_pago}` : ""}` : ""
-          });
+          };
+
+          // Check if document already exists
+          const existingDoc = refreshedDocs.find(d => 
+            d.client_id === clientId && d.document_number === String(doc.numero)
+          );
+
+          if (existingDoc) {
+            documentsToUpdate.push({ id: existingDoc.id, data: docData });
+          } else {
+            documentsToCreate.push(docData);
+          }
         }
       }
 
-      if (documentsToCreate.length === 0) {
-        throw new Error("No se encontraron documentos nuevos para procesar. Todos los documentos ya existen o faltan datos requeridos.");
+      if (documentsToCreate.length === 0 && documentsToUpdate.length === 0) {
+        throw new Error("No se encontraron documentos para procesar. Verifica que el archivo tenga datos válidos.");
       }
 
       // Helper function to add delay between batches
