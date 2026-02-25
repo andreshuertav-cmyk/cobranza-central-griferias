@@ -40,17 +40,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
-      console.log("📄 Datos del Excel:", jsonData);
-      console.log("📊 Total de filas:", jsonData.length);
-      
       if (jsonData.length === 0) {
         throw new Error("El archivo está vacío o no tiene datos válidos");
-      }
-      
-      // Show first row in error message for debugging
-      if (jsonData.length > 0) {
-        console.log("🔍 Primera fila:", jsonData[0]);
-        console.log("🔍 Columnas detectadas:", Object.keys(jsonData[0]));
       }
 
       // 2. Parse and validate data
@@ -125,16 +116,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           vendedor: row.VENDEDOR || row.vendedor || row.Vendedor || "",
           forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || row['Forma Pago'] || ""
         };
-        
-        if (idx === 0) {
-          console.log("🔍 Primer documento parseado:", parsed);
-        }
 
         return parsed;
         });
-
-      console.log("📋 Documentos parseados:", documentsData);
-      console.log("✅ Total documentos:", documentsData.length);
 
       if (documentsData.length === 0) {
         throw new Error("No se encontraron datos válidos en el archivo");
@@ -215,16 +199,6 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
       // 9. Re-fetch existing documents to catch any created during this session
       const refreshedDocs = await base44.entities.Document.list("-created_date", 10000);
-      console.log("📚 Total documentos existentes en DB:", refreshedDocs.length);
-      if (refreshedDocs.length > 0) {
-        console.log("📋 Primeros 5 documentos existentes:", refreshedDocs.slice(0, 5).map(d => ({ 
-          client_id: d.client_id, 
-          doc_number: d.document_number 
-        })));
-      }
-      const refreshedDocNumbers = new Set(
-        refreshedDocs.map(doc => `${doc.client_id}_${doc.document_number}`)
-      );
 
       // 9b. Prepare all documents data (create or update)
       const documentsToCreate = [];
@@ -236,7 +210,6 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         for (const doc of clientData.documents) {
           // Skip if missing required fields
           if (!doc.numero || !doc.vencio) {
-            console.log("⚠️ Documento sin número o fecha:", doc);
             continue;
           }
 
@@ -263,17 +236,12 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           );
 
           if (existingDoc) {
-            console.log(`🔄 Actualizando documento existente: ${doc.numero} (Cliente ID: ${clientId})`);
             documentsToUpdate.push({ id: existingDoc.id, data: docData });
           } else {
-            console.log(`✨ Creando nuevo documento: ${doc.numero} (Cliente ID: ${clientId})`);
             documentsToCreate.push(docData);
           }
         }
       }
-
-      console.log("📝 Documentos a crear:", documentsToCreate.length);
-      console.log("📝 Documentos a actualizar:", documentsToUpdate.length);
 
       if (documentsToCreate.length === 0 && documentsToUpdate.length === 0) {
         throw new Error("No se encontraron documentos para procesar. Verifica que el archivo tenga datos válidos.");
@@ -311,9 +279,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         for (let i = 0; i < documentsToUpdate.length; i += BATCH_SIZE) {
           const batch = documentsToUpdate.slice(i, i + BATCH_SIZE);
           for (const { id, data } of batch) {
-            console.log(`💾 Actualizando documento ID ${id}:`, data);
-            const updated = await base44.entities.Document.update(id, data);
-            console.log(`✅ Documento actualizado:`, updated);
+            await base44.entities.Document.update(id, data);
             updatedDocuments.push(id);
           }
           
