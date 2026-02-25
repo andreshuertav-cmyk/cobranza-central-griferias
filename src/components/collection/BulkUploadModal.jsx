@@ -263,8 +263,10 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           );
 
           if (existingDoc) {
+            console.log(`🔄 Actualizando documento existente: ${doc.numero} (Cliente ID: ${clientId})`);
             documentsToUpdate.push({ id: existingDoc.id, data: docData });
           } else {
+            console.log(`✨ Creando nuevo documento: ${doc.numero} (Cliente ID: ${clientId})`);
             documentsToCreate.push(docData);
           }
         }
