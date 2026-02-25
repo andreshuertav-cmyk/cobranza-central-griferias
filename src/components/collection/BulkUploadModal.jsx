@@ -255,24 +255,46 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
       setProgress(30);
-      setProgressMessage(`Creando ${documentsToCreate.length} documentos...`);
+      const totalDocs = documentsToCreate.length + documentsToUpdate.length;
+      setProgressMessage(`Procesando ${totalDocs} documentos...`);
       
-      // 10. Create all new documents in batches with delays
-      const BATCH_SIZE = 10; // Reduced batch size
+      // 10. Create new documents in batches with delays
+      const BATCH_SIZE = 10;
       const createdDocuments = [];
-      for (let i = 0; i < documentsToCreate.length; i += BATCH_SIZE) {
-        const batch = documentsToCreate.slice(i, i + BATCH_SIZE);
-        const batchResult = await base44.entities.Document.bulkCreate(batch);
-        createdDocuments.push(...batchResult);
-        
-        // Update progress (30% to 80% range for documents)
-        const progressPercent = 30 + Math.floor((i / documentsToCreate.length) * 50);
-        setProgress(progressPercent);
-        setProgressMessage(`Creando documentos: ${i + batch.length}/${documentsToCreate.length}`);
-        
-        // Add delay between batches to avoid rate limiting
-        if (i + BATCH_SIZE < documentsToCreate.length) {
-          await delay(1200); // Increased delay
+      if (documentsToCreate.length > 0) {
+        for (let i = 0; i < documentsToCreate.length; i += BATCH_SIZE) {
+          const batch = documentsToCreate.slice(i, i + BATCH_SIZE);
+          const batchResult = await base44.entities.Document.bulkCreate(batch);
+          createdDocuments.push(...batchResult);
+          
+          const progressPercent = 30 + Math.floor((i / totalDocs) * 50);
+          setProgress(progressPercent);
+          setProgressMessage(`Creando documentos: ${i + batch.length}/${documentsToCreate.length}`);
+          
+          if (i + BATCH_SIZE < documentsToCreate.length) {
+            await delay(1200);
+          }
+        }
+      }
+      
+      // Update existing documents in batches
+      const updatedDocuments = [];
+      if (documentsToUpdate.length > 0) {
+        for (let i = 0; i < documentsToUpdate.length; i += BATCH_SIZE) {
+          const batch = documentsToUpdate.slice(i, i + BATCH_SIZE);
+          for (const { id, data } of batch) {
+            await base44.entities.Document.update(id, data);
+            updatedDocuments.push(id);
+          }
+          
+          const processedSoFar = documentsToCreate.length + i + batch.length;
+          const progressPercent = 30 + Math.floor((processedSoFar / totalDocs) * 50);
+          setProgress(progressPercent);
+          setProgressMessage(`Actualizando documentos: ${i + batch.length}/${documentsToUpdate.length}`);
+          
+          if (i + BATCH_SIZE < documentsToUpdate.length) {
+            await delay(1200);
+          }
         }
       }
 
