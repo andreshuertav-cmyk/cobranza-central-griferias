@@ -123,6 +123,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         return parsed;
         });
 
+      console.log("📋 Documentos parseados:", documentsData);
+      console.log("✅ Total documentos:", documentsData.length);
+
       if (documentsData.length === 0) {
         throw new Error("No se encontraron datos válidos en el archivo");
       }
