@@ -447,7 +447,6 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
                   {result.clientsCount > 0 && <div>• {result.clientsCount} cliente(s) nuevo(s) creado(s)</div>}
                   {result.updatedClientsCount > 0 && <div>• {result.updatedClientsCount} cliente(s) actualizado(s)</div>}
                   <div>• {result.documentsCount} documento(s) agregado(s)</div>
-                  {result.documentsMarkedPaid > 0 && <div>• {result.documentsMarkedPaid} documento(s) marcado(s) como pagado(s)</div>}
                 </div>
               </AlertDescription>
             </Alert>
