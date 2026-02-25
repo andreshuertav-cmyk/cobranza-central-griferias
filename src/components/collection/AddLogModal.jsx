@@ -280,8 +280,17 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                     type="number"
                     step="0.01"
                     placeholder="0.00"
+                    max={totalDebt || undefined}
                     value={formData.paid_amount}
-                    onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseFloat(value);
+                      if (totalDebt !== undefined && numValue > totalDebt) {
+                        setFormData({ ...formData, paid_amount: totalDebt.toString() });
+                      } else {
+                        setFormData({ ...formData, paid_amount: value });
+                      }
+                    }}
                     className="flex-1"
                   />
                   <Button
