@@ -253,6 +253,9 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         }
       }
 
+      console.log("📝 Documentos a crear:", documentsToCreate.length);
+      console.log("📝 Documentos a actualizar:", documentsToUpdate.length);
+
       if (documentsToCreate.length === 0 && documentsToUpdate.length === 0) {
         throw new Error("No se encontraron documentos para procesar. Verifica que el archivo tenga datos válidos.");
       }
