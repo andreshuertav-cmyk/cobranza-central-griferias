@@ -475,7 +475,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
                 <div className="text-sm">
                   {result.clientsCount > 0 && <div>• {result.clientsCount} cliente(s) nuevo(s) creado(s)</div>}
                   {result.updatedClientsCount > 0 && <div>• {result.updatedClientsCount} cliente(s) actualizado(s)</div>}
-                  <div>• {result.documentsCount} documento(s) agregado(s)</div>
+                  {result.documentsCreated > 0 && <div>• {result.documentsCreated} documento(s) nuevo(s) creado(s)</div>}
+                  {result.documentsUpdated > 0 && <div>• {result.documentsUpdated} documento(s) actualizado(s)</div>}
                 </div>
               </AlertDescription>
             </Alert>
