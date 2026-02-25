@@ -219,6 +219,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         for (const doc of clientData.documents) {
           // Skip if missing required fields
           if (!doc.numero || !doc.vencio) {
+            console.log("⚠️ Documento sin número o fecha:", doc);
             continue;
           }
 
