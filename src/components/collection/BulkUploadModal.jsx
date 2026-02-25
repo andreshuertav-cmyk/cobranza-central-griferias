@@ -42,9 +42,15 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
       console.log("📄 Datos del Excel:", jsonData);
       console.log("📊 Total de filas:", jsonData.length);
-
+      
       if (jsonData.length === 0) {
         throw new Error("El archivo está vacío o no tiene datos válidos");
+      }
+      
+      // Show first row in error message for debugging
+      if (jsonData.length > 0) {
+        console.log("🔍 Primera fila:", jsonData[0]);
+        console.log("🔍 Columnas detectadas:", Object.keys(jsonData[0]));
       }
 
       // 2. Parse and validate data
