@@ -304,48 +304,11 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       setProgress(100);
       setProgressMessage("¡Completado!");
 
-      // 12. Mark documents as paid if they no longer appear in the upload with delays
-      const documentsMarkedPaid = [];
-      const uploadedDocNumbers = new Set();
-
-      // Collect all document numbers from the upload
-      for (const [clientName, clientData] of Object.entries(clientsMap)) {
-        const clientId = clientNameToId[clientName];
-        for (const doc of clientData.documents) {
-          if (doc.numero) {
-            uploadedDocNumbers.add(`${clientId}_${doc.numero}`);
-          }
-        }
-      }
-
-      // Find and mark documents as paid that are not in the upload
-      let docUpdateCount = 0;
-      for (const existingDoc of allExistingDocs) {
-        const docKey = `${existingDoc.client_id}_${existingDoc.document_number}`;
-        const clientName = Object.keys(clientNameToId).find(name => clientNameToId[name] === existingDoc.client_id);
-
-        // Only process documents for clients in this upload
-        if (clientName && !uploadedDocNumbers.has(docKey) && existingDoc.status !== "pagado") {
-          await base44.entities.Document.update(existingDoc.id, {
-            status: "pagado",
-            paid_amount: existingDoc.amount
-          });
-          documentsMarkedPaid.push(existingDoc);
-          
-          docUpdateCount++;
-          // Add delay every 5 document updates
-          if (docUpdateCount % 5 === 0) {
-            await delay(300);
-          }
-        }
-      }
-
       setResult({
         success: true,
         clientsCount: createdClients.length,
         updatedClientsCount: allClientsInUpload.size - createdClients.length,
-        documentsCount: createdDocuments.length,
-        documentsMarkedPaid: documentsMarkedPaid.length
+        documentsCount: createdDocuments.length
       });
 
       // Notify parent
