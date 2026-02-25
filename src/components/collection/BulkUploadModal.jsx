@@ -218,9 +218,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
 
           const docType = doc.tipo?.toLowerCase() || "factura";
           const mappedType = docType.includes("factura") ? "factura" : 
-                             docType.includes("pagar") ? "pagare" : 
-                             docType.includes("contrato") ? "contrato" :
-                             docType.includes("crédito") || docType.includes("credito") ? "credito" : "otro";
+                             docType.includes("boleta") ? "boleta" : 
+                             docType.includes("cheque") ? "cheque_pendiente" : "factura";
 
           const docData = {
             client_id: clientId,
