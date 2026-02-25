@@ -336,7 +336,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         success: true,
         clientsCount: createdClients.length,
         updatedClientsCount: allClientsInUpload.size - createdClients.length,
-        documentsCount: createdDocuments.length
+        documentsCreated: createdDocuments.length,
+        documentsUpdated: updatedDocuments.length
       });
 
       // Notify parent
