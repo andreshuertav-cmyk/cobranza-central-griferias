@@ -114,17 +114,21 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         };
 
         const parsed = {
-          tipo: row.TIPO || row.tipo,
-          numero: String(row.NÚMERO || row.numero || row.NUMERO || ""),
-          cliente: row.CLIENTE || row.cliente,
+          tipo: row.TIPO || row.tipo || row.Tipo,
+          numero: String(row.NÚMERO || row.numero || row.NUMERO || row.Número || row.Numero || ""),
+          cliente: row.CLIENTE || row.cliente || row.Cliente,
           vencio: dueDate,
-          dias_mora: parseNumber(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA']),
-          total: parseNumber(row.TOTAL || row.total),
-          pagado: parseNumber(row.PAGADO || row.pagado),
-          pendiente: parseNumber(row.PENDIENTE || row.pendiente),
-          vendedor: row.VENDEDOR || row.vendedor || "",
-          forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || ""
+          dias_mora: parseNumber(row['DÍAS MORA'] || row.dias_mora || row['DIAS MORA'] || row['Días Mora'] || row['Dias Mora']),
+          total: parseNumber(row.TOTAL || row.total || row.Total),
+          pagado: parseNumber(row.PAGADO || row.pagado || row.Pagado),
+          pendiente: parseNumber(row.PENDIENTE || row.pendiente || row.Pendiente),
+          vendedor: row.VENDEDOR || row.vendedor || row.Vendedor || "",
+          forma_pago: row['FORMA PAGO'] || row.forma_pago || row['FORMA_PAGO'] || row['Forma Pago'] || ""
         };
+        
+        if (idx === 0) {
+          console.log("🔍 Primer documento parseado:", parsed);
+        }
 
         return parsed;
         });
