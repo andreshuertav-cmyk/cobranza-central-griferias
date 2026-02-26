@@ -32,6 +32,7 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState(urlParams.get("statusFilter") || "all");
   const [sortBy, setSortBy] = useState(urlParams.get("sortBy") || localStorage.getItem("sortBy") || "name");
   const [debtSortDirection, setDebtSortDirection] = useState(localStorage.getItem("debtSortDirection") || "desc");
+  const [moraSortDirection, setMoraSortDirection] = useState(localStorage.getItem("moraSortDirection") || "desc");
   const [showAddClient, setShowAddClient] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -351,10 +352,23 @@ export default function Home() {
     .sort((a, b) => {
       if (sortBy === "name") {
         return (a.name || "").localeCompare(b.name || "");
-      } else {
+      } else if (sortBy === "debt") {
         const debtA = (a.total_debt || 0) - (a.paid_amount || 0);
         const debtB = (b.total_debt || 0) - (b.paid_amount || 0);
         return debtSortDirection === "desc" ? debtB - debtA : debtA - debtB;
+      } else if (sortBy === "mora") {
+        // Get max days overdue for each client
+        const getMoraA = () => {
+          const clientDocsA = documents.filter(d => d.client_id === a.id);
+          return Math.max(0, ...clientDocsA.map(d => d.days_overdue || 0));
+        };
+        const getMoraB = () => {
+          const clientDocsB = documents.filter(d => d.client_id === b.id);
+          return Math.max(0, ...clientDocsB.map(d => d.days_overdue || 0));
+        };
+        const moraA = getMoraA();
+        const moraB = getMoraB();
+        return moraSortDirection === "desc" ? moraB - moraA : moraA - moraB;
       }
     });
 
@@ -424,6 +438,24 @@ export default function Home() {
           >
             <ArrowUpDown className="h-3 w-3" />
             Deuda {sortBy === "debt" && (debtSortDirection === "desc" ? "↓" : "↑")}
+          </Button>
+          <Button
+            variant={sortBy === "mora" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              if (sortBy === "mora") {
+                const newDirection = moraSortDirection === "desc" ? "asc" : "desc";
+                setMoraSortDirection(newDirection);
+                localStorage.setItem("moraSortDirection", newDirection);
+              } else {
+                setSortBy("mora");
+                localStorage.setItem("sortBy", "mora");
+              }
+            }}
+            className="gap-2 shadow-lg"
+          >
+            <ArrowUpDown className="h-3 w-3" />
+            Mora {sortBy === "mora" && (moraSortDirection === "desc" ? "↓" : "↑")}
           </Button>
         </div>
 
@@ -566,6 +598,24 @@ export default function Home() {
             >
               <ArrowUpDown className="h-3 w-3" />
               Deuda {sortBy === "debt" && (debtSortDirection === "desc" ? "↓" : "↑")}
+            </Button>
+            <Button
+              variant={sortBy === "mora" ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                if (sortBy === "mora") {
+                  const newDirection = moraSortDirection === "desc" ? "asc" : "desc";
+                  setMoraSortDirection(newDirection);
+                  localStorage.setItem("moraSortDirection", newDirection);
+                } else {
+                  setSortBy("mora");
+                  localStorage.setItem("sortBy", "mora");
+                }
+              }}
+              className="gap-2 flex-1"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              Mora {sortBy === "mora" && (moraSortDirection === "desc" ? "↓" : "↑")}
             </Button>
           </div>
 
@@ -723,6 +773,9 @@ export default function Home() {
 
                           const clientWithStatus = { ...client, status: actualStatus };
 
+                          // Calculate max days overdue
+                          const maxDaysOverdue = Math.max(0, ...clientDocs.map(d => d.days_overdue || 0));
+
                           const filterParams = new URLSearchParams({
                             statusFilter,
                             sortBy,
@@ -744,6 +797,7 @@ export default function Home() {
                                 lastLog={lastLog}
                                 totalDebt={totalDebtFromDocs}
                                 totalPaid={totalPaidFromDocs}
+                                maxDaysOverdue={maxDaysOverdue}
                               />
                             </Link>
                           );
