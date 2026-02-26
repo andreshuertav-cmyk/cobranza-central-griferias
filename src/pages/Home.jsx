@@ -358,9 +358,6 @@ export default function Home() {
         return debtSortDirection === "desc" ? debtB - debtA : debtA - debtB;
       } else if (sortBy === "mora") {
         // Calculate max days overdue in real-time for sorting
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
         const getMoraA = () => {
           const clientDocsA = documents.filter(d => d.client_id === a.id);
           return Math.max(0, ...clientDocsA.map(doc => {
@@ -829,9 +826,6 @@ export default function Home() {
                           const clientWithStatus = { ...client, status: actualStatus };
 
                           // Calculate max days overdue in real-time
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          
                           const maxDaysOverdue = Math.max(0, ...clientDocs.map(doc => {
                             const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
                             if (docRemaining <= 0 || !doc.due_date) return 0;
