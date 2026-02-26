@@ -357,15 +357,70 @@ export default function Home() {
         const debtB = (b.total_debt || 0) - (b.paid_amount || 0);
         return debtSortDirection === "desc" ? debtB - debtA : debtA - debtB;
       } else if (sortBy === "mora") {
-        // Get max days overdue for each client
+        // Calculate max days overdue in real-time for sorting
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         const getMoraA = () => {
           const clientDocsA = documents.filter(d => d.client_id === a.id);
-          return Math.max(0, ...clientDocsA.map(d => d.days_overdue || 0));
+          return Math.max(0, ...clientDocsA.map(doc => {
+            const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+            if (docRemaining <= 0 || !doc.due_date) return 0;
+
+            const dateStr = String(doc.due_date).trim();
+            let dueDate;
+            if (dateStr.includes('-')) {
+              const parts = dateStr.split('-');
+              if (parts.length === 3) {
+                const [day, month, year] = parts;
+                if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                  dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                }
+              }
+            }
+            if (!dueDate) {
+              dueDate = new Date(dateStr);
+            }
+            dueDate.setHours(0, 0, 0, 0);
+
+            if (dueDate >= today) return 0;
+            
+            const diffTime = today - dueDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+          }));
         };
+        
         const getMoraB = () => {
           const clientDocsB = documents.filter(d => d.client_id === b.id);
-          return Math.max(0, ...clientDocsB.map(d => d.days_overdue || 0));
+          return Math.max(0, ...clientDocsB.map(doc => {
+            const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+            if (docRemaining <= 0 || !doc.due_date) return 0;
+
+            const dateStr = String(doc.due_date).trim();
+            let dueDate;
+            if (dateStr.includes('-')) {
+              const parts = dateStr.split('-');
+              if (parts.length === 3) {
+                const [day, month, year] = parts;
+                if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                  dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                }
+              }
+            }
+            if (!dueDate) {
+              dueDate = new Date(dateStr);
+            }
+            dueDate.setHours(0, 0, 0, 0);
+
+            if (dueDate >= today) return 0;
+            
+            const diffTime = today - dueDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+          }));
         };
+        
         const moraA = getMoraA();
         const moraB = getMoraB();
         return moraSortDirection === "desc" ? moraB - moraA : moraA - moraB;
@@ -773,8 +828,36 @@ export default function Home() {
 
                           const clientWithStatus = { ...client, status: actualStatus };
 
-                          // Calculate max days overdue
-                          const maxDaysOverdue = Math.max(0, ...clientDocs.map(d => d.days_overdue || 0));
+                          // Calculate max days overdue in real-time
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          
+                          const maxDaysOverdue = Math.max(0, ...clientDocs.map(doc => {
+                            const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+                            if (docRemaining <= 0 || !doc.due_date) return 0;
+
+                            const dateStr = String(doc.due_date).trim();
+                            let dueDate;
+                            if (dateStr.includes('-')) {
+                              const parts = dateStr.split('-');
+                              if (parts.length === 3) {
+                                const [day, month, year] = parts;
+                                if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                                  dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                                }
+                              }
+                            }
+                            if (!dueDate) {
+                              dueDate = new Date(dateStr);
+                            }
+                            dueDate.setHours(0, 0, 0, 0);
+
+                            if (dueDate >= today) return 0;
+                            
+                            const diffTime = today - dueDate;
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            return diffDays;
+                          }));
 
                           const filterParams = new URLSearchParams({
                             statusFilter,
