@@ -35,10 +35,9 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
 
   // Determine color based on days overdue
   const getMoraColor = (days) => {
-    if (days === 0) return { bg: "bg-red-100", text: "text-red-700", border: "border-red-200" };
-    if (days <= 30) return { bg: "bg-red-200", text: "text-red-800", border: "border-red-300" };
-    if (days <= 90) return { bg: "bg-red-400", text: "text-red-900", border: "border-red-500" };
-    return { bg: "bg-red-600", text: "text-white", border: "border-red-700" };
+    if (days <= 30) return { bg: "bg-red-100", text: "text-red-700", border: "border-red-200" };
+    if (days <= 90) return { bg: "bg-red-500", text: "text-white", border: "border-red-600" };
+    return { bg: "bg-red-700", text: "text-white", border: "border-red-800" };
   };
 
   const moraColor = client.status === "mora" && maxDaysOverdue > 0 ? getMoraColor(maxDaysOverdue) : null;
