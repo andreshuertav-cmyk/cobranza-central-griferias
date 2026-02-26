@@ -25,7 +25,7 @@ const resultLabels = {
   otro: "Otro"
 };
 
-export default function ClientCard({ client, lastLog, onClick, totalDebt, totalPaid }) {
+export default function ClientCard({ client, lastLog, onClick, totalDebt, totalPaid, maxDaysOverdue }) {
   const status = statusConfig[client.status] || statusConfig.pendiente;
   const remaining = totalDebt !== undefined ? (totalDebt - totalPaid) : ((client.total_debt || 0) - (client.paid_amount || 0));
   const progress = totalDebt !== undefined && totalDebt > 0 ? (totalPaid / totalDebt) * 100 : (client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0);
@@ -50,8 +50,15 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-semibold text-sm shrink-0">
               {client.name?.charAt(0)?.toUpperCase() || "?"}
             </div>
-            <div className="min-w-0">
-              <h3 className="font-semibold text-slate-900 truncate">{client.name}</h3>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-slate-900 truncate">{client.name}</h3>
+                {maxDaysOverdue > 0 && (
+                  <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                    {maxDaysOverdue}d
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 {client.phone && (
                   <span className="flex items-center gap-1">
