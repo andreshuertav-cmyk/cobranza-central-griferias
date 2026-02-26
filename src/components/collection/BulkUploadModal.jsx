@@ -255,7 +255,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       setProgressMessage(`Procesando ${totalDocs} documentos...`);
       
       // 10. Create new documents in batches with delays
-      const BATCH_SIZE = 10;
+      const BATCH_SIZE = 50;
       const createdDocuments = [];
       if (documentsToCreate.length > 0) {
         for (let i = 0; i < documentsToCreate.length; i += BATCH_SIZE) {
@@ -268,7 +268,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           setProgressMessage(`Creando documentos: ${i + batch.length}/${documentsToCreate.length}`);
           
           if (i + BATCH_SIZE < documentsToCreate.length) {
-            await delay(1200);
+            await delay(500);
           }
         }
       }
@@ -289,7 +289,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           setProgressMessage(`Actualizando documentos: ${i + batch.length}/${documentsToUpdate.length}`);
           
           if (i + BATCH_SIZE < documentsToUpdate.length) {
-            await delay(1200);
+            await delay(500);
           }
         }
       }
@@ -318,7 +318,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         
         clientUpdateCount++;
         // Add delay after every client update
-        await delay(400);
+        await delay(200);
         
         // Update progress (85% to 95% range for client updates)
         const updateProgress = 85 + Math.floor((clientUpdateCount / allClientsInUpload.size) * 10);
