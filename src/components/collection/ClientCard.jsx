@@ -33,6 +33,16 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
   const isPendingLog = lastLog?.result === "pendiente";
   const isPromiseLog = lastLog?.result === "promesa_pago";
 
+  // Determine color based on days overdue
+  const getMoraColor = (days) => {
+    if (days === 0) return { bg: "bg-red-100", text: "text-red-700", border: "border-red-200" };
+    if (days <= 30) return { bg: "bg-red-200", text: "text-red-800", border: "border-red-300" };
+    if (days <= 90) return { bg: "bg-red-400", text: "text-red-900", border: "border-red-500" };
+    return { bg: "bg-red-600", text: "text-white", border: "border-red-700" };
+  };
+
+  const moraColor = client.status === "mora" && maxDaysOverdue > 0 ? getMoraColor(maxDaysOverdue) : null;
+
   return (
     <Card 
       className={cn(
@@ -105,8 +115,13 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
         </div>
 
         <div className="text-right shrink-0">
-          <Badge className={cn("border text-xs font-medium", status.color)}>
+          <Badge className={cn("border text-xs font-medium", moraColor ? `${moraColor.bg} ${moraColor.text} ${moraColor.border}` : status.color)}>
             {status.label}
+            {client.status === "mora" && maxDaysOverdue > 0 && (
+              <span className="ml-1.5 font-semibold">
+                {maxDaysOverdue}d
+              </span>
+            )}
           </Badge>
           <div className="mt-2">
             <p className="text-xs text-slate-500">Adeudo</p>
