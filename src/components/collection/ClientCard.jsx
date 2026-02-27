@@ -62,11 +62,6 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="font-semibold text-slate-900 truncate">{client.name}</h3>
-                {maxDaysOverdue > 0 && (
-                  <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
-                    {maxDaysOverdue}d
-                  </span>
-                )}
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 {client.phone && (
