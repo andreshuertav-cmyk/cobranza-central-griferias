@@ -581,6 +581,10 @@ export default function Home() {
                 <span className="hidden sm:inline">Reportes</span>
               </Button>
             </Link>
+            <Button onClick={() => setShowXmlToPdf(true)} variant="outline" className="gap-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">XML a PDF</span>
+            </Button>
             <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="gap-2">
               <Upload className="h-4 w-4" />
               <span className="hidden sm:inline">Carga masiva</span>
