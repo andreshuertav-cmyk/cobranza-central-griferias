@@ -353,8 +353,10 @@ export default function Home() {
       if (sortBy === "name") {
         return (a.name || "").localeCompare(b.name || "");
       } else if (sortBy === "debt") {
-        const debtA = (a.total_debt || 0) - (a.paid_amount || 0);
-        const debtB = (b.total_debt || 0) - (b.paid_amount || 0);
+        const docsA = documents.filter(d => d.client_id === a.id);
+        const docsB = documents.filter(d => d.client_id === b.id);
+        const debtA = docsA.reduce((s, d) => s + (d.amount || 0), 0) - docsA.reduce((s, d) => s + (d.paid_amount || 0), 0);
+        const debtB = docsB.reduce((s, d) => s + (d.amount || 0), 0) - docsB.reduce((s, d) => s + (d.paid_amount || 0), 0);
         return debtSortDirection === "desc" ? debtB - debtA : debtA - debtB;
       } else if (sortBy === "mora") {
         // Calculate max days overdue in real-time for sorting
