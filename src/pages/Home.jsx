@@ -899,6 +899,9 @@ export default function Home() {
         isLoading={createClientMutation.isPending}
       />
 
+      {/* XML to PDF Modal */}
+      <XmlToPdfModal open={showXmlToPdf} onOpenChange={setShowXmlToPdf} />
+
       {/* Bulk Upload Modal */}
       <BulkUploadModal
         open={showBulkUpload}
