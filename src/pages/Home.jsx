@@ -23,6 +23,7 @@ import StatsCard from "@/components/collection/StatsCard";
 import ClientCard from "@/components/collection/ClientCard";
 import AddClientModal from "@/components/collection/AddClientModal";
 import BulkUploadModal from "@/components/collection/BulkUploadModal";
+import XmlToPdfModal from "@/components/collection/XmlToPdfModal";
 
 
 export default function Home() {
