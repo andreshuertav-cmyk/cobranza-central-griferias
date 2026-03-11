@@ -315,7 +315,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         });
         
         clientUpdateCount++;
-        await delay(500);
+        await delay(1500);
         
         const updateProgress = 85 + Math.floor((clientUpdateCount / allClientsInUpload.size) * 10);
         setProgress(updateProgress);
