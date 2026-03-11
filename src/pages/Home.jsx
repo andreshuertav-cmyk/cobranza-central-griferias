@@ -24,6 +24,7 @@ import ClientCard from "@/components/collection/ClientCard";
 import AddClientModal from "@/components/collection/AddClientModal";
 import BulkUploadModal from "@/components/collection/BulkUploadModal";
 import XmlToPdfModal from "@/components/collection/XmlToPdfModal";
+import BulkPaymentModal from "@/components/collection/BulkPaymentModal";
 
 
 export default function Home() {
