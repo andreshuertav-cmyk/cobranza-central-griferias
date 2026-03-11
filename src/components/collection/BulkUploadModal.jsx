@@ -255,7 +255,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       setProgressMessage(`Procesando ${totalDocs} documentos...`);
       
       // 10. Create new documents in batches with delays
-      const BATCH_SIZE = 50;
+      const BATCH_SIZE = 30;
       const createdDocuments = [];
       if (documentsToCreate.length > 0) {
         for (let i = 0; i < documentsToCreate.length; i += BATCH_SIZE) {
@@ -263,24 +263,26 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           const batchResult = await base44.entities.Document.bulkCreate(batch);
           createdDocuments.push(...batchResult);
           
-          const progressPercent = 30 + Math.floor((i / totalDocs) * 50);
+          const progressPercent = 30 + Math.floor(((i + batch.length) / totalDocs) * 50);
           setProgress(progressPercent);
           setProgressMessage(`Creando documentos: ${i + batch.length}/${documentsToCreate.length}`);
           
           if (i + BATCH_SIZE < documentsToCreate.length) {
-            await delay(500);
+            await delay(1500);
           }
         }
       }
       
-      // Update existing documents in batches
+      // Update existing documents in small batches with delays
       const updatedDocuments = [];
       if (documentsToUpdate.length > 0) {
         for (let i = 0; i < documentsToUpdate.length; i += BATCH_SIZE) {
           const batch = documentsToUpdate.slice(i, i + BATCH_SIZE);
+          // Sequential updates with small delay between each
           for (const { id, data } of batch) {
             await base44.entities.Document.update(id, data);
             updatedDocuments.push(id);
+            await delay(300);
           }
           
           const processedSoFar = documentsToCreate.length + i + batch.length;
@@ -289,7 +291,7 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           setProgressMessage(`Actualizando documentos: ${i + batch.length}/${documentsToUpdate.length}`);
           
           if (i + BATCH_SIZE < documentsToUpdate.length) {
-            await delay(500);
+            await delay(1500);
           }
         }
       }
@@ -297,14 +299,21 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       setProgress(85);
       setProgressMessage("Recalculando deudas de clientes...");
       
-      // 11. Recalculate total_debt and paid_amount for ALL clients (new and existing) with delays
+      // 11. Recalculate using already-fetched data (no extra API calls per client)
+      // Build a combined doc list from refreshedDocs + createdDocuments
+      const allDocsInMemory = [
+        ...refreshedDocs.filter(d => !documentsToUpdate.find(u => u.id === d.id)), // old docs not updated
+        ...documentsToUpdate.map(u => ({ ...u.data, id: u.id })),                  // updated docs
+        ...createdDocuments,                                                         // new docs
+      ];
+
       const allClientsInUpload = new Set(Object.keys(clientsMap));
       let clientUpdateCount = 0;
       for (const clientName of allClientsInUpload) {
         const clientId = clientNameToId[clientName];
 
-        // Get ALL documents for this client (old + new)
-        const clientDocs = await base44.entities.Document.filter({ client_id: clientId });
+        // Use in-memory data instead of fetching per client
+        const clientDocs = allDocsInMemory.filter(doc => doc.client_id === clientId);
 
         const totalDebt = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
         const totalPaid = clientDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
@@ -317,10 +326,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         });
         
         clientUpdateCount++;
-        // Add delay after every client update
-        await delay(200);
+        await delay(500);
         
-        // Update progress (85% to 95% range for client updates)
         const updateProgress = 85 + Math.floor((clientUpdateCount / allClientsInUpload.size) * 10);
         setProgress(updateProgress);
       }
