@@ -728,16 +728,16 @@ export default function Home() {
             variant="danger"
           />
           <StatsCard
-            title="Promesas activas"
-            value={activePromises}
-            icon={Calendar}
-            variant="info"
-          />
-          <StatsCard
             title="Pendiente pago factoring"
             value={clientsWithFactoring}
             icon={Landmark}
             variant="warning"
+          />
+          <StatsCard
+            title="Promesas activas"
+            value={activePromises}
+            icon={Calendar}
+            variant="info"
           />
         </div>
 
