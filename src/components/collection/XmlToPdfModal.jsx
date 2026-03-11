@@ -1,112 +1,99 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, Download, Loader2, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { FileText, Download, Loader2, AlertCircle, CheckCircle2, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import jsPDF from "jspdf";
 
-function parseXmlToObject(xmlString) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlString, "application/xml");
-  const parseError = doc.querySelector("parsererror");
-  if (parseError) throw new Error("El archivo XML no es válido");
+// Recursively convert DOM node to lines array
+function xmlNodeToLines(node, indent = 0) {
+  const lines = [];
+  const pad = "  ".repeat(indent);
 
-  function nodeToObj(node) {
-    const obj = {};
-    // Attributes
-    if (node.attributes && node.attributes.length > 0) {
-      for (const attr of node.attributes) {
-        obj[`@${attr.name}`] = attr.value;
-      }
-    }
-    // Children
-    const children = Array.from(node.childNodes);
-    const elementChildren = children.filter(n => n.nodeType === 1);
-    const textChildren = children.filter(n => n.nodeType === 3 && n.textContent.trim());
-
-    if (elementChildren.length === 0 && textChildren.length > 0) {
-      const text = textChildren.map(n => n.textContent.trim()).join("");
-      if (Object.keys(obj).length === 0) return text;
-      obj["#text"] = text;
-    }
-
-    for (const child of elementChildren) {
-      const localName = child.localName;
-      const parsed = nodeToObj(child);
-      if (obj[localName] !== undefined) {
-        if (!Array.isArray(obj[localName])) obj[localName] = [obj[localName]];
-        obj[localName].push(parsed);
-      } else {
-        obj[localName] = parsed;
-      }
-    }
-    return obj;
+  if (node.nodeType === 3) {
+    // Text node
+    const text = node.textContent.trim();
+    if (text) lines.push({ text: pad + text, type: "value", indent });
+    return lines;
   }
 
-  return { rootName: doc.documentElement.localName, data: nodeToObj(doc.documentElement) };
+  if (node.nodeType !== 1) return lines;
+
+  const name = node.localName || node.nodeName;
+  const attrs = [];
+  for (let i = 0; i < node.attributes.length; i++) {
+    const a = node.attributes[i];
+    attrs.push(`${a.localName || a.name}="${a.value}"`);
+  }
+
+  const attrStr = attrs.length ? " " + attrs.join(" ") : "";
+  lines.push({ text: pad + name + attrStr, type: "key", indent });
+
+  const children = Array.from(node.childNodes);
+  const elementChildren = children.filter(n => n.nodeType === 1);
+  const textChildren = children.filter(n => n.nodeType === 3 && n.textContent.trim());
+
+  if (elementChildren.length === 0 && textChildren.length > 0) {
+    const text = textChildren.map(n => n.textContent.trim()).join(" ");
+    lines.push({ text: pad + "  " + text, type: "value", indent: indent + 1 });
+  } else {
+    for (const child of elementChildren) {
+      lines.push(...xmlNodeToLines(child, indent + 1));
+    }
+  }
+
+  return lines;
 }
 
-function renderToPdf(pdf, obj, depth = 0, y = 20) {
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 14;
-  const maxWidth = pdf.internal.pageSize.getWidth() - margin * 2 - depth * 4;
+function generatePdf(filename, lines) {
+  // Use jsPDF from global (loaded via CDN-like import)
+  const { jsPDF } = window.jspdf || {};
+  
+  // Fallback: dynamic import
+  return import("jspdf").then(({ default: JsPDF }) => {
+    const pdf = new JsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const marginLeft = 12;
+    const marginTop = 20;
+    const lineH = 5;
+    const maxWidth = pageW - marginLeft - 8;
 
-  const checkPage = (currentY) => {
-    if (currentY > pageHeight - 20) {
-      pdf.addPage();
-      return 20;
-    }
-    return currentY;
-  };
+    // Header bar
+    pdf.setFillColor(30, 60, 120);
+    pdf.rect(0, 0, pageW, 13, "F");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(filename, marginLeft, 9);
 
-  if (typeof obj === "string" || typeof obj === "number") {
-    y = checkPage(y);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(9);
-    pdf.setTextColor(60, 60, 60);
-    const lines = pdf.splitTextToSize(String(obj), maxWidth);
-    pdf.text(lines, margin + depth * 4, y);
-    return y + lines.length * 5;
-  }
+    let y = marginTop;
 
-  for (const [key, value] of Object.entries(obj)) {
-    if (key.startsWith("@")) {
-      // Attribute
-      y = checkPage(y);
-      pdf.setFont("helvetica", "italic");
-      pdf.setFontSize(8);
-      pdf.setTextColor(120, 120, 180);
-      const line = `${key.slice(1)}: ${value}`;
-      const lines = pdf.splitTextToSize(line, maxWidth);
-      pdf.text(lines, margin + depth * 4, y);
-      y += lines.length * 4.5;
-    } else if (key === "#text") {
-      y = checkPage(y);
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(9);
-      pdf.setTextColor(60, 60, 60);
-      const lines = pdf.splitTextToSize(String(value), maxWidth);
-      pdf.text(lines, margin + depth * 4, y);
-      y += lines.length * 5;
-    } else {
-      // Element key
-      y = checkPage(y);
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(9);
-      pdf.setTextColor(30, 60, 120);
-      pdf.text(key, margin + depth * 4, y);
-      y += 5;
+    for (const line of lines) {
+      const indentPx = line.indent * 3;
 
-      if (Array.isArray(value)) {
-        for (const item of value) {
-          y = renderToPdf(pdf, item, depth + 1, y);
-        }
+      if (line.type === "key") {
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(30, 60, 120);
       } else {
-        y = renderToPdf(pdf, value, depth + 1, y);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8);
+        pdf.setTextColor(60, 60, 60);
+      }
+
+      const wrapped = pdf.splitTextToSize(line.text.trimStart(), maxWidth - indentPx);
+      for (const wline of wrapped) {
+        if (y > pageH - 10) {
+          pdf.addPage();
+          y = 15;
+        }
+        pdf.text(wline, marginLeft + indentPx, y);
+        y += lineH;
       }
     }
-  }
-  return y;
+
+    pdf.save(filename.replace(/\.xml$/i, "") + ".pdf");
+  });
 }
 
 export default function XmlToPdfModal({ open, onOpenChange }) {
@@ -133,25 +120,21 @@ export default function XmlToPdfModal({ open, onOpenChange }) {
 
     try {
       const text = await file.text();
-      const { rootName, data } = parseXmlToObject(text);
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, "application/xml");
 
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const parseError = doc.querySelector("parsererror");
+      if (parseError) {
+        // Try as text/xml
+        const doc2 = parser.parseFromString(text, "text/xml");
+        const parseError2 = doc2.querySelector("parsererror");
+        if (parseError2) throw new Error("El archivo XML no es válido o está mal formado");
+      }
 
-      // Header
-      pdf.setFillColor(30, 60, 120);
-      pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 14, "F");
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(11);
-      pdf.setTextColor(255, 255, 255);
-      pdf.text(`XML: ${file.name}`, 14, 9);
+      const root = doc.documentElement;
+      const lines = xmlNodeToLines(root, 0);
 
-      pdf.setFontSize(9);
-      pdf.setTextColor(180, 200, 255);
-      pdf.text(`Elemento raíz: ${rootName}`, pdf.internal.pageSize.getWidth() - 14, 9, { align: "right" });
-
-      renderToPdf(pdf, data, 0, 22);
-
-      pdf.save(file.name.replace(/\.xml$/i, "") + ".pdf");
+      await generatePdf(file.name, lines);
       setSuccess(true);
     } catch (err) {
       setError(err.message || "Error al convertir el archivo");
@@ -164,6 +147,7 @@ export default function XmlToPdfModal({ open, onOpenChange }) {
     setFile(null);
     setError(null);
     setSuccess(false);
+    if (inputRef.current) inputRef.current.value = "";
     onOpenChange(false);
   };
 
@@ -172,37 +156,41 @@ export default function XmlToPdfModal({ open, onOpenChange }) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Convertir XML a PDF</DialogTitle>
-          <DialogDescription>Sube un archivo XML y descárgalo como PDF</DialogDescription>
+          <DialogDescription>Sube un archivo XML (ej. DTE del SII) y descárgalo como PDF</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 mt-2">
           {/* Drop zone */}
           <div
-            className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-slate-400 transition-colors cursor-pointer"
+            className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors cursor-pointer"
             onClick={() => inputRef.current?.click()}
           >
             <input ref={inputRef} type="file" accept=".xml" className="hidden" onChange={handleFile} />
             <FileText className="h-10 w-10 text-slate-400 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-900">
-              {file ? file.name : "Selecciona un archivo XML"}
-            </p>
-            {file && (
-              <p className="text-xs text-slate-500 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+            {file ? (
+              <>
+                <p className="text-sm font-semibold text-slate-900">{file.name}</p>
+                <p className="text-xs text-slate-500 mt-1">{(file.size / 1024).toFixed(1)} KB · Click para cambiar</p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-slate-700">Click para seleccionar un archivo XML</p>
+                <p className="text-xs text-slate-400 mt-1">DTE, facturas electrónicas, etc.</p>
+              </>
             )}
-            {!file && <p className="text-xs text-slate-500 mt-1">Solo archivos .xml</p>}
           </div>
 
           {error && (
             <Alert className="border-red-200 bg-red-50">
               <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-900">{error}</AlertDescription>
+              <AlertDescription className="text-red-900 text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
           {success && (
             <Alert className="border-emerald-200 bg-emerald-50">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <AlertDescription className="text-emerald-900">¡PDF generado y descargado exitosamente!</AlertDescription>
+              <AlertDescription className="text-emerald-900 text-sm">¡PDF generado y descargado exitosamente!</AlertDescription>
             </Alert>
           )}
 
