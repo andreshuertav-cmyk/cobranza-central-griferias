@@ -54,10 +54,13 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         
         if (vencioValue) {
           if (typeof vencioValue === 'number') {
-            // Excel serial date: days since 1900-01-01
-            const excelEpoch = new Date(1900, 0, 1);
-            const date = new Date(excelEpoch.getTime() + (vencioValue - 2) * 86400000);
-            dueDate = date.toISOString().split('T')[0];
+            // Excel serial date - use UTC to avoid timezone day-shift
+            const utcMs = Date.UTC(1900, 0, 1) + (vencioValue - 2) * 86400 * 1000;
+            const date = new Date(utcMs);
+            const y = date.getUTCFullYear();
+            const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const d = String(date.getUTCDate()).padStart(2, '0');
+            dueDate = `${y}-${m}-${d}`;
           } else if (typeof vencioValue === 'string') {
             // Try to parse string date in various formats
             const dateStr = String(vencioValue).trim();
