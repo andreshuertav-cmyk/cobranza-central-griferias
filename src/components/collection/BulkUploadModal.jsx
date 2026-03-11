@@ -252,8 +252,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
       const totalDocs = documentsToCreate.length + documentsToUpdate.length;
       setProgressMessage(`Procesando ${totalDocs} documentos...`);
       
-      // 10. Create new documents in batches with delays
-      const BATCH_SIZE = 30;
+      // 10. Create new documents in small batches with generous delays
+      const BATCH_SIZE = 15;
       const createdDocuments = [];
       if (documentsToCreate.length > 0) {
         for (let i = 0; i < documentsToCreate.length; i += BATCH_SIZE) {
@@ -265,32 +265,23 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
           setProgress(progressPercent);
           setProgressMessage(`Creando documentos: ${i + batch.length}/${documentsToCreate.length}`);
           
-          if (i + BATCH_SIZE < documentsToCreate.length) {
-            await delay(1500);
-          }
+          await delay(3000); // siempre esperar entre lotes
         }
       }
       
-      // Update existing documents in small batches with delays
+      // Update existing documents one by one with delay
       const updatedDocuments = [];
       if (documentsToUpdate.length > 0) {
-        for (let i = 0; i < documentsToUpdate.length; i += BATCH_SIZE) {
-          const batch = documentsToUpdate.slice(i, i + BATCH_SIZE);
-          // Sequential updates with small delay between each
-          for (const { id, data } of batch) {
-            await base44.entities.Document.update(id, data);
-            updatedDocuments.push(id);
-            await delay(300);
-          }
+        for (let i = 0; i < documentsToUpdate.length; i++) {
+          const { id, data } = documentsToUpdate[i];
+          await base44.entities.Document.update(id, data);
+          updatedDocuments.push(id);
+          await delay(1000);
           
-          const processedSoFar = documentsToCreate.length + i + batch.length;
+          const processedSoFar = documentsToCreate.length + i + 1;
           const progressPercent = 30 + Math.floor((processedSoFar / totalDocs) * 50);
           setProgress(progressPercent);
-          setProgressMessage(`Actualizando documentos: ${i + batch.length}/${documentsToUpdate.length}`);
-          
-          if (i + BATCH_SIZE < documentsToUpdate.length) {
-            await delay(1500);
-          }
+          setProgressMessage(`Actualizando documentos: ${i + 1}/${documentsToUpdate.length}`);
         }
       }
 
