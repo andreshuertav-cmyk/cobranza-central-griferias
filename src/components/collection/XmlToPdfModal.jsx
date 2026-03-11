@@ -1,99 +1,333 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, Loader2, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { FileText, Download, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Recursively convert DOM node to lines array
-function xmlNodeToLines(node, indent = 0) {
-  const lines = [];
-  const pad = "  ".repeat(indent);
+const TIPO_DTE = {
+  "33": "FACTURA ELECTRÓNICA",
+  "34": "FACTURA NO AFECTA O EXENTA",
+  "39": "BOLETA ELECTRÓNICA",
+  "41": "BOLETA NO AFECTA O EXENTA",
+  "52": "GUÍA DE DESPACHO ELECTRÓNICA",
+  "56": "NOTA DE DÉBITO ELECTRÓNICA",
+  "61": "NOTA DE CRÉDITO ELECTRÓNICA",
+};
 
-  if (node.nodeType === 3) {
-    // Text node
-    const text = node.textContent.trim();
-    if (text) lines.push({ text: pad + text, type: "value", indent });
-    return lines;
-  }
+const ONES = ["","UNO","DOS","TRES","CUATRO","CINCO","SEIS","SIETE","OCHO","NUEVE","DIEZ","ONCE","DOCE","TRECE","CATORCE","QUINCE","DIECISÉIS","DIECISIETE","DIECIOCHO","DIECINUEVE","VEINTE"];
+const TENS = ["","","VEINTI","TREINTA","CUARENTA","CINCUENTA","SESENTA","SETENTA","OCHENTA","NOVENTA"];
+const HUNDREDS = ["","CIENTO","DOSCIENTOS","TRESCIENTOS","CUATROCIENTOS","QUINIENTOS","SEISCIENTOS","SETECIENTOS","OCHOCIENTOS","NOVECIENTOS"];
 
-  if (node.nodeType !== 1) return lines;
-
-  const name = node.localName || node.nodeName;
-  const attrs = [];
-  for (let i = 0; i < node.attributes.length; i++) {
-    const a = node.attributes[i];
-    attrs.push(`${a.localName || a.name}="${a.value}"`);
-  }
-
-  const attrStr = attrs.length ? " " + attrs.join(" ") : "";
-  lines.push({ text: pad + name + attrStr, type: "key", indent });
-
-  const children = Array.from(node.childNodes);
-  const elementChildren = children.filter(n => n.nodeType === 1);
-  const textChildren = children.filter(n => n.nodeType === 3 && n.textContent.trim());
-
-  if (elementChildren.length === 0 && textChildren.length > 0) {
-    const text = textChildren.map(n => n.textContent.trim()).join(" ");
-    lines.push({ text: pad + "  " + text, type: "value", indent: indent + 1 });
-  } else {
-    for (const child of elementChildren) {
-      lines.push(...xmlNodeToLines(child, indent + 1));
-    }
-  }
-
-  return lines;
+function toWords(n) {
+  n = Math.round(n);
+  if (n === 0) return "CERO";
+  let r = "";
+  if (n >= 1000000) { const m = Math.floor(n / 1000000); r += (m === 1 ? "UN MILLÓN " : toWords(m) + " MILLONES "); n %= 1000000; }
+  if (n >= 1000) { const k = Math.floor(n / 1000); r += (k === 1 ? "MIL " : toWords(k) + " MIL "); n %= 1000; }
+  if (n >= 100) { r += (n === 100 ? "CIEN " : HUNDREDS[Math.floor(n / 100)] + " "); n %= 100; }
+  if (n > 20) { r += TENS[Math.floor(n / 10)]; if (n % 10) r += "Y " + ONES[n % 10] + " "; else r += " "; }
+  else if (n > 0) r += ONES[n] + " ";
+  return r.trim();
 }
 
-function generatePdf(filename, lines) {
-  // Use jsPDF from global (loaded via CDN-like import)
-  const { jsPDF } = window.jspdf || {};
-  
-  // Fallback: dynamic import
-  return import("jspdf").then(({ default: JsPDF }) => {
-    const pdf = new JsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const marginLeft = 12;
-    const marginTop = 20;
-    const lineH = 5;
-    const maxWidth = pageW - marginLeft - 8;
+function formatDate(d) {
+  if (!d) return "";
+  const months = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  try {
+    const dt = new Date(d + "T12:00:00");
+    return `${dt.getDate()} de ${months[dt.getMonth()]} de ${dt.getFullYear()}`;
+  } catch { return d; }
+}
 
-    // Header bar
-    pdf.setFillColor(30, 60, 120);
-    pdf.rect(0, 0, pageW, 13, "F");
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(10);
-    pdf.setTextColor(255, 255, 255);
-    pdf.text(filename, marginLeft, 9);
+function parseDTE(xmlText) {
+  const parser = new DOMParser();
+  let doc = parser.parseFromString(xmlText, "application/xml");
+  if (doc.querySelector("parsererror")) doc = parser.parseFromString(xmlText, "text/xml");
+  if (doc.querySelector("parsererror")) throw new Error("El XML no es válido o está mal formado");
 
-    let y = marginTop;
+  const g = (tag) => { const el = doc.getElementsByTagName(tag)[0]; return el ? el.textContent.trim() : ""; };
 
-    for (const line of lines) {
-      const indentPx = line.indent * 3;
+  const emisor = {
+    rut: g("RUTEmisor") || g("RutEmisor"),
+    razonSocial: g("RznSoc"),
+    giro: g("GiroEmis"),
+    direccion: g("DirOrigen"),
+    comuna: g("CmnaOrigen"),
+    ciudad: g("CiudadOrigen"),
+    sucursal: g("Sucursal"),
+    correo: g("CorreoEmisor"),
+    telefono: g("Telefono"),
+  };
 
-      if (line.type === "key") {
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(8.5);
-        pdf.setTextColor(30, 60, 120);
-      } else {
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(8);
-        pdf.setTextColor(60, 60, 60);
-      }
+  const idDoc = {
+    tipo: g("TipoDTE"),
+    folio: g("Folio"),
+    fecha: g("FchEmis"),
+    formaPago: g("FmaPago"),
+  };
 
-      const wrapped = pdf.splitTextToSize(line.text.trimStart(), maxWidth - indentPx);
-      for (const wline of wrapped) {
-        if (y > pageH - 10) {
-          pdf.addPage();
-          y = 15;
-        }
-        pdf.text(wline, marginLeft + indentPx, y);
-        y += lineH;
-      }
-    }
+  const receptor = {
+    rut: g("RUTRecep"),
+    razonSocial: g("RznSocRecep"),
+    giro: g("GiroRecep"),
+    direccion: g("DirRecep"),
+    comuna: g("CmnaRecep"),
+    ciudad: g("CiudadRecep"),
+    contacto: g("Contacto"),
+    vendedor: g("CdgVendedor"),
+  };
 
-    pdf.save(filename.replace(/\.xml$/i, "") + ".pdf");
+  const detalleEls = Array.from(doc.getElementsByTagName("Detalle"));
+  const detalles = detalleEls.map(d => {
+    const dg = (tag) => { const el = d.getElementsByTagName(tag)[0]; return el ? el.textContent.trim() : ""; };
+    return {
+      nro: dg("NroLinDet"),
+      codigo: dg("VlrCodigo") || dg("CdgItem") || "0",
+      descripcion: dg("NmbItem"),
+      unidad: dg("UnmdItem"),
+      cantidad: dg("QtyItem"),
+      precioUnit: dg("PrcItem"),
+      descuento: dg("DescuentoMonto") || "0",
+      total: dg("MontoItem"),
+    };
   });
+
+  const totales = {
+    neto: parseInt(g("MntNeto") || "0"),
+    tasaIVA: g("TasaIVA") || "19",
+    iva: parseInt(g("IVA") || "0"),
+    total: parseInt(g("MntTotal") || "0"),
+    exento: parseInt(g("MntExe") || "0"),
+  };
+
+  return { emisor, idDoc, receptor, detalles, totales };
+}
+
+async function generatePdf(filename, data) {
+  const { default: JsPDF } = await import("jspdf");
+  const { emisor, idDoc, receptor, detalles, totales } = data;
+
+  const pdf = new JsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const W = pdf.internal.pageSize.getWidth();
+  const H = pdf.internal.pageSize.getHeight();
+  const BLACK = [0, 0, 0];
+  const RED = [170, 0, 0];
+  const BLUE = [0, 0, 180];
+  const GRAY = [100, 100, 100];
+
+  let y = 14;
+  const leftW = W * 0.62;
+  const centerX = leftW / 2 + 8;
+
+  // ── EMISOR (left block) ──
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(13);
+  pdf.setTextColor(...BLACK);
+  pdf.text(emisor.razonSocial || "", centerX, y, { align: "center" });
+
+  y += 5;
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  pdf.text(emisor.giro || "", centerX, y, { align: "center" });
+
+  y += 4;
+  pdf.setDrawColor(...BLACK);
+  pdf.setLineWidth(0.4);
+  pdf.line(10, y, leftW + 6, y);
+
+  y += 5;
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(8);
+  pdf.setTextColor(...BLUE);
+  pdf.text("Dirección:", centerX, y, { align: "center" });
+  y += 4;
+  pdf.text(emisor.direccion || "", centerX, y, { align: "center" });
+  y += 4;
+  if (emisor.comuna || emisor.ciudad)
+    pdf.text(`${emisor.comuna || ""} - ${emisor.ciudad || ""}`.trim().replace(/^-\s*/, "").replace(/\s*-$/, ""), centerX, y, { align: "center" });
+  if (emisor.sucursal) { y += 4; pdf.text(`Sucursal: ${emisor.sucursal}`, centerX, y, { align: "center" }); }
+  if (emisor.correo) { y += 4; pdf.text(`Correo Electrónico: ${emisor.correo}`, centerX, y, { align: "center" }); }
+
+  // ── RUT / TIPO / FOLIO BOX (right) ──
+  const boxX = leftW + 10;
+  const boxW = W - boxX - 8;
+  const boxY = 8;
+  const boxH = 36;
+  const bCX = boxX + boxW / 2;
+
+  pdf.setDrawColor(...RED);
+  pdf.setLineWidth(1);
+  pdf.rect(boxX, boxY, boxW, boxH);
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(10);
+  pdf.setTextColor(...RED);
+  pdf.text(`R.U.T.: ${emisor.rut || ""}`, bCX, boxY + 9, { align: "center" });
+
+  pdf.setFontSize(9);
+  const tipoLabel = TIPO_DTE[idDoc.tipo] || `TIPO ${idDoc.tipo}`;
+  const tipoLines = pdf.splitTextToSize(tipoLabel, boxW - 4);
+  let ty = boxY + 17;
+  for (const tl of tipoLines) { pdf.text(tl, bCX, ty, { align: "center" }); ty += 5; }
+
+  pdf.setFontSize(10);
+  pdf.text(`Nº ${idDoc.folio || ""}`, bCX, boxY + boxH - 5, { align: "center" });
+
+  // SII & date
+  const headerBottom = Math.max(y, boxY + boxH) + 5;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+  pdf.setTextColor(...BLACK);
+  pdf.text("S.I.I. - MELIPILLA", W - 10, headerBottom, { align: "right" });
+
+  pdf.setFont("helvetica", "normal");
+  const ciudad = emisor.ciudad ? `${emisor.ciudad}, ` : "";
+  pdf.text(`${ciudad}${formatDate(idDoc.fecha)}`, W - 10, headerBottom + 5, { align: "right" });
+
+  y = headerBottom + 11;
+
+  // ── RECEPTOR TABLE ──
+  const tX = 8;
+  const tW = W - 16;
+  const midX = tX + tW / 2;
+  const recRowH = 5.5;
+  const recFields = [
+    ["Señor(es)", receptor.razonSocial],
+    ["R.U.T.", receptor.rut],
+    ["Giro", receptor.giro],
+    ["Dirección", receptor.direccion],
+    ["Comuna", receptor.comuna],
+  ];
+  const recRight = [
+    ["Teléfono", receptor.contacto || ""],
+    ["Vencimiento", ""],
+    ["Forma de Pago", idDoc.formaPago || ""],
+    ["Vendedor", receptor.vendedor || ""],
+    ["Ciudad", receptor.ciudad || ""],
+  ];
+  const recH = recFields.length * recRowH;
+
+  pdf.setDrawColor(...BLACK);
+  pdf.setLineWidth(0.3);
+  pdf.rect(tX, y, tW, recH);
+  pdf.line(midX, y, midX, y + recH);
+
+  for (let i = 0; i < recFields.length; i++) {
+    const ry = y + (i + 1) * recRowH - 1.5;
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(...BLACK);
+    pdf.text(recFields[i][0], tX + 2, ry);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`: ${(recFields[i][1] || "").substring(0, 38)}`, tX + 22, ry);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(recRight[i][0], midX + 2, ry);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`: ${(recRight[i][1] || "").substring(0, 28)}`, midX + 30, ry);
+  }
+
+  y += recH + 0.5;
+  pdf.rect(tX, y, tW, recRowH);
+  pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(...BLACK);
+  pdf.text("Referencia", tX + 2, y + recRowH - 1.5);
+
+  y += recRowH + 5;
+
+  // ── ITEMS TABLE ──
+  const cols = [
+    { label: "Item",         w: 10,  align: "center" },
+    { label: "Código",       w: 16,  align: "center" },
+    { label: "Descripción",  w: 74,  align: "left"   },
+    { label: "U.M.",         w: 12,  align: "center" },
+    { label: "Cant.",        w: 12,  align: "center" },
+    { label: "Precio Unit.", w: 24,  align: "right"  },
+    { label: "Valor Dscto.", w: 22,  align: "right"  },
+    { label: "Total",        w: 24,  align: "right"  },
+  ];
+  const rowH = 6;
+  const itemTableStartY = y;
+
+  // Header
+  pdf.setFillColor(0, 0, 0);
+  pdf.rect(tX, y, tW, rowH, "F");
+  let cx = tX;
+  pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(255, 255, 255);
+  for (const col of cols) {
+    const tx = col.align === "right" ? cx + col.w - 1.5 : col.align === "left" ? cx + 2 : cx + col.w / 2;
+    pdf.text(col.label, tx, y + 4, { align: col.align === "center" ? "center" : col.align === "right" ? "right" : "left" });
+    cx += col.w;
+  }
+  y += rowH;
+
+  // Rows
+  for (const item of detalles) {
+    const rowData = [
+      item.nro,
+      item.codigo,
+      item.descripcion,
+      item.unidad,
+      item.cantidad,
+      item.precioUnit ? Number(item.precioUnit).toLocaleString("es-CL") : "",
+      item.descuento ? Number(item.descuento).toLocaleString("es-CL") : "0",
+      item.total ? Number(item.total).toLocaleString("es-CL") : "",
+    ];
+    cx = tX;
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(7.5); pdf.setTextColor(...BLACK);
+    for (let i = 0; i < cols.length; i++) {
+      const col = cols[i];
+      const tx = col.align === "right" ? cx + col.w - 1.5 : col.align === "left" ? cx + 2 : cx + col.w / 2;
+      const txt = ((rowData[i] || "").toString()).substring(0, col.align === "left" ? 50 : 14);
+      pdf.text(txt, tx, y + 4, { align: col.align === "center" ? "center" : col.align === "right" ? "right" : "left" });
+      cx += col.w;
+    }
+    pdf.setDrawColor(200, 200, 200); pdf.setLineWidth(0.1);
+    pdf.line(tX, y + rowH, tX + tW, y + rowH);
+    pdf.setLineWidth(0.3); pdf.setDrawColor(...BLACK);
+    y += rowH;
+  }
+
+  // Table outer border + vertical lines
+  pdf.rect(tX, itemTableStartY, tW, y - itemTableStartY);
+  cx = tX;
+  for (let i = 0; i < cols.length - 1; i++) {
+    cx += cols[i].w;
+    pdf.line(cx, itemTableStartY, cx, y);
+  }
+
+  // ── TOTALS ──
+  const totY = H - 48;
+  const totX = W - 76;
+  const totW = 68;
+
+  const mntNeto = totales.neto;
+  const mntIVA = totales.iva;
+  const mntTotal = totales.total || mntNeto + mntIVA;
+
+  // Amount in words
+  pdf.setFont("helvetica", "bold"); pdf.setFontSize(8.5); pdf.setTextColor(...BLACK);
+  const words = toWords(mntTotal);
+  const wordLines = pdf.splitTextToSize(`SON: ${words} PESOS.--`, tW);
+  pdf.text(wordLines, tX, totY - 2);
+
+  // Totals rows
+  const tRows = [];
+  if (totales.exento > 0) tRows.push({ label: "Exento:", val: `$ ${totales.exento.toLocaleString("es-CL")}` });
+  if (mntNeto > 0) tRows.push({ label: "Neto:", val: `$ ${mntNeto.toLocaleString("es-CL")}` });
+  tRows.push({ label: `${totales.tasaIVA} % I.V.A.:`, val: `$ ${mntIVA.toLocaleString("es-CL")}` });
+  tRows.push({ label: "Total:", val: `$ ${mntTotal.toLocaleString("es-CL")}` });
+
+  let tty = totY;
+  for (const row of tRows) {
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(...BLACK);
+    pdf.text(row.label, totX + totW * 0.48, tty + 4, { align: "right" });
+    pdf.setTextColor(...BLUE);
+    pdf.text(row.val, totX + totW - 2, tty + 4, { align: "right" });
+    pdf.setDrawColor(190, 190, 190); pdf.setLineWidth(0.1);
+    pdf.line(totX, tty, totX + totW, tty);
+    tty += 6;
+  }
+  pdf.setDrawColor(...BLACK); pdf.setLineWidth(0.3);
+  pdf.rect(totX, totY, totW, tRows.length * 6);
+
+  pdf.save(filename.replace(/\.xml$/i, "") + ".pdf");
 }
 
 export default function XmlToPdfModal({ open, onOpenChange }) {
@@ -105,36 +339,16 @@ export default function XmlToPdfModal({ open, onOpenChange }) {
 
   const handleFile = (e) => {
     const f = e.target.files?.[0];
-    if (f) {
-      setFile(f);
-      setError(null);
-      setSuccess(false);
-    }
+    if (f) { setFile(f); setError(null); setSuccess(false); }
   };
 
   const handleConvert = async () => {
     if (!file) return;
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-
+    setLoading(true); setError(null); setSuccess(false);
     try {
       const text = await file.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, "application/xml");
-
-      const parseError = doc.querySelector("parsererror");
-      if (parseError) {
-        // Try as text/xml
-        const doc2 = parser.parseFromString(text, "text/xml");
-        const parseError2 = doc2.querySelector("parsererror");
-        if (parseError2) throw new Error("El archivo XML no es válido o está mal formado");
-      }
-
-      const root = doc.documentElement;
-      const lines = xmlNodeToLines(root, 0);
-
-      await generatePdf(file.name, lines);
+      const data = parseDTE(text);
+      await generatePdf(file.name, data);
       setSuccess(true);
     } catch (err) {
       setError(err.message || "Error al convertir el archivo");
@@ -144,9 +358,7 @@ export default function XmlToPdfModal({ open, onOpenChange }) {
   };
 
   const handleClose = () => {
-    setFile(null);
-    setError(null);
-    setSuccess(false);
+    setFile(null); setError(null); setSuccess(false);
     if (inputRef.current) inputRef.current.value = "";
     onOpenChange(false);
   };
@@ -155,12 +367,11 @@ export default function XmlToPdfModal({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Convertir XML a PDF</DialogTitle>
-          <DialogDescription>Sube un archivo XML (ej. DTE del SII) y descárgalo como PDF</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">Convertir XML DTE a PDF</DialogTitle>
+          <DialogDescription>Sube un DTE del SII y descárgalo como factura en PDF</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 mt-2">
-          {/* Drop zone */}
           <div
             className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors cursor-pointer"
             onClick={() => inputRef.current?.click()}
@@ -175,7 +386,7 @@ export default function XmlToPdfModal({ open, onOpenChange }) {
             ) : (
               <>
                 <p className="text-sm font-medium text-slate-700">Click para seleccionar un archivo XML</p>
-                <p className="text-xs text-slate-400 mt-1">DTE, facturas electrónicas, etc.</p>
+                <p className="text-xs text-slate-400 mt-1">DTE del SII (facturas, boletas, notas de crédito/débito)</p>
               </>
             )}
           </div>
