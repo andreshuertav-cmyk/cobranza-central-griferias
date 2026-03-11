@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Users, DollarSign, AlertTriangle, 
-  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2, ArrowUpDown, Settings, X, FileText
+  TrendingUp, Calendar, Loader2, Upload, BarChart3, Trash2, ArrowUpDown, Settings, X, FileText, CreditCard
 } from "lucide-react";
 import {
   DropdownMenu,
