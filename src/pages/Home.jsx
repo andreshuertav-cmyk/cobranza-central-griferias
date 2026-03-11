@@ -277,6 +277,11 @@ export default function Home() {
     todayFollowUps.map(log => log.client_id)
   );
 
+  // Count clients with factoring documents
+  const clientsWithFactoring = new Set(
+    documents.filter(doc => doc.status === "factorizada").map(doc => doc.client_id)
+  ).size;
+
   // Count active payment promises
   const activePromises = logs.filter(log => {
     if (log.result !== "promesa_pago" || !log.promised_date) return false;
