@@ -733,6 +733,12 @@ export default function Home() {
             icon={Calendar}
             variant="info"
           />
+          <StatsCard
+            title="Pendiente pago factoring"
+            value={clientsWithFactoring}
+            icon={Landmark}
+            variant="warning"
+          />
         </div>
 
         {/* Today's Follow-ups Alert */}
