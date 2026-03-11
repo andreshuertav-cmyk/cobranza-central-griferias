@@ -197,10 +197,8 @@ export default function BulkUploadModal({ open, onOpenChange, onSuccess }) {
         allExistingDocs.map(doc => `${doc.client_id}_${doc.document_number}`)
       );
 
-      // 9. Re-fetch existing documents to catch any created during this session
-      const refreshedDocs = await base44.entities.Document.list("-created_date", 10000);
-
-      // 9b. Prepare all documents data (create or update)
+      // 9. Prepare all documents data (create or update)
+      const refreshedDocs = allExistingDocs;
       const documentsToCreate = [];
       const documentsToUpdate = [];
       
