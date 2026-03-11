@@ -38,6 +38,7 @@ export default function Home() {
   const [showAddClient, setShowAddClient] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showXmlToPdf, setShowXmlToPdf] = useState(false);
+  const [showBulkPayment, setShowBulkPayment] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPendingFollowUps, setShowPendingFollowUps] = useState(urlParams.get("showPendingFollowUps") === "true");
   const [showDocsWithoutLogs, setShowDocsWithoutLogs] = useState(urlParams.get("showDocsWithoutLogs") === "true");
