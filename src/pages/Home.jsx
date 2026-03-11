@@ -905,6 +905,18 @@ export default function Home() {
         isLoading={createClientMutation.isPending}
       />
 
+      {/* Bulk Payment Modal */}
+      <BulkPaymentModal
+        open={showBulkPayment}
+        onOpenChange={setShowBulkPayment}
+        documents={documents}
+        clients={clients}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["documents"] });
+          queryClient.invalidateQueries({ queryKey: ["clients"] });
+        }}
+      />
+
       {/* XML to PDF Modal */}
       <XmlToPdfModal open={showXmlToPdf} onOpenChange={setShowXmlToPdf} />
 
