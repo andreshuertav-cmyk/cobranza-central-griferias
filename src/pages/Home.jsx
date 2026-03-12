@@ -220,11 +220,11 @@ export default function Home() {
   // Calculate stats from real documents (only from existing clients)
   const clientIds = new Set(clients.map(c => c.id));
   const validDocuments = documents.filter(doc => clientIds.has(doc.client_id));
-  // Solo documentos activos (excluye factorizados y cancelados)
-  const activeDocuments = validDocuments.filter(doc => doc.status !== "factorizada" && doc.status !== "cancelado" && doc.status !== "pagado");
-  const totalDebt = activeDocuments.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+  // Solo excluir documentos cancelados (pagados ya tienen paid_amount = amount)
+  const activeDocuments = validDocuments.filter(doc => doc.status !== "cancelado");
+  const pendingAmount = activeDocuments.reduce((sum, doc) => sum + Math.max(0, (doc.amount || 0) - (doc.paid_amount || 0)), 0);
   const totalPaid = activeDocuments.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
-  const pendingAmount = totalDebt - totalPaid;
+  const totalDebt = activeDocuments.reduce((sum, doc) => sum + (doc.amount || 0), 0);
 
   // Count clients with overdue documents
   const today = new Date();
