@@ -447,9 +447,10 @@ export default function ClientDetail() {
     );
   }
 
-  // Calcular deuda real desde documentos
-  const totalDebtFromDocs = documents.reduce((sum, doc) => sum + (doc.amount || 0), 0);
-  const totalPaidFromDocs = documents.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
+  // Calcular deuda real desde documentos (excluir cancelados)
+  const activeDocs = documents.filter(doc => doc.status !== "cancelado");
+  const totalDebtFromDocs = activeDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+  const totalPaidFromDocs = activeDocs.reduce((sum, doc) => sum + (doc.paid_amount || 0), 0);
   const remaining = totalDebtFromDocs - totalPaidFromDocs;
   const progress = totalDebtFromDocs > 0 ? (totalPaidFromDocs / totalDebtFromDocs) * 100 : 0;
   
