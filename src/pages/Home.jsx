@@ -233,6 +233,7 @@ export default function Home() {
   const inMora = clients.filter(client => {
     return documents.some(doc => {
       if (doc.client_id !== client.id) return false;
+      if (doc.status === "factorizada" || doc.status === "cancelado" || doc.status === "pagado") return false;
       const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
       if (docRemaining <= 0) return false;
       if (!doc.due_date) return false;
