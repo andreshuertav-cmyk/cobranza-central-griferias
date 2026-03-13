@@ -573,7 +573,7 @@ export default function ClientDetail() {
 
 
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-screen-xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <Link to={createPageUrl("Home")}>
@@ -597,21 +597,23 @@ export default function ClientDetail() {
           </div>
         </div>
 
-        {/* Client Info Card */}
-        <Card className="p-6 mb-6">
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div>
+        {/* 3-column layout */}
+        <div className="flex gap-6 items-start">
+
+          {/* LEFT: Client Info Card (sticky) */}
+          <div className="w-72 shrink-0 sticky top-6">
+            <Card className="p-5">
               <h3 className="text-sm font-medium text-slate-500 mb-3">Información de contacto</h3>
-              <div className="space-y-2">
+              <div className="space-y-2 mb-4">
                 {client.phone && (
-                  <a href={`tel:${client.phone}`} className="flex items-center gap-2 text-slate-700 hover:text-slate-900">
-                    <Phone className="h-4 w-4 text-slate-400" />
+                  <a href={`tel:${client.phone}`} className="flex items-center gap-2 text-slate-700 hover:text-slate-900 text-sm">
+                    <Phone className="h-4 w-4 text-slate-400 shrink-0" />
                     {client.phone}
                   </a>
                 )}
                 {client.email && (
-                  <a href={`mailto:${client.email}`} className="flex items-center gap-2 text-slate-700 hover:text-slate-900">
-                    <Mail className="h-4 w-4 text-slate-400" />
+                  <a href={`mailto:${client.email}`} className="flex items-center gap-2 text-slate-700 hover:text-slate-900 text-sm">
+                    <Mail className="h-4 w-4 text-slate-400 shrink-0" />
                     {client.email}
                   </a>
                 )}
@@ -620,186 +622,169 @@ export default function ClientDetail() {
                 )}
               </div>
               {client.notes && (
-                <div className="mt-4 pt-4 border-t">
+                <div className="pt-3 border-t mb-4">
                   <p className="text-sm text-slate-600">{client.notes}</p>
                 </div>
               )}
-            </div>
 
-            <div>
-              <h3 className="text-sm font-medium text-slate-500 mb-3">Estado de cuenta</h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 rounded-xl p-4">
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium text-slate-500 mb-3">Estado de cuenta</h3>
+                <div className="space-y-3">
+                  <div className="bg-slate-50 rounded-xl p-3">
                     <p className="text-xs text-slate-500 mb-1">Deuda total</p>
-                    <p className="text-xl font-bold text-slate-900">
+                    <p className="text-lg font-bold text-slate-900">
                       ${totalDebtFromDocs.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                     </p>
                   </div>
-                  <div className="bg-emerald-50 rounded-xl p-4">
+                  <div className="bg-emerald-50 rounded-xl p-3">
                     <p className="text-xs text-emerald-600 mb-1">Pagado</p>
-                    <p className="text-xl font-bold text-emerald-700">
+                    <p className="text-lg font-bold text-emerald-700">
                       ${totalPaidFromDocs.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                     </p>
                   </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-slate-500">Progreso de pago</span>
-                    <span className="font-semibold text-slate-900">{Math.floor(progress)}%</span>
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-slate-500">Progreso</span>
+                      <span className="font-semibold text-slate-900">{Math.floor(progress)}%</span>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 rounded-full transition-all"
+                        style={{ width: `${Math.min(progress, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-right text-xs text-slate-500 mt-1">
+                      Saldo: <span className="font-semibold text-slate-900">${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
+                    </p>
                   </div>
-                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-emerald-500 rounded-full transition-all"
-                      style={{ width: `${Math.min(progress, 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-right text-sm text-slate-500 mt-2">
-                    Saldo: <span className="font-semibold text-slate-900">${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
-                  </p>
                 </div>
               </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Documents Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-slate-400" />
-              <h2 className="text-lg font-semibold text-slate-900">Documentos</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={() => setShowOnlyOverdue(!showOnlyOverdue)} 
-                variant={showOnlyOverdue ? "outline" : "default"} 
-                size="sm" 
-                className="gap-2"
-              >
-                {showOnlyOverdue ? "Mostrar todas" : "Solo morosas"}
-              </Button>
-              <Button onClick={() => setShowAddDocument(true)} variant="outline" size="sm" className="gap-2">
-                <Plus className="h-3 w-3" />
-                Agregar documento
-              </Button>
-            </div>
-          </div>
-
-          {loadingDocuments ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-            </div>
-          ) : documents.length === 0 ? (
-            <Card className="p-8 text-center bg-slate-50">
-              <DollarSign className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm text-slate-500">Sin documentos registrados</p>
             </Card>
-          ) : (() => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+          </div>
 
-            const filteredDocs = documents.filter(doc => {
-              const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
-              
-              // Si "Mostrar todas" está activo, mostrar todos los documentos (incluso pagados)
-              if (!showOnlyOverdue) return true;
-              
-              // Si solo queremos morosas, excluir documentos pagados
-              if (docRemaining <= 0) return false;
+          {/* CENTER: Documents */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-slate-400" />
+                <h2 className="text-lg font-semibold text-slate-900">Documentos</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => setShowOnlyOverdue(!showOnlyOverdue)}
+                  variant={showOnlyOverdue ? "outline" : "default"}
+                  size="sm"
+                  className="gap-2"
+                >
+                  {showOnlyOverdue ? "Mostrar todas" : "Solo morosas"}
+                </Button>
+                <Button onClick={() => setShowAddDocument(true)} variant="outline" size="sm" className="gap-2">
+                  <Plus className="h-3 w-3" />
+                  Agregar documento
+                </Button>
+              </div>
+            </div>
 
-              if (!doc.due_date) return false;
-
-              const dateStr = String(doc.due_date).trim();
-              let dueDate;
-              if (dateStr.includes('-')) {
-                const parts = dateStr.split('-');
-                if (parts.length === 3) {
-                  const [day, month, year] = parts;
-                  if (day.length <= 2 && month.length <= 2 && year.length === 4) {
-                    dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                  }
-                }
-              }
-              if (!dueDate) dueDate = new Date(dateStr);
-              dueDate.setHours(0, 0, 0, 0);
-
-              return dueDate < today;
-            });
-
-            return filteredDocs.length === 0 ? (
+            {loadingDocuments ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              </div>
+            ) : documents.length === 0 ? (
               <Card className="p-8 text-center bg-slate-50">
                 <DollarSign className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm text-slate-500">
-                  {showOnlyOverdue ? "Sin documentos vencidos" : "Sin documentos"}
-                </p>
+                <p className="text-sm text-slate-500">Sin documentos registrados</p>
+              </Card>
+            ) : (() => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const filteredDocs = documents.filter(doc => {
+                const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+                if (!showOnlyOverdue) return true;
+                if (docRemaining <= 0) return false;
+                if (!doc.due_date) return false;
+                const dateStr = String(doc.due_date).trim();
+                let dueDate;
+                if (dateStr.includes('-')) {
+                  const parts = dateStr.split('-');
+                  if (parts.length === 3) {
+                    const [day, month, year] = parts;
+                    if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                      dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                    }
+                  }
+                }
+                if (!dueDate) dueDate = new Date(dateStr);
+                dueDate.setHours(0, 0, 0, 0);
+                return dueDate < today;
+              });
+
+              return filteredDocs.length === 0 ? (
+                <Card className="p-8 text-center bg-slate-50">
+                  <DollarSign className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                  <p className="text-sm text-slate-500">
+                    {showOnlyOverdue ? "Sin documentos vencidos" : "Sin documentos"}
+                  </p>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {filteredDocs.map((doc) => (
+                    <DocumentCard
+                      key={doc.id}
+                      document={doc}
+                      onPayment={(doc) => { setSelectedDocument(doc); setShowQuickPayment(true); }}
+                      onEdit={(doc) => { setEditingDocument(doc); setShowAddDocument(true); }}
+                      onFactorize={(doc) => factorizeMutation.mutate(doc)}
+                      onDelete={(doc) => deleteDocumentMutation.mutate(doc)}
+                    />
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* RIGHT: Collection History */}
+          <div className="w-80 shrink-0">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <History className="h-5 w-5 text-slate-400" />
+                <h2 className="text-lg font-semibold text-slate-900">Gestiones</h2>
+              </div>
+              <Button onClick={() => setShowAddLog(true)} size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nueva
+              </Button>
+            </div>
+
+            {loadingLogs ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              </div>
+            ) : logs.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Calendar className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-base font-medium text-slate-900 mb-2">Sin gestiones</h3>
+                <p className="text-slate-500 text-sm mb-4">Registra la primera gestión</p>
+                <Button onClick={() => setShowAddLog(true)} variant="outline" size="sm" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Registrar gestión
+                </Button>
               </Card>
             ) : (
               <div className="space-y-3">
-                {filteredDocs.map((doc) => (
-                  <DocumentCard 
-                    key={doc.id} 
-                    document={doc}
-                    onPayment={(doc) => {
-                      setSelectedDocument(doc);
-                      setShowQuickPayment(true);
-                    }}
-                    onEdit={(doc) => {
-                      setEditingDocument(doc);
-                      setShowAddDocument(true);
-                    }}
-                    onFactorize={(doc) => factorizeMutation.mutate(doc)}
-                    onDelete={(doc) => deleteDocumentMutation.mutate(doc)}
+                {logs.map((log) => (
+                  <LogEntry
+                    key={log.id}
+                    log={log}
+                    documents={documents}
+                    onEdit={(log) => { setEditingLog(log); setShowAddLog(true); }}
+                    onDelete={(logId) => deleteLogMutation.mutate(logId)}
                   />
                 ))}
               </div>
-            );
-          })()}
-        </div>
+            )}
+          </div>
 
-        {/* Collection History */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <History className="h-5 w-5 text-slate-400" />
-            <h2 className="text-lg font-semibold text-slate-900">Historial de gestiones</h2>
-          </div>
-          <Button onClick={() => setShowAddLog(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nueva gestión
-          </Button>
         </div>
-
-        {loadingLogs ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-          </div>
-        ) : logs.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">Sin gestiones</h3>
-            <p className="text-slate-500 mb-4">Registra la primera gestión de cobranza</p>
-            <Button onClick={() => setShowAddLog(true)} variant="outline" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Registrar gestión
-            </Button>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {logs.map((log) => (
-              <LogEntry 
-                key={log.id} 
-                log={log}
-                documents={documents}
-                onEdit={(log) => {
-                  setEditingLog(log);
-                  setShowAddLog(true);
-                }}
-                onDelete={(logId) => deleteLogMutation.mutate(logId)}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Modals */}
