@@ -573,7 +573,7 @@ export default function ClientDetail() {
 
 
 
-      <div className="max-w-screen-xl mx-auto px-4 py-8">
+      <div className="max-w-screen-2xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <Link to={createPageUrl("Home")}>
