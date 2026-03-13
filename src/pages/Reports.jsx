@@ -91,6 +91,11 @@ export default function Reports() {
               <ArrowLeft className="h-6 w-6" />
             </Button>
           </Link>
+          <Link to={createPageUrl("Home")}>
+            <Button variant="ghost" size="icon" className="h-12 w-12">
+              <Home className="h-6 w-6" />
+            </Button>
+          </Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Reportes de Cobranza</h1>
             <p className="text-slate-500 mt-1">Selecciona el reporte que deseas consultar</p>
