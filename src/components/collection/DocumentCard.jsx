@@ -41,6 +41,11 @@ export default function DocumentCard({ document, onPayment, onEdit, onFactorize,
         }
       }
     }
+    // YYYY-MM-DD format — parse as local time to avoid UTC offset day shift
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
     const date = new Date(dateStr);
     date.setHours(0, 0, 0, 0);
     return date;
