@@ -914,6 +914,7 @@ export default function Home() {
                                 totalDebt={totalDebtFromDocs}
                                 totalPaid={totalPaidFromDocs}
                                 maxDaysOverdue={maxDaysOverdue}
+                                hasActivePromise={hasActivePromise}
                               />
                             </Link>
                           );
