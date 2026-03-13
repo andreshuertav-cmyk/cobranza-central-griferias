@@ -881,6 +881,17 @@ export default function Home() {
                             return diffDays;
                           }));
 
+                          // Check if client has any active (non-expired) promise
+                          const today2 = new Date();
+                          today2.setHours(0, 0, 0, 0);
+                          const hasActivePromise = clientLogs.some(log => {
+                            if (log.result !== "promesa_pago") return false;
+                            if (!log.promised_date) return true; // no date = still active
+                            const pd = new Date(log.promised_date);
+                            pd.setHours(0, 0, 0, 0);
+                            return pd >= today2;
+                          });
+
                           const filterParams = new URLSearchParams({
                             statusFilter,
                             sortBy,
