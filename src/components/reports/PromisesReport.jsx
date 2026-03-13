@@ -268,6 +268,19 @@ export default function PromisesReport({ logs, clients, documents }) {
                   <p className="text-lg font-bold text-slate-900">
                     ${(promise.promised_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                   </p>
+                  {(() => {
+                    if (!promise.document_id) return null;
+                    const doc = documents?.find(d => d.id === promise.document_id);
+                    if (!doc) return null;
+                    const paid = doc.paid_amount || 0;
+                    const remaining = Math.max(0, (doc.amount || 0) - paid);
+                    if (remaining === 0) return null;
+                    return (
+                      <p className="text-xs font-semibold text-red-600">
+                        Saldo: ${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+                      </p>
+                    );
+                  })()}
                   <p className="text-xs text-slate-500">
                     Registrado: {format(parseISO(promise.contact_date), "d MMM", { locale: es })}
                   </p>
