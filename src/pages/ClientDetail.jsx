@@ -601,7 +601,7 @@ export default function ClientDetail() {
         <div className="flex gap-6 items-start">
 
           {/* LEFT: Client Info Card (sticky) */}
-          <div className="w-72 shrink-0 sticky top-6">
+          <div className="w-80 shrink-0 sticky top-6">
             <Card className="p-5">
               <h3 className="text-sm font-medium text-slate-500 mb-3">Información de contacto</h3>
               <div className="space-y-2 mb-4">
