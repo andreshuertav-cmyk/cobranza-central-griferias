@@ -743,7 +743,7 @@ export default function ClientDetail() {
           </div>
 
           {/* RIGHT: Collection History */}
-          <div className="w-80 shrink-0">
+          <div className="w-96 shrink-0">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <History className="h-5 w-5 text-slate-400" />
