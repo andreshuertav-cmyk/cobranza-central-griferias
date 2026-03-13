@@ -30,8 +30,8 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
   const remaining = totalDebt !== undefined ? (totalDebt - totalPaid) : ((client.total_debt || 0) - (client.paid_amount || 0));
   const progress = totalDebt !== undefined && totalDebt > 0 ? (totalPaid / totalDebt) * 100 : (client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0);
 
-  const isPendingLog = lastLog?.result === "pendiente";
-  const isPromiseLog = lastLog?.result === "promesa_pago";
+  const isPendingLog = lastLog?.result === "pendiente" && !hasActivePromise;
+  const isPromiseLog = hasActivePromise || lastLog?.result === "promesa_pago";
 
   // Determine color based on days overdue
   const getMoraColor = (days) => {
