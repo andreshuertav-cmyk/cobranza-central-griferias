@@ -25,7 +25,7 @@ const resultLabels = {
   otro: "Otro"
 };
 
-export default function ClientCard({ client, lastLog, onClick, totalDebt, totalPaid, maxDaysOverdue }) {
+export default function ClientCard({ client, lastLog, onClick, totalDebt, totalPaid, maxDaysOverdue, hasActivePromise }) {
   const status = statusConfig[client.status] || statusConfig.pendiente;
   const remaining = totalDebt !== undefined ? (totalDebt - totalPaid) : ((client.total_debt || 0) - (client.paid_amount || 0));
   const progress = totalDebt !== undefined && totalDebt > 0 ? (totalPaid / totalDebt) * 100 : (client.total_debt > 0 ? ((client.paid_amount || 0) / client.total_debt) * 100 : 0);
