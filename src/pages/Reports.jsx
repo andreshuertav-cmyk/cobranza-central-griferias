@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
-  ArrowLeft, BarChart3, Users, DollarSign, Calendar, 
+  ArrowLeft, Home, BarChart3, Users, DollarSign, Calendar, 
   TrendingUp, FileText, CreditCard, ClipboardList, ChevronRight, CheckCircle2
 } from "lucide-react";
 import { Link } from "react-router-dom";

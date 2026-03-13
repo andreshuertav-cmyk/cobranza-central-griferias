@@ -28,6 +28,11 @@ export default function DetailedManagementReportPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
+          <Link to={createPageUrl("Home")}>
+            <Button variant="ghost" size="icon">
+              <Home className="h-5 w-5" />
+            </Button>
+          </Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Gestiones Detalladas por Cliente</h1>
             <p className="text-slate-500 mt-1">Vista detallada de cada gestión realizada por cliente</p>

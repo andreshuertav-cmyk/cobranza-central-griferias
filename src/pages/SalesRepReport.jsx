@@ -75,6 +75,11 @@ export default function SalesRepReportPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
+            <Link to={createPageUrl("Home")}>
+              <Button variant="ghost" size="icon">
+                <Home className="h-5 w-5" />
+              </Button>
+            </Link>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Reporte por Vendedor</h1>
               <p className="text-slate-500 mt-1">Análisis de cartera por vendedor</p>

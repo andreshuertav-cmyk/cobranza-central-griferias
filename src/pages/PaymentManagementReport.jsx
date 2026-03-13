@@ -28,6 +28,11 @@ export default function PaymentManagementReportPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
+          <Link to={createPageUrl("Home")}>
+            <Button variant="ghost" size="icon">
+              <Home className="h-5 w-5" />
+            </Button>
+          </Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Reporte de Gestión de Pagos</h1>
             <p className="text-sm text-slate-500 mt-1">
