@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ArrowLeft, Phone, DollarSign, CheckCircle2, Clock, 
+  ArrowLeft, Home, Phone, DollarSign, CheckCircle2, Clock, 
   Loader2, Download, AlertTriangle
 } from "lucide-react";
 import * as XLSX from 'xlsx';
