@@ -269,11 +269,15 @@ export default function PromisesReport({ logs, clients, documents }) {
                     ${(promise.promised_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                   </p>
                   {(() => {
-                    if (!promise.document_id) return null;
-                    const doc = documents?.find(d => d.id === promise.document_id);
-                    if (!doc) return null;
-                    const paid = doc.paid_amount || 0;
-                    const remaining = Math.max(0, (doc.amount || 0) - paid);
+                    let remaining = 0;
+                    if (promise.document_id) {
+                      const doc = documents?.find(d => d.id === promise.document_id);
+                      if (doc) remaining = Math.max(0, (doc.amount || 0) - (doc.paid_amount || 0));
+                    } else {
+                      // Sum all active docs for this client
+                      const clientDocs = (documents || []).filter(d => d.client_id === promise.client_id && d.status !== "cancelado" && d.status !== "pagado");
+                      remaining = clientDocs.reduce((sum, d) => sum + Math.max(0, (d.amount || 0) - (d.paid_amount || 0)), 0);
+                    }
                     if (remaining === 0) return null;
                     return (
                       <p className="text-xs font-semibold text-red-600">
