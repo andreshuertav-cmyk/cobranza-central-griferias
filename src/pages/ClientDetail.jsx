@@ -653,9 +653,10 @@ export default function ClientDetail() {
                         style={{ width: `${Math.min(progress, 100)}%` }}
                       />
                     </div>
-                    <p className="text-right text-xs text-slate-500 mt-1">
-                      Saldo: <span className="font-semibold text-slate-900">${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
-                    </p>
+                    <div className="mt-3 bg-red-50 rounded-xl p-3 text-center">
+                      <p className="text-xs text-red-500 mb-1">Saldo pendiente</p>
+                      <p className="text-2xl font-bold text-red-600">${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
+                    </div>
                   </div>
                 </div>
               </div>
