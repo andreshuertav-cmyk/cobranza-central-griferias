@@ -78,6 +78,13 @@ export default function Reports() {
       icon: ClipboardList,
       color: "bg-violet-500",
       page: "DetailedManagementReport"
+    },
+    {
+      title: "Historial de Pagos",
+      description: "Fecha, medio de pago y documentos pagados",
+      icon: CreditCard,
+      color: "bg-emerald-600",
+      page: "PaymentHistoryReport"
     }
   ];
 
