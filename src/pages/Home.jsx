@@ -61,7 +61,7 @@ export default function Home() {
 
   const { data: logs = [] } = useQuery({
     queryKey: ["logs"],
-    queryFn: () => base44.entities.CollectionLog.list("-contact_date", 100)
+    queryFn: () => base44.entities.CollectionLog.list("-contact_date", 5000)
   });
 
   const { data: documents = [] } = useQuery({
