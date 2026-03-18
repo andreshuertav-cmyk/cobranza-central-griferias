@@ -207,7 +207,7 @@ async function generatePdf(filename, data) {
   const midX = tX + tW / 2;
   const recRowH = 5.5;
   const recFields = [
-    ["\u00cee\u00f1or(es)", receptor.razonSocial],
+    ["Se\u00f1or(es)", receptor.razonSocial],
     ["R.U.T.", receptor.rut],
     ["Giro", receptor.giro],
     ["Direcci\u00f3n", receptor.direccion],
