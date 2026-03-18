@@ -289,7 +289,7 @@ async function generatePdf(filename, data) {
     for (let i = 0; i < cols.length; i++) {
       const col = cols[i];
       const tx = col.align === "right" ? cx + col.w - 1.5 : col.align === "left" ? cx + 2 : cx + col.w / 2;
-      const txt = ((rowData[i] || "").toString()).substring(0, col.align === "left" ? 50 : 14);
+      const txt = fixText(((rowData[i] || "").toString()).substring(0, col.align === "left" ? 50 : 14));
       pdf.text(txt, tx, y + 4, { align: col.align === "center" ? "center" : col.align === "right" ? "right" : "left" });
       cx += col.w;
     }
