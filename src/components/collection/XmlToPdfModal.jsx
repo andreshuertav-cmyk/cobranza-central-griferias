@@ -146,9 +146,6 @@ async function generatePdf(filename, data) {
   pdf.setFontSize(8);
   const giroLines = pdf.splitTextToSize(fixText(emisor.giro || ""), leftW - 10);
   pdf.text(giroLines, centerX, y, { align: "center" });
-  y += giroLines.length * 4;
-
-  y += 4;
   pdf.setDrawColor(...BLACK);
   pdf.setLineWidth(0.4);
   pdf.line(10, y, leftW + 6, y);
