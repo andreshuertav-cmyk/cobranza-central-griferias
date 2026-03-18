@@ -103,6 +103,11 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
                     {formatDistanceToNow(new Date(lastLog.contact_date), { addSuffix: true, locale: es })}
                   </span>
                 </div>
+                {lastLog.notes && (
+                  <p className={cn("text-xs mt-0.5 truncate", isPendingLog ? "text-amber-700" : "text-blue-700")}>
+                    {lastLog.notes}
+                  </p>
+                )}
               </div>
             )}
           </div>
