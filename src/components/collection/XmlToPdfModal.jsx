@@ -103,19 +103,42 @@ function parseDTE(xmlText) {
   return { emisor, idDoc, receptor, detalles, totales };
 }
 
-// Fix special characters for jsPDF helvetica (latin-1 encoding)
+// Fix special characters for jsPDF helvetica (WinAnsi/Latin-1 encoding)
+// jsPDF internally encodes strings as Latin-1; we must replace chars > 0xFF
+// and fix multi-byte UTF-8 sequences that got mis-decoded.
 function fixText(str) {
   if (!str) return "";
+  // Some XML parsers or readers may deliver the string with UTF-8 bytes
+  // interpreted as Latin-1 (mojibake). Detect and fix the most common pattern:
+  // e.g. "Ã³" → "ó",  "Ã±" → "ñ",  "Ã\u0081" → "Á"
+  const mojibakeMap = {
+    "Ã¡": "á", "Ã\u0081": "Á",
+    "Ã©": "é", "Ã\u0089": "É",
+    "Ã­": "í", "Ã\u008d": "Í",
+    "Ã³": "ó", "Ã\u0093": "Ó",
+    "Ãº": "ú", "Ã\u009a": "Ú",
+    "Ã¼": "ü", "Ã\u009c": "Ü",
+    "Ã±": "ñ", "Ã\u0091": "Ñ",
+    "Â¿": "¿", "Â¡": "¡",
+    "Â°": "°",
+    // double-encoded
+    "ÃÂ³": "ó", "ÃÂ±": "ñ", "ÃÂ©": "é",
+  };
+  for (const [bad, good] of Object.entries(mojibakeMap)) {
+    str = str.split(bad).join(good);
+  }
+
+  // Now encode for jsPDF Latin-1: replace UTF-8 chars with their Latin-1 byte
   return str
-    .replace(/á/g, "\u00e1").replace(/Á/g, "\u00c1")
-    .replace(/é/g, "\u00e9").replace(/É/g, "\u00c9")
-    .replace(/í/g, "\u00ed").replace(/Í/g, "\u00cd")
-    .replace(/ó/g, "\u00f3").replace(/Ó/g, "\u00d3")
-    .replace(/ú/g, "\u00fa").replace(/Ú/g, "\u00da")
-    .replace(/ü/g, "\u00fc").replace(/Ü/g, "\u00dc")
-    .replace(/ñ/g, "\u00f1").replace(/Ñ/g, "\u00d1")
-    .replace(/¿/g, "\u00bf").replace(/¡/g, "\u00a1")
-    .replace(/°/g, "\u00b0");
+    .replace(/á/g, String.fromCharCode(225)).replace(/Á/g, String.fromCharCode(193))
+    .replace(/é/g, String.fromCharCode(233)).replace(/É/g, String.fromCharCode(201))
+    .replace(/í/g, String.fromCharCode(237)).replace(/Í/g, String.fromCharCode(205))
+    .replace(/ó/g, String.fromCharCode(243)).replace(/Ó/g, String.fromCharCode(211))
+    .replace(/ú/g, String.fromCharCode(250)).replace(/Ú/g, String.fromCharCode(218))
+    .replace(/ü/g, String.fromCharCode(252)).replace(/Ü/g, String.fromCharCode(220))
+    .replace(/ñ/g, String.fromCharCode(241)).replace(/Ñ/g, String.fromCharCode(209))
+    .replace(/¿/g, String.fromCharCode(191)).replace(/¡/g, String.fromCharCode(161))
+    .replace(/°/g, String.fromCharCode(176));
 }
 
 async function generatePdf(filename, data) {
