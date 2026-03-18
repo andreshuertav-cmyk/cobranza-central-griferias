@@ -154,14 +154,14 @@ async function generatePdf(filename, data) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
   pdf.setTextColor(...BLUE);
-  pdf.text("Dirección:", centerX, y, { align: "center" });
+  pdf.text("Direcci\u00f3n:", centerX, y, { align: "center" });
   y += 4;
-  pdf.text(emisor.direccion || "", centerX, y, { align: "center" });
+  pdf.text(fixText(emisor.direccion || ""), centerX, y, { align: "center" });
   y += 4;
   if (emisor.comuna || emisor.ciudad)
-    pdf.text(`${emisor.comuna || ""} - ${emisor.ciudad || ""}`.trim().replace(/^-\s*/, "").replace(/\s*-$/, ""), centerX, y, { align: "center" });
-  if (emisor.sucursal) { y += 4; pdf.text(`Sucursal: ${emisor.sucursal}`, centerX, y, { align: "center" }); }
-  if (emisor.correo) { y += 4; pdf.text(`Correo Electrónico: ${emisor.correo}`, centerX, y, { align: "center" }); }
+    pdf.text(fixText(`${emisor.comuna || ""} - ${emisor.ciudad || ""}`.trim().replace(/^-\s*/, "").replace(/\s*-$/, "")), centerX, y, { align: "center" });
+  if (emisor.sucursal) { y += 4; pdf.text(fixText(`Sucursal: ${emisor.sucursal}`), centerX, y, { align: "center" }); }
+  if (emisor.correo) { y += 4; pdf.text(fixText(`Correo Electr\u00f3nico: ${emisor.correo}`), centerX, y, { align: "center" }); }
 
   // ── RUT / TIPO / FOLIO BOX (right) ──
   const boxX = leftW + 10;
