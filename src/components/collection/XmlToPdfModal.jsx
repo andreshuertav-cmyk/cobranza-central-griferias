@@ -384,7 +384,17 @@ export default function XmlToPdfModal({ open, onOpenChange }) {
     if (!file) return;
     setLoading(true); setError(null); setSuccess(false);
     try {
-      const text = await file.text();
+      // Read as ArrayBuffer to handle encoding correctly
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      
+      // Detect encoding from XML declaration
+      const sniff = new TextDecoder("utf-8").decode(bytes.slice(0, 200));
+      const encodingMatch = sniff.match(/encoding=["']([^"']+)["']/i);
+      const encoding = encodingMatch ? encodingMatch[1].toLowerCase() : "utf-8";
+      
+      // Decode with the correct encoding
+      const text = new TextDecoder(encoding).decode(bytes);
       const data = parseDTE(text);
       await generatePdf(file.name, data);
       setSuccess(true);
