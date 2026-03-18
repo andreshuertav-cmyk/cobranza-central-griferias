@@ -232,11 +232,11 @@ async function generatePdf(filename, data) {
     pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(...BLACK);
     pdf.text(recFields[i][0], tX + 2, ry);
     pdf.setFont("helvetica", "normal");
-    pdf.text(`: ${(recFields[i][1] || "").substring(0, 38)}`, tX + 22, ry);
+    pdf.text(fixText(`: ${(recFields[i][1] || "").substring(0, 38)}`), tX + 22, ry);
     pdf.setFont("helvetica", "bold");
     pdf.text(recRight[i][0], midX + 2, ry);
     pdf.setFont("helvetica", "normal");
-    pdf.text(`: ${(recRight[i][1] || "").substring(0, 28)}`, midX + 30, ry);
+    pdf.text(fixText(`: ${(recRight[i][1] || "").substring(0, 28)}`), midX + 30, ry);
   }
 
   y += recH + 0.5;
