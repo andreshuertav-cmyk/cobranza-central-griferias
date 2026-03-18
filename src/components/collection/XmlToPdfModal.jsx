@@ -136,14 +136,17 @@ async function generatePdf(filename, data) {
 
   // ── EMISOR (left block) ──
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(13);
+  pdf.setFontSize(11);
   pdf.setTextColor(...BLACK);
-  pdf.text(fixText(emisor.razonSocial || ""), centerX, y, { align: "center" });
+  const razonLines = pdf.splitTextToSize(fixText(emisor.razonSocial || ""), leftW - 10);
+  pdf.text(razonLines, centerX, y, { align: "center" });
+  y += razonLines.length * 5;
 
-  y += 5;
   pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(9);
-  pdf.text(fixText(emisor.giro || ""), centerX, y, { align: "center" });
+  pdf.setFontSize(8);
+  const giroLines = pdf.splitTextToSize(fixText(emisor.giro || ""), leftW - 10);
+  pdf.text(giroLines, centerX, y, { align: "center" });
+  y += giroLines.length * 4;
 
   y += 4;
   pdf.setDrawColor(...BLACK);
