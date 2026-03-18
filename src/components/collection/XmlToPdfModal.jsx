@@ -207,14 +207,14 @@ async function generatePdf(filename, data) {
   const midX = tX + tW / 2;
   const recRowH = 5.5;
   const recFields = [
-    ["Señor(es)", receptor.razonSocial],
+    ["\u00cee\u00f1or(es)", receptor.razonSocial],
     ["R.U.T.", receptor.rut],
     ["Giro", receptor.giro],
-    ["Dirección", receptor.direccion],
+    ["Direcci\u00f3n", receptor.direccion],
     ["Comuna", receptor.comuna],
   ];
   const recRight = [
-    ["Teléfono", receptor.contacto || ""],
+    ["Tel\u00e9fono", receptor.contacto || ""],
     ["Vencimiento", ""],
     ["Forma de Pago", idDoc.formaPago || ""],
     ["Vendedor", receptor.vendedor || ""],
