@@ -103,6 +103,21 @@ function parseDTE(xmlText) {
   return { emisor, idDoc, receptor, detalles, totales };
 }
 
+// Fix special characters for jsPDF helvetica (latin-1 encoding)
+function fixText(str) {
+  if (!str) return "";
+  return str
+    .replace(/á/g, "\u00e1").replace(/Á/g, "\u00c1")
+    .replace(/é/g, "\u00e9").replace(/É/g, "\u00c9")
+    .replace(/í/g, "\u00ed").replace(/Í/g, "\u00cd")
+    .replace(/ó/g, "\u00f3").replace(/Ó/g, "\u00d3")
+    .replace(/ú/g, "\u00fa").replace(/Ú/g, "\u00da")
+    .replace(/ü/g, "\u00fc").replace(/Ü/g, "\u00dc")
+    .replace(/ñ/g, "\u00f1").replace(/Ñ/g, "\u00d1")
+    .replace(/¿/g, "\u00bf").replace(/¡/g, "\u00a1")
+    .replace(/°/g, "\u00b0");
+}
+
 async function generatePdf(filename, data) {
   const { default: JsPDF } = await import("jspdf");
   const { emisor, idDoc, receptor, detalles, totales } = data;
