@@ -138,12 +138,12 @@ async function generatePdf(filename, data) {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(13);
   pdf.setTextColor(...BLACK);
-  pdf.text(emisor.razonSocial || "", centerX, y, { align: "center" });
+  pdf.text(fixText(emisor.razonSocial || ""), centerX, y, { align: "center" });
 
   y += 5;
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
-  pdf.text(emisor.giro || "", centerX, y, { align: "center" });
+  pdf.text(fixText(emisor.giro || ""), centerX, y, { align: "center" });
 
   y += 4;
   pdf.setDrawColor(...BLACK);
