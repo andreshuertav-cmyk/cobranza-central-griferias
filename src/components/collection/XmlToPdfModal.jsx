@@ -180,7 +180,7 @@ async function generatePdf(filename, data) {
   pdf.text(`R.U.T.: ${emisor.rut || ""}`, bCX, boxY + 9, { align: "center" });
 
   pdf.setFontSize(9);
-  const tipoLabel = TIPO_DTE[idDoc.tipo] || `TIPO ${idDoc.tipo}`;
+  const tipoLabel = fixText(TIPO_DTE[idDoc.tipo] || `TIPO ${idDoc.tipo}`);
   const tipoLines = pdf.splitTextToSize(tipoLabel, boxW - 4);
   let ty = boxY + 17;
   for (const tl of tipoLines) { pdf.text(tl, bCX, ty, { align: "center" }); ty += 5; }
