@@ -103,32 +103,9 @@ function parseDTE(xmlText) {
   return { emisor, idDoc, receptor, detalles, totales };
 }
 
-// Fix special characters for jsPDF helvetica (WinAnsi/Latin-1 encoding)
-// jsPDF internally encodes strings as Latin-1; we must replace chars > 0xFF
-// and fix multi-byte UTF-8 sequences that got mis-decoded.
+// Convert UTF-8 special chars to Latin-1 char codes that jsPDF/helvetica can render
 function fixText(str) {
   if (!str) return "";
-  // Some XML parsers or readers may deliver the string with UTF-8 bytes
-  // interpreted as Latin-1 (mojibake). Detect and fix the most common pattern:
-  // e.g. "Ã³" → "ó",  "Ã±" → "ñ",  "Ã\u0081" → "Á"
-  const mojibakeMap = {
-    "Ã¡": "á", "Ã\u0081": "Á",
-    "Ã©": "é", "Ã\u0089": "É",
-    "Ã­": "í", "Ã\u008d": "Í",
-    "Ã³": "ó", "Ã\u0093": "Ó",
-    "Ãº": "ú", "Ã\u009a": "Ú",
-    "Ã¼": "ü", "Ã\u009c": "Ü",
-    "Ã±": "ñ", "Ã\u0091": "Ñ",
-    "Â¿": "¿", "Â¡": "¡",
-    "Â°": "°",
-    // double-encoded
-    "ÃÂ³": "ó", "ÃÂ±": "ñ", "ÃÂ©": "é",
-  };
-  for (const [bad, good] of Object.entries(mojibakeMap)) {
-    str = str.split(bad).join(good);
-  }
-
-  // Now encode for jsPDF Latin-1: replace UTF-8 chars with their Latin-1 byte
   return str
     .replace(/á/g, String.fromCharCode(225)).replace(/Á/g, String.fromCharCode(193))
     .replace(/é/g, String.fromCharCode(233)).replace(/É/g, String.fromCharCode(201))
