@@ -77,46 +77,49 @@ export default function AddClientModal({ open, onOpenChange, onSubmit, isLoading
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Deuda total *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.total_debt}
-                onChange={(e) => setFormData({ ...formData, total_debt: e.target.value })}
-                required
-              />
+          {isEditing && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Deuda total</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={formData.total_debt}
+                  onChange={(e) => setFormData({ ...formData, total_debt: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Monto pagado</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={formData.paid_amount}
+                  onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Monto pagado</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.paid_amount}
-                onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
-              />
-            </div>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <Label>Estado</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(v) => setFormData({ ...formData, status: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isEditing && (
+            <div className="space-y-2">
+              <Label>Estado</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(v) => setFormData({ ...formData, status: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Notas</Label>
@@ -132,9 +135,9 @@ export default function AddClientModal({ open, onOpenChange, onSubmit, isLoading
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={!formData.name || !formData.total_debt || isLoading}>
+            <Button type="submit" disabled={!formData.name || isLoading}>
               {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editClient ? "Actualizar" : "Crear cliente"}
+              {isEditing ? "Actualizar" : "Crear cliente"}
             </Button>
           </div>
         </form>
