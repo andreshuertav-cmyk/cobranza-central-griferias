@@ -178,6 +178,20 @@ export default function DocumentCard({ document, onPayment, onEdit, onFactorize,
                 Factorizada
               </Button>
             )}
+            {onDelete && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (window.confirm(`¿Eliminar documento ${document.document_number}?`)) {
+                    onDelete(document, true);
+                  }
+                }}
+                className="text-red-600 border-red-200 hover:bg-red-50 gap-1"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
             </div>
             </div>
             </div>
