@@ -706,16 +706,42 @@ export default function ClientDetail() {
                       dueDate.setHours(0, 0, 0, 0);
                       return dueDate < today;
                     });
-                    const header = "Documento\tTipo\tMonto\tPagado\tSaldo\tVencimiento";
+                    const tipoLabels = {
+                      factura: "Factura Electrónica",
+                      boleta: "Boleta Electrónica",
+                      cheque_pendiente: "Cheque Pendiente"
+                    };
+                    const header = "Documento\tTipo\tMonto\tPagado\tSaldo\tVencimiento\tDías Mora\tFactorizada";
                     const rows = docsToCopy.map(doc => {
                       const saldo = (doc.amount || 0) - (doc.paid_amount || 0);
+                      // Calcular días de mora
+                      let diasMora = 0;
+                      if (doc.due_date) {
+                        const dateStr = String(doc.due_date).trim();
+                        let dueDate;
+                        if (dateStr.includes('-')) {
+                          const parts = dateStr.split('-');
+                          if (parts.length === 3) {
+                            const [day, month, year] = parts;
+                            if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                              dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                            }
+                          }
+                        }
+                        if (!dueDate) dueDate = new Date(dateStr);
+                        dueDate.setHours(0, 0, 0, 0);
+                        const now = new Date(); now.setHours(0,0,0,0);
+                        if (dueDate < now) diasMora = Math.ceil((now - dueDate) / (1000 * 60 * 60 * 24));
+                      }
                       return [
                         doc.document_number || "",
-                        doc.document_type || "",
+                        tipoLabels[doc.document_type] || doc.document_type || "",
                         (doc.amount || 0).toLocaleString('es-CL'),
                         (doc.paid_amount || 0).toLocaleString('es-CL'),
                         saldo.toLocaleString('es-CL'),
-                        doc.due_date || ""
+                        doc.due_date || "",
+                        diasMora,
+                        doc.status === "factorizada" ? "Sí" : "No"
                       ].join("\t");
                     });
                     navigator.clipboard.writeText([header, ...rows].join("\n"));
