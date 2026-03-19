@@ -56,6 +56,7 @@ export default function ClientDetail() {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [editingDocument, setEditingDocument] = useState(null);
   const [showOnlyOverdue, setShowOnlyOverdue] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const queryClient = useQueryClient();
 
