@@ -35,6 +35,8 @@ export default function AddClientModal({ open, onOpenChange, onSubmit, isLoading
     });
   };
 
+  const isEditing = !!editClient;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
