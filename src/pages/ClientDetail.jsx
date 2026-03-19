@@ -680,6 +680,52 @@ export default function ClientDetail() {
                 >
                   {showOnlyOverdue ? "Mostrar todas" : "Solo morosas"}
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const docsToCopy = documents.filter(doc => {
+                      const docRemaining = (doc.amount || 0) - (doc.paid_amount || 0);
+                      if (docRemaining <= 0) return false;
+                      if (!doc.due_date) return false;
+                      const dateStr = String(doc.due_date).trim();
+                      let dueDate;
+                      if (dateStr.includes('-')) {
+                        const parts = dateStr.split('-');
+                        if (parts.length === 3) {
+                          const [day, month, year] = parts;
+                          if (day.length <= 2 && month.length <= 2 && year.length === 4) {
+                            dueDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                          }
+                        }
+                      }
+                      if (!dueDate) dueDate = new Date(dateStr);
+                      dueDate.setHours(0, 0, 0, 0);
+                      return dueDate < today;
+                    });
+                    const header = "Documento\tTipo\tMonto\tPagado\tSaldo\tVencimiento";
+                    const rows = docsToCopy.map(doc => {
+                      const saldo = (doc.amount || 0) - (doc.paid_amount || 0);
+                      return [
+                        doc.document_number || "",
+                        doc.document_type || "",
+                        (doc.amount || 0).toLocaleString('es-CL'),
+                        (doc.paid_amount || 0).toLocaleString('es-CL'),
+                        saldo.toLocaleString('es-CL'),
+                        doc.due_date || ""
+                      ].join("\t");
+                    });
+                    navigator.clipboard.writeText([header, ...rows].join("\n"));
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  {copied ? "Copiado" : "Copiar"}
+                </Button>
                 <Button onClick={() => setShowAddDocument(true)} variant="outline" size="sm" className="gap-2">
                   <Plus className="h-3 w-3" />
                   Agregar documento
