@@ -74,10 +74,12 @@ export default function AddDocumentModal({ open, onOpenChange, onSubmit, isLoadi
   const handleDueDateChange = (e) => {
     const newDueDate = e.target.value;
     const daysOverdue = calculateDaysOverdue(newDueDate);
+    const autoStatus = daysOverdue > 0 ? "vencido" : "vigente";
     setFormData({ 
       ...formData, 
       due_date: newDueDate,
-      days_overdue: daysOverdue.toString()
+      days_overdue: daysOverdue.toString(),
+      status: autoStatus
     });
   };
 
