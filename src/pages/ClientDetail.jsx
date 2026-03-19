@@ -808,7 +808,14 @@ export default function ClientDetail() {
                       onPayment={(doc) => { setSelectedDocument(doc); setShowQuickPayment(true); }}
                       onEdit={(doc) => { setEditingDocument(doc); setShowAddDocument(true); }}
                       onFactorize={(doc) => factorizeMutation.mutate(doc)}
-                      onDelete={(doc) => deleteDocumentMutation.mutate(doc)}
+                      onDelete={(doc, isDelete) => {
+                        if (isDelete) {
+                          deleteDocumentMutation.mutate(doc);
+                        } else {
+                          // unfactorize — revert to vencido/vigente
+                          factorizeMutation.mutate(doc);
+                        }
+                      }}
                     />
                   ))}
                 </div>
