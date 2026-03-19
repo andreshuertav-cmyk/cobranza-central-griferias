@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { 
   ArrowLeft, Phone, Mail, Plus, Edit2, Trash2, 
   Loader2, Calendar, DollarSign, TrendingUp, History,
-  ChevronLeft, ChevronRight, Home
+  ChevronLeft, ChevronRight, Home, Copy, Check
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
