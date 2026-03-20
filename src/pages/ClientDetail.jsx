@@ -755,7 +755,7 @@ export default function ClientDetail() {
                       <tbody>${rows.map(r => `<tr>${r.map(cell => `<td style="${cellStyle}">${cell}</td>`).join('')}</tr>`).join('')}</tbody>
                       <tfoot><tr>${totalRow.map(cell => `<td style="${tfStyle}">${cell}</td>`).join('')}</tr></tfoot>
                     </table>`;
-                    const plainText = [headers.join('\t'), ...rows.map(r => r.join('\t'))].join('\n');
+                    const plainText = [headers.join('\t'), ...rows.map(r => r.join('\t')), totalRow.join('\t')].join('\n');
                     const clipboardItem = new ClipboardItem({
                       'text/html': new Blob([tableHtml], { type: 'text/html' }),
                       'text/plain': new Blob([plainText], { type: 'text/plain' })
