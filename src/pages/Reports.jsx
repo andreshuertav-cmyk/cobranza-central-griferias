@@ -85,6 +85,13 @@ export default function Reports() {
       icon: CreditCard,
       color: "bg-emerald-600",
       page: "PaymentHistoryReport"
+    },
+    {
+      title: "Auditoría de Cobros",
+      description: "Verifica y compara el total cobrado entre documentos y registros de gestión",
+      icon: CheckCircle2,
+      color: "bg-red-600",
+      page: "AuditReport"
     }
   ];
 
