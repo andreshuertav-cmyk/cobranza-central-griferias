@@ -14,6 +14,22 @@ const statusConfig = {
   incobrable: { label: "Incobrable", color: "bg-slate-100 text-slate-700 border-slate-200" }
 };
 
+const contactTypeLabels = {
+  llamada: "Llamada",
+  visita: "Visita",
+  mensaje: "Mensaje",
+  correo: "Correo",
+  whatsapp: "WhatsApp"
+};
+
+const contactTypeIcons = {
+  llamada: PhoneCall,
+  visita: MapPin,
+  mensaje: MessageSquare,
+  correo: AtSign,
+  whatsapp: MessageSquare
+};
+
 const resultLabels = {
   contactado: "Contactado",
   no_contesto: "No contestó",
