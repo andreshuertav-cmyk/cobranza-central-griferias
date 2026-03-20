@@ -61,6 +61,7 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/PaymentHistoryReport" element={<LayoutWrapper currentPageName="PaymentHistoryReport"><PaymentHistoryReportPage /></LayoutWrapper>} />
+      <Route path="/AuditReport" element={<LayoutWrapper currentPageName="AuditReport"><AuditReportPage /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
