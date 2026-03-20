@@ -743,11 +743,17 @@ export default function ClientDetail() {
                         doc.status === "factorizada" ? "Sí" : "No"
                       ];
                     });
+                    const totalMonto = docsToCopy.reduce((s, d) => s + (d.amount || 0), 0);
+                    const totalPagado = docsToCopy.reduce((s, d) => s + (d.paid_amount || 0), 0);
+                    const totalSaldo = totalMonto - totalPagado;
                     const cellStyle = `border: 1px solid #ccc; padding: 6px 12px;`;
                     const thStyle = `${cellStyle} background-color: #f0f0f0; font-weight: bold; text-align: left;`;
+                    const tfStyle = `${cellStyle} background-color: #f0f0f0; font-weight: bold;`;
+                    const totalRow = ["TOTAL", "", totalMonto.toLocaleString('es-CL'), totalPagado.toLocaleString('es-CL'), totalSaldo.toLocaleString('es-CL'), "", "", ""];
                     const tableHtml = `<table style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 13px;">
                       <thead><tr>${headers.map(h => `<th style="${thStyle}">${h}</th>`).join('')}</tr></thead>
                       <tbody>${rows.map(r => `<tr>${r.map(cell => `<td style="${cellStyle}">${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+                      <tfoot><tr>${totalRow.map(cell => `<td style="${tfStyle}">${cell}</td>`).join('')}</tr></tfoot>
                     </table>`;
                     const plainText = [headers.join('\t'), ...rows.map(r => r.join('\t'))].join('\n');
                     const clipboardItem = new ClipboardItem({
