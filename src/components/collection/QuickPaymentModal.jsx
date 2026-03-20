@@ -25,6 +25,11 @@ export default function QuickPaymentModal({ open, onOpenChange, document, onSubm
     if (document) {
       const pendingAmount = Math.max(0, (document.amount || 0) - (document.paid_amount || 0));
       setAmount(pendingAmount);
+      if (document.status === "factorizada") {
+        setPaymentMethod("pagada_factoring");
+      } else {
+        setPaymentMethod("");
+      }
     }
   }, [document]);
 
