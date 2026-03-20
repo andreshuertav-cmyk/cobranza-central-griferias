@@ -111,6 +111,13 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
               )}>
                 <div className="flex items-center gap-1.5 text-xs">
                   <Clock className={cn("h-3 w-3 shrink-0", isPendingLog ? "text-amber-600" : "text-blue-600")} />
+                  {lastLog.contact_type && (() => { const Icon = contactTypeIcons[lastLog.contact_type] || PhoneCall; return <Icon className={cn("h-3 w-3 shrink-0", isPendingLog ? "text-amber-600" : "text-blue-600")} />; })()}
+                  {lastLog.contact_type && (
+                    <span className={cn("font-medium", isPendingLog ? "text-amber-700" : "text-blue-700")}>
+                      {contactTypeLabels[lastLog.contact_type] || lastLog.contact_type}
+                    </span>
+                  )}
+                  {lastLog.contact_type && <span className={isPendingLog ? "text-amber-600" : "text-blue-600"}>·</span>}
                   <span className={cn("font-medium", isPendingLog ? "text-amber-900" : "text-blue-900")}>
                     {resultLabels[lastLog.result] || lastLog.result}
                   </span>
