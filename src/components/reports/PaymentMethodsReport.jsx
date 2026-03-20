@@ -138,7 +138,7 @@ export default function PaymentMethodsReport({ logs }) {
                   </td>
                   <td className="px-4 py-3 text-sm text-right text-slate-700">{percentage}%</td>
                   <td className="px-4 py-3 text-sm text-right text-slate-600">
-                    ${average.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+                    ${Math.round(average).toLocaleString('es-MX')}
                   </td>
                 </tr>
               );
