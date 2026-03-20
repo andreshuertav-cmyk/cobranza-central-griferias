@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, ChevronRight, TrendingUp, Clock } from "lucide-react";
+import { Phone, Mail, ChevronRight, TrendingUp, Clock, PhoneCall, MapPin, MessageSquare, AtSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
