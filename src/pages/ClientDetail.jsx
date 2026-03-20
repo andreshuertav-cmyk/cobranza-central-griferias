@@ -711,10 +711,9 @@ export default function ClientDetail() {
                       boleta: "Boleta Electrónica",
                       cheque_pendiente: "Cheque Pendiente"
                     };
-                    const header = "Documento\tTipo\tMonto\tPagado\tSaldo\tVencimiento\tDías Mora\tFactorizada";
+                    const headers = ["Documento", "Tipo", "Monto", "Pagado", "Saldo", "Vencimiento", "Días Mora", "Factorizada"];
                     const rows = docsToCopy.map(doc => {
                       const saldo = (doc.amount || 0) - (doc.paid_amount || 0);
-                      // Calcular días de mora
                       let diasMora = 0;
                       if (doc.due_date) {
                         const dateStr = String(doc.due_date).trim();
@@ -742,9 +741,20 @@ export default function ClientDetail() {
                         doc.due_date || "",
                         diasMora,
                         doc.status === "factorizada" ? "Sí" : "No"
-                      ].join("\t");
+                      ];
                     });
-                    navigator.clipboard.writeText([header, ...rows].join("\n"));
+                    const cellStyle = `border: 1px solid #ccc; padding: 6px 12px;`;
+                    const thStyle = `${cellStyle} background-color: #f0f0f0; font-weight: bold; text-align: left;`;
+                    const tableHtml = `<table style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 13px;">
+                      <thead><tr>${headers.map(h => `<th style="${thStyle}">${h}</th>`).join('')}</tr></thead>
+                      <tbody>${rows.map(r => `<tr>${r.map(cell => `<td style="${cellStyle}">${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+                    </table>`;
+                    const plainText = [headers.join('\t'), ...rows.map(r => r.join('\t'))].join('\n');
+                    const clipboardItem = new ClipboardItem({
+                      'text/html': new Blob([tableHtml], { type: 'text/html' }),
+                      'text/plain': new Blob([plainText], { type: 'text/plain' })
+                    });
+                    navigator.clipboard.write([clipboardItem]);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                   }}
