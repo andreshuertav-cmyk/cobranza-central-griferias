@@ -226,14 +226,21 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
             </div>
           )}
 
-          {showPaymentFields && (
+          {showPaymentFields && (() => {
+            const selectedTotal = selectedDocuments.length > 0
+              ? selectedDocuments.reduce((sum, docId) => {
+                  const doc = documents?.find(d => d.id === docId);
+                  return sum + (doc ? (doc.amount || 0) - (doc.paid_amount || 0) : 0);
+                }, 0)
+              : totalDebt;
+            return (
             <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 space-y-4">
-              {totalDebt !== undefined && (
-                <div className="flex items-center justify-between pb-3 border-b border-emerald-200">
-                  <span className="text-sm text-emerald-700">Deuda pendiente:</span>
-                  <span className="text-lg font-bold text-emerald-900">${totalDebt.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
-                </div>
-              )}
+              <div className="flex items-center justify-between pb-3 border-b border-emerald-200">
+                <span className="text-sm text-emerald-700">
+                  {selectedDocuments.length > 0 ? "Total documentos seleccionados:" : "Deuda pendiente:"}
+                </span>
+                <span className="text-lg font-bold text-emerald-900">${(selectedTotal || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
+              </div>
               
               {documents && documents.length > 0 && (
                 <div className="space-y-2">
@@ -280,17 +287,8 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                     type="number"
                     step="0.01"
                     placeholder="0.00"
-                    max={totalDebt || undefined}
                     value={formData.paid_amount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseFloat(value);
-                      if (totalDebt !== undefined && numValue > totalDebt) {
-                        setFormData({ ...formData, paid_amount: totalDebt.toString() });
-                      } else {
-                        setFormData({ ...formData, paid_amount: value });
-                      }
-                    }}
+                    onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
                     className="flex-1"
                   />
                   <Button
@@ -298,9 +296,13 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      if (totalDebt !== undefined) {
-                        setFormData({ ...formData, paid_amount: totalDebt.toString() });
-                      }
+                      const selectedTotal = selectedDocuments.length > 0
+                        ? selectedDocuments.reduce((sum, docId) => {
+                            const doc = documents?.find(d => d.id === docId);
+                            return sum + (doc ? (doc.amount || 0) - (doc.paid_amount || 0) : 0);
+                          }, 0)
+                        : totalDebt;
+                      setFormData({ ...formData, paid_amount: (selectedTotal || 0).toString() });
                     }}
                   >
                     Pagar todo
@@ -327,7 +329,8 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                 </Select>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           <div className="space-y-2">
             <Label>Notas</Label>
