@@ -7,7 +7,7 @@ const COLORS = {
   visita: "#8b5cf6",
   mensaje: "#ec4899",
   correo: "#10b981",
-  whatsapp: "#22c55e"
+  whatsapp: "#f97316"
 };
 
 const RESULT_COLORS = {
