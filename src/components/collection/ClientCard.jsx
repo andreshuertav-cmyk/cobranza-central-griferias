@@ -148,7 +148,7 @@ export default function ClientCard({ client, lastLog, onClick, totalDebt, totalP
           <div className="mt-2">
             <p className="text-xs text-slate-500">Adeudo</p>
             <p className="text-lg font-bold text-slate-900">
-              ${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+              ${Math.max(0, remaining).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
             </p>
           </div>
         </div>
