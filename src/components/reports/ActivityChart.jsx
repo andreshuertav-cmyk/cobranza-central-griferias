@@ -116,19 +116,35 @@ export default function ActivityChart({ contactsByType, resultsByType }) {
         </div>
 
         {/* Legend */}
-        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-          {contactData.map((item, idx) => {
-            const key = Object.keys(contactsByType)[idx];
-            return (
-              <div key={item.name} className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: COLORS[key] || "#94a3b8" }}
-                />
-                <span className="text-slate-600">{item.name}: {item.value}</span>
-              </div>
-            );
-          })}
+        <div className="mt-4 grid grid-cols-2 gap-4 text-xs">
+          <div className="space-y-1">
+            {contactData.map((item, idx) => {
+              const key = Object.keys(contactsByType)[idx];
+              return (
+                <div key={item.name} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full flex-shrink-0" 
+                    style={{ backgroundColor: COLORS[key] || "#94a3b8" }}
+                  />
+                  <span className="text-slate-600">{item.name}: {item.value}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="space-y-1">
+            {resultData.map((item, idx) => {
+              const key = Object.keys(resultsByType)[idx];
+              return (
+                <div key={item.name} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full flex-shrink-0" 
+                    style={{ backgroundColor: RESULT_COLORS[key] || "#94a3b8" }}
+                  />
+                  <span className="text-slate-600">{item.name}: {item.value}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </CardContent>
     </Card>
