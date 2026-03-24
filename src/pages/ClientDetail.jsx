@@ -656,7 +656,7 @@ export default function ClientDetail() {
                     </div>
                     <div className="mt-3 bg-red-50 rounded-xl p-3 text-center">
                       <p className="text-xs text-red-500 mb-1">Saldo pendiente</p>
-                      <p className="text-2xl font-bold text-red-600">${remaining.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
+                      <p className="text-2xl font-bold text-red-600">${Math.max(0, remaining).toLocaleString('es-MX', { minimumFractionDigits: 0 })}</p>
                     </div>
                   </div>
                 </div>
