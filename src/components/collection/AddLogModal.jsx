@@ -296,13 +296,14 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const selectedTotal = selectedDocuments.length > 0
-                        ? selectedDocuments.reduce((sum, docId) => {
-                            const doc = documents?.find(d => d.id === docId);
-                            return sum + (doc ? (doc.amount || 0) - (doc.paid_amount || 0) : 0);
-                          }, 0)
-                        : totalDebt;
-                      setFormData({ ...formData, paid_amount: (selectedTotal || 0).toString() });
+                      const pendingDocs = documents?.filter(doc => {
+                        const pending = (doc.amount || 0) - (doc.paid_amount || 0);
+                        return pending > 0;
+                      }) || [];
+                      const allDocIds = pendingDocs.map(d => d.id);
+                      setSelectedDocuments(allDocIds);
+                      const total = pendingDocs.reduce((sum, doc) => sum + (doc.amount || 0) - (doc.paid_amount || 0), 0);
+                      setFormData(prev => ({ ...prev, paid_amount: total.toString() }));
                     }}
                   >
                     Pagar todo
