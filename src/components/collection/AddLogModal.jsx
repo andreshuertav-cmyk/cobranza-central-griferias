@@ -197,22 +197,35 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Monto prometido</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    max={totalDebt || undefined}
-                    value={formData.promised_amount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      const numValue = parseFloat(value);
-                      if (totalDebt !== undefined && numValue > totalDebt) {
-                        setFormData({ ...formData, promised_amount: totalDebt.toString() });
-                      } else {
-                        setFormData({ ...formData, promised_amount: value });
-                      }
-                    }}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      max={totalDebt || undefined}
+                      value={formData.promised_amount}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numValue = parseFloat(value);
+                        if (totalDebt !== undefined && numValue > totalDebt) {
+                          setFormData({ ...formData, promised_amount: totalDebt.toString() });
+                        } else {
+                          setFormData({ ...formData, promised_amount: value });
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    {totalDebt !== undefined && totalDebt > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setFormData({ ...formData, promised_amount: totalDebt.toString() })}
+                      >
+                        Total
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Fecha de pago</Label>
