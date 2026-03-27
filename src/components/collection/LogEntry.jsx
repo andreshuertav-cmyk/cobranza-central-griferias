@@ -89,7 +89,7 @@ export default function LogEntry({ log, onDelete, onEdit, documents }) {
         )}
 
         <div className="flex flex-wrap gap-3 mt-3">
-          {log.paid_amount > 0 && (
+          {log.paid_amount > 0 && log.result === "pago_realizado" && (
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
                 <CheckCircle2 className="h-3.5 w-3.5" />
