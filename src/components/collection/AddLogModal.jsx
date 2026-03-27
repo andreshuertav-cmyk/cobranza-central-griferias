@@ -194,6 +194,39 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                   <span className="text-lg font-bold text-blue-900">${totalDebt.toLocaleString('es-MX', { minimumFractionDigits: 0 })}</span>
                 </div>
               )}
+              {documents && documents.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Documento(s) incluidos en la promesa</Label>
+                  <div className="border rounded-lg p-3 bg-white max-h-40 overflow-y-auto space-y-2">
+                    {documents.filter(doc => (doc.amount || 0) - (doc.paid_amount || 0) > 0).map((doc) => {
+                      const pending = (doc.amount || 0) - (doc.paid_amount || 0);
+                      const isSelected = selectedDocuments.includes(doc.id);
+                      return (
+                        <div key={doc.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              const updated = checked
+                                ? [...selectedDocuments, doc.id]
+                                : selectedDocuments.filter(id => id !== doc.id);
+                              setSelectedDocuments(updated);
+                              const total = updated.reduce((sum, docId) => {
+                                const d = documents.find(x => x.id === docId);
+                                return sum + (d ? (d.amount || 0) - (d.paid_amount || 0) : 0);
+                              }, 0);
+                              if (total > 0) setFormData(prev => ({ ...prev, promised_amount: total.toString() }));
+                            }}
+                          />
+                          <label className="flex-1 text-sm cursor-pointer">
+                            <span className="font-medium">{doc.document_number}</span>
+                            <span className="text-slate-600"> - ${pending.toLocaleString('es-MX', { minimumFractionDigits: 0 })} pendiente</span>
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Monto prometido</Label>
@@ -220,7 +253,11 @@ export default function AddLogModal({ open, onOpenChange, onSubmit, isLoading, t
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setFormData({ ...formData, promised_amount: totalDebt.toString() })}
+                        onClick={() => {
+                          const pendingDocs = documents?.filter(doc => (doc.amount || 0) - (doc.paid_amount || 0) > 0) || [];
+                          setSelectedDocuments(pendingDocs.map(d => d.id));
+                          setFormData({ ...formData, promised_amount: totalDebt.toString() });
+                        }}
                       >
                         Total
                       </Button>
