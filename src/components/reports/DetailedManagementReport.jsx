@@ -20,7 +20,18 @@ const resultLabels = {
   promesa_pago: "Promesa de pago",
   pago_realizado: "Pago realizado",
   rechaza_pago: "Rechaza pago",
-  otro: "Otro"
+  otro: "Otro",
+  sin_gestion: "Sin gestión"
+};
+
+const getResultLabel = (log) => {
+  if (log.notes?.includes("[SIN GESTION]")) return "Sin gestión";
+  return resultLabels[log.result] || log.result;
+};
+
+const getContactTypeLabel = (log) => {
+  if (log.notes?.includes("[SIN GESTION]")) return "Sin gestión";
+  return contactTypeLabels[log.contact_type] || log.contact_type;
 };
 
 export default function DetailedManagementReport({ logs, clients }) {
@@ -54,8 +65,8 @@ export default function DetailedManagementReport({ logs, clients }) {
       logs.forEach((log, index) => {
         const logNum = index + 1;
         row[`G${logNum} - Fecha`] = log.contact_date ? format(new Date(log.contact_date), "dd/MM/yyyy HH:mm", { locale: es }) : '';
-        row[`G${logNum} - Tipo`] = contactTypeLabels[log.contact_type] || log.contact_type;
-        row[`G${logNum} - Resultado`] = resultLabels[log.result] || log.result;
+        row[`G${logNum} - Tipo`] = getContactTypeLabel(log);
+        row[`G${logNum} - Resultado`] = getResultLabel(log);
         
         if (log.result === 'promesa_pago') {
           row[`G${logNum} - Detalle`] = `Promesa: $${(log.promised_amount || 0).toLocaleString('es-MX')} - ${log.promised_date ? format(new Date(log.promised_date), "dd/MM/yyyy", { locale: es }) : 'Sin fecha'}`;
@@ -182,15 +193,16 @@ export default function DetailedManagementReport({ logs, clients }) {
                         {format(new Date(log.contact_date), "dd/MM/yy", { locale: es })}
                       </td>
                       <td key={`${i}-tipo`} className="px-2 py-3 text-xs text-slate-700 text-center">
-                        {contactTypeLabels[log.contact_type] || log.contact_type}
+                        {getContactTypeLabel(log)}
                       </td>
                       <td key={`${i}-resultado`} className="px-2 py-3 text-xs text-center">
                         <span className={
+                          log.notes?.includes("[SIN GESTION]") ? 'text-slate-500 font-medium' :
                           log.result === 'pago_realizado' ? 'text-emerald-600 font-medium' :
                           log.result === 'promesa_pago' ? 'text-amber-600 font-medium' :
                           'text-slate-700'
                         }>
-                          {resultLabels[log.result] || log.result}
+                          {getResultLabel(log)}
                         </span>
                       </td>
                       <td key={`${i}-detalle`} className="px-2 py-3 text-xs text-slate-600 max-w-[200px] truncate">

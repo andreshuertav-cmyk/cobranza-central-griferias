@@ -26,6 +26,11 @@ const resultLabels = {
   otro: "Otro"
 };
 
+const getResultLabel = (log) => {
+  if (log.notes?.includes("[SIN GESTION]")) return "Sin gestión";
+  return resultLabels[log.result] || log.result;
+};
+
 export default function ClientManagementReport({ logs, clients, documents }) {
   const [search, setSearch] = useState("");
 
@@ -43,7 +48,7 @@ export default function ClientManagementReport({ logs, clients, documents }) {
       'Pagos sin Gestión': stat.paymentsWithoutManagement,
       'Saldo': stat.remaining,
       'Última Gestión': stat.lastLog ? format(new Date(stat.lastLog.contact_date), "dd/MM/yyyy", { locale: es }) : 'N/A',
-      'Resultado': stat.lastLog ? resultLabels[stat.lastLog.result] : 'N/A'
+      'Resultado': stat.lastLog ? getResultLabel(stat.lastLog) : 'N/A'
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
@@ -227,7 +232,7 @@ export default function ClientManagementReport({ logs, clients, documents }) {
                           </span>
                         </div>
                         <Badge variant="outline" className="text-xs">
-                          {resultLabels[stat.lastLog.result]}
+                          {getResultLabel(stat.lastLog)}
                         </Badge>
                       </div>
                     ) : (
