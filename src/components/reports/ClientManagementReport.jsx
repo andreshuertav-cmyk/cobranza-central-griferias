@@ -56,35 +56,38 @@ export default function ClientManagementReport({ logs, clients, documents }) {
     const clientLogs = logs.filter(log => log.client_id === client.id);
     const clientDocs = documents.filter(doc => doc.client_id === client.id);
 
-    // Count by contact type
-    const contactTypes = clientLogs.reduce((acc, log) => {
+    // Separate real management logs from "sin gestión" payments
+    const managementLogs = clientLogs.filter(log => !log.notes?.includes("[SIN GESTION]"));
+
+    // Count by contact type (only real management logs)
+    const contactTypes = managementLogs.reduce((acc, log) => {
       acc[log.contact_type] = (acc[log.contact_type] || 0) + 1;
       return acc;
     }, {});
 
-    // Count by result
-    const results = clientLogs.reduce((acc, log) => {
+    // Count by result (only real management logs)
+    const results = managementLogs.reduce((acc, log) => {
       acc[log.result] = (acc[log.result] || 0) + 1;
       return acc;
     }, {});
 
     // Payments
-    const paymentsReceived = clientLogs.filter(l => l.result === "pago_realizado").length;
+    const paymentsReceived = managementLogs.filter(l => l.result === "pago_realizado").length;
     const paymentsWithoutManagement = clientLogs.filter(l => 
       l.result === "pago_realizado" && l.notes?.includes("[SIN GESTION]")
     ).length;
-    const totalPaid = clientLogs
+    const totalPaid = managementLogs
       .filter(l => l.result === "pago_realizado")
       .reduce((sum, l) => sum + (l.paid_amount || 0), 0);
 
     // Promises
-    const promises = clientLogs.filter(l => l.result === "promesa_pago").length;
-    const promisedAmount = clientLogs
+    const promises = managementLogs.filter(l => l.result === "promesa_pago").length;
+    const promisedAmount = managementLogs
       .filter(l => l.result === "promesa_pago")
       .reduce((sum, l) => sum + (l.promised_amount || 0), 0);
 
-    // Last contact
-    const lastLog = clientLogs.length > 0 ? clientLogs[0] : null;
+    // Last contact (only real management logs)
+    const lastLog = managementLogs.length > 0 ? managementLogs[0] : null;
 
     // Debt
     const totalDebt = clientDocs.reduce((sum, doc) => sum + (doc.amount || 0), 0);
@@ -92,7 +95,7 @@ export default function ClientManagementReport({ logs, clients, documents }) {
 
     return {
       client,
-      totalLogs: clientLogs.length,
+      totalLogs: managementLogs.length,
       contactTypes,
       results,
       paymentsReceived,
@@ -105,7 +108,7 @@ export default function ClientManagementReport({ logs, clients, documents }) {
       totalPaidFromDocs,
       remaining: totalDebt - totalPaidFromDocs
     };
-  }).filter(stat => stat.totalLogs > 0)
+  }).filter(stat => stat.totalLogs > 0 || stat.paymentsWithoutManagement > 0)
     .sort((a, b) => b.totalLogs - a.totalLogs);
 
   // Filter by search
