@@ -60,7 +60,7 @@ export default function DebtEvolutionReport() {
   // Auto-set range once months are available
   useEffect(() => {
     if (availableMonths.length > 0 && !fromMonth && !toMonth) {
-      setFromMonth(availableMonths[availableMonths.length - 1]);
+      setFromMonth(availableMonths[0]);
       setToMonth(availableMonths[0]);
     }
   }, [availableMonths]);
