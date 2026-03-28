@@ -54,14 +54,14 @@ export default function DebtEvolutionReport() {
       if (isNaN(date)) return;
       keys.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
     });
-    return Array.from(keys).sort();
+    return Array.from(keys).sort().reverse();
   }, [documents]);
 
   // Auto-set range once months are available
   useEffect(() => {
     if (availableMonths.length > 0 && !fromMonth && !toMonth) {
-      setFromMonth(availableMonths[0]);
-      setToMonth(availableMonths[availableMonths.length - 1]);
+      setFromMonth(availableMonths[availableMonths.length - 1]);
+      setToMonth(availableMonths[0]);
     }
   }, [availableMonths]);
 
