@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, FileText, Loader2, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -12,6 +14,8 @@ import { es } from "date-fns/locale";
 export default function DebtEvolutionReport() {
   const [report, setReport] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [fromMonth, setFromMonth] = useState("");
+  const [toMonth, setToMonth] = useState("");
 
   const { data: documents = [], isLoading: loadingDocs } = useQuery({
     queryKey: ["documents"],
@@ -29,6 +33,29 @@ export default function DebtEvolutionReport() {
   });
 
   const isLoading = loadingDocs || loadingClients || loadingLogs;
+
+  // Compute all available months from documents
+  const availableMonths = useMemo(() => {
+    const keys = new Set();
+    documents.forEach((doc) => {
+      if (!doc.due_date || doc.status === "cancelado") return;
+      const dateStr = String(doc.due_date).trim();
+      let date;
+      if (dateStr.includes("-")) {
+        const parts = dateStr.split("-");
+        if (parts.length === 3) {
+          const [d, m, y] = parts;
+          if (d.length <= 2 && m.length <= 2 && y.length === 4) {
+            date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+          }
+        }
+      }
+      if (!date) date = new Date(dateStr);
+      if (isNaN(date)) return;
+      keys.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
+    });
+    return Array.from(keys).sort();
+  }, [documents]);
 
   // Build monthly summary from documents
   const buildMonthlySummary = () => {
@@ -81,7 +108,12 @@ export default function DebtEvolutionReport() {
     setIsGenerating(true);
     const { monthMap, paymentMap } = buildMonthlySummary();
 
-    const sortedMonths = Object.keys(monthMap).sort();
+    const allSortedMonths = Object.keys(monthMap).sort();
+    const sortedMonths = allSortedMonths.filter((key) => {
+      if (fromMonth && key < fromMonth) return false;
+      if (toMonth && key > toMonth) return false;
+      return true;
+    });
     const totalClients = clients.length;
     const today = new Date();
 
@@ -95,17 +127,22 @@ export default function DebtEvolutionReport() {
       return `- ${label}: ${m.count} documento(s), deuda total $${m.total.toLocaleString("es-MX", { minimumFractionDigits: 0 })}, cobrado $${m.paid.toLocaleString("es-MX", { minimumFractionDigits: 0 })}, pendiente $${pending.toLocaleString("es-MX", { minimumFractionDigits: 0 })}, pagos registrados en el mes $${paymentsThisMonth.toLocaleString("es-MX", { minimumFractionDigits: 0 })}, vencido sin pagar $${m.overdue.toLocaleString("es-MX", { minimumFractionDigits: 0 })}`;
     }).join("\n");
 
-    const totalDebt = documents.filter(d => d.status !== "cancelado").reduce((s, d) => s + (d.amount || 0), 0);
-    const totalPaid = documents.filter(d => d.status !== "cancelado").reduce((s, d) => s + (d.paid_amount || 0), 0);
-    const totalPending = totalDebt - totalPaid;
+    // Totals only for selected range
+    const rangeTotal = sortedMonths.reduce((s, k) => s + (monthMap[k]?.total || 0), 0);
+    const rangePaid = sortedMonths.reduce((s, k) => s + (monthMap[k]?.paid || 0), 0);
+    const rangePending = rangeTotal - rangePaid;
 
-    const prompt = `Eres un analista financiero experto en cobranza. Basándote en los siguientes datos reales de una cartera de créditos, redacta un reporte ejecutivo mensual en español, conciso y claro (máximo 400 palabras), que explique cómo ha variado la deuda mes a mes, qué tendencias se observan, si la cobranza está mejorando o empeorando, y cualquier punto de atención importante. No uses listas ni tablas, solo párrafos narrativos.
+    const fromLabel = fromMonth ? format(new Date(parseInt(fromMonth.split("-")[0]), parseInt(fromMonth.split("-")[1]) - 1, 1), "MMMM yyyy", { locale: es }) : "inicio";
+    const toLabel = toMonth ? format(new Date(parseInt(toMonth.split("-")[0]), parseInt(toMonth.split("-")[1]) - 1, 1), "MMMM yyyy", { locale: es }) : "actual";
+
+    const prompt = `Eres un analista financiero experto en cobranza. Basándote en los siguientes datos reales de una cartera de créditos, redacta un reporte ejecutivo en español, conciso y claro (máximo 400 palabras), que explique cómo ha variado la deuda mes a mes durante el período indicado, qué tendencias se observan, si la cobranza está mejorando o empeorando, y cualquier punto de atención importante. No uses listas ni tablas, solo párrafos narrativos.
 
 CONTEXTO GENERAL:
 - Total de clientes: ${totalClients}
-- Deuda total emitida: $${totalDebt.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
-- Total cobrado: $${totalPaid.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
-- Saldo pendiente actual: $${totalPending.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
+- Período analizado: de ${fromLabel} a ${toLabel}
+- Deuda total emitida en el período: $${rangeTotal.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
+- Total cobrado en el período: $${rangePaid.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
+- Saldo pendiente del período: $${rangePending.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
 - Fecha del reporte: ${format(today, "d 'de' MMMM 'de' yyyy", { locale: es })}
 
 DESGLOSE POR MES (agrupado por vencimiento de documentos):
@@ -134,19 +171,49 @@ Redacta el reporte ahora:`;
           </div>
         </div>
 
-        {/* Generate button */}
+        {/* Controls */}
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <p className="text-sm text-slate-600">
-                  Genera un análisis en texto sobre cómo ha variado la cartera de créditos mes a mes, basado en tus documentos y pagos registrados.
-                </p>
+          <CardContent className="pt-6 space-y-4">
+            <p className="text-sm text-slate-600">
+              Selecciona el rango de meses a analizar y genera un reporte narrativo con IA sobre la evolución de tu cartera.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">Desde</Label>
+                <Select value={fromMonth} onValueChange={setFromMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Inicio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableMonths.map((key) => {
+                      const [y, m] = key.split("-");
+                      const label = format(new Date(parseInt(y), parseInt(m) - 1, 1), "MMMM yyyy", { locale: es });
+                      return <SelectItem key={key} value={key}>{label}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">Hasta</Label>
+                <Select value={toMonth} onValueChange={setToMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Fin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableMonths.map((key) => {
+                      const [y, m] = key.split("-");
+                      const label = format(new Date(parseInt(y), parseInt(m) - 1, 1), "MMMM yyyy", { locale: es });
+                      return <SelectItem key={key} value={key}>{label}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end">
               <Button
                 onClick={generateReport}
                 disabled={isLoading || isGenerating}
-                className="gap-2 shrink-0"
+                className="gap-2"
               >
                 {isGenerating ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Generando...</>
@@ -175,7 +242,10 @@ Redacta el reporte ahora:`;
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <FileText className="h-4 w-4 text-slate-500" />
-                Reporte — {format(new Date(), "MMMM yyyy", { locale: es })}
+                Reporte — {fromMonth && toMonth
+                  ? `${format(new Date(parseInt(fromMonth.split("-")[0]), parseInt(fromMonth.split("-")[1]) - 1, 1), "MMM yyyy", { locale: es })} – ${format(new Date(parseInt(toMonth.split("-")[0]), parseInt(toMonth.split("-")[1]) - 1, 1), "MMM yyyy", { locale: es })}`
+                  : format(new Date(), "MMMM yyyy", { locale: es })
+                }
               </CardTitle>
             </CardHeader>
             <CardContent>
