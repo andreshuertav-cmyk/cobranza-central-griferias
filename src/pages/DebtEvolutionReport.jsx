@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,14 @@ export default function DebtEvolutionReport() {
     });
     return Array.from(keys).sort();
   }, [documents]);
+
+  // Auto-set range once months are available
+  useEffect(() => {
+    if (availableMonths.length > 0 && !fromMonth && !toMonth) {
+      setFromMonth(availableMonths[0]);
+      setToMonth(availableMonths[availableMonths.length - 1]);
+    }
+  }, [availableMonths]);
 
   // Build monthly summary from documents
   const buildMonthlySummary = () => {
