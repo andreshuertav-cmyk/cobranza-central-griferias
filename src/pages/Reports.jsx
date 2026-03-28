@@ -92,6 +92,13 @@ export default function Reports() {
       icon: CheckCircle2,
       color: "bg-red-600",
       page: "AuditReport"
+    },
+    {
+      title: "Evolución de Deuda (IA)",
+      description: "Reporte narrativo mensual generado por IA sobre la variación de la cartera",
+      icon: TrendingUp,
+      color: "bg-sky-600",
+      page: "DebtEvolutionReport"
     }
   ];
 

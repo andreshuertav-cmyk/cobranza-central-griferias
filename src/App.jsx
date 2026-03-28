@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import PaymentHistoryReportPage from './pages/PaymentHistoryReport';
 import AuditReportPage from './pages/AuditReport';
+import DebtEvolutionReportPage from './pages/DebtEvolutionReport';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
       ))}
       <Route path="/PaymentHistoryReport" element={<LayoutWrapper currentPageName="PaymentHistoryReport"><PaymentHistoryReportPage /></LayoutWrapper>} />
       <Route path="/AuditReport" element={<LayoutWrapper currentPageName="AuditReport"><AuditReportPage /></LayoutWrapper>} />
+      <Route path="/DebtEvolutionReport" element={<LayoutWrapper currentPageName="DebtEvolutionReport"><DebtEvolutionReportPage /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
