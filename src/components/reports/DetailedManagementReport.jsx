@@ -27,7 +27,7 @@ export default function DetailedManagementReport({ logs, clients }) {
   // Group logs by client and sort by date
   const clientData = clients.map(client => {
     const clientLogs = logs
-      .filter(log => log.client_id === client.id)
+      .filter(log => log.client_id === client.id && !log.notes?.includes("[SIN GESTION]"))
       .sort((a, b) => new Date(a.contact_date) - new Date(b.contact_date));
     
     return {
